@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GroundCheck : MonoBehaviour
@@ -11,8 +12,11 @@ public class GroundCheck : MonoBehaviour
     public bool IsGrounded => isGrounded;
     public Vector3 GroundNormal { get; private set; } = Vector3.up;
 
+    private readonly Dictionary<int, Vector3> groundContacts = new Dictionary<int, Vector3>();
+
     public void SetGroundedState(bool grounded)
     {
+        groundContacts.Clear();
         isGrounded = grounded;
         if (!grounded)
         {
@@ -36,15 +40,37 @@ public class GroundCheck : MonoBehaviour
             }
         }
 
-        isGrounded = bestNormalY > minNormalY;
+        int colliderId = collision.collider.GetInstanceID();
+        if (bestNormalY > minNormalY)
+            groundContacts[colliderId] = bestNormal;
+        else
+            groundContacts.Remove(colliderId);
 
-        if (isGrounded)
-            GroundNormal = bestNormal;
+        UpdateGroundedState();
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        isGrounded = false;
-        GroundNormal = Vector3.up;
+        groundContacts.Remove(collision.collider.GetInstanceID());
+        UpdateGroundedState();
+    }
+
+    private void UpdateGroundedState()
+    {
+        isGrounded = groundContacts.Count > 0;
+        if (!isGrounded)
+        {
+            GroundNormal = Vector3.up;
+            return;
+        }
+
+        Vector3 bestNormal = Vector3.up;
+        foreach (Vector3 normal in groundContacts.Values)
+        {
+            if (normal.y > bestNormal.y)
+                bestNormal = normal;
+        }
+
+        GroundNormal = bestNormal;
     }
 }
