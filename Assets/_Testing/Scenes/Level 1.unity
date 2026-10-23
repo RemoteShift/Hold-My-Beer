@@ -2082,6 +2082,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6057291999746676834, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: m_Mass
+      value: 500
+      objectReference: {fileID: 0}
     - target: {fileID: 8943551015724784779, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_Name
       value: Persistents
@@ -11543,17 +11547,9 @@ MonoBehaviour:
   m_Mesh: {fileID: 980410448}
   m_VersionIndex: 5025
   m_IsSelectable: 1
-  m_SelectedFaces: 00000000
-  m_SelectedEdges:
-  - a: 2
-    b: 3
-  - a: 3
-    b: 1
-  - a: 1
-    b: 0
-  - a: 0
-    b: 2
-  m_SelectedVertices: 02000000030000000100000000000000
+  m_SelectedFaces: 
+  m_SelectedEdges: []
+  m_SelectedVertices: 
 --- !u!43 &1873738374
 Mesh:
   m_ObjectHideFlags: 0
