@@ -187,7 +187,8 @@ MonoBehaviour:
   LookInput: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   MoveInput: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   JumpInput: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  SprintInput: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  DashInput: {fileID: 6217255844711320137, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  SlideInput: {fileID: 6165576198637513670, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1 &6324861357508907939
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,10 +443,24 @@ MonoBehaviour:
   rb: {fileID: 6057291999746676834}
   GroundCheck: {fileID: 2537236449888375985}
   moveSpeed: 7
-  sprintMultiplier: 1.5
   jumpSpeed: 7
+  dashSpeed: 25
+  dashDuration: 0.2
+  maxDashCount: 3
+  dashRecoveryDuration: 1
+  slideSpeed: 15
   AirAcc: 50
+  slamSpeed: 40
   canMove: 1
+  OnDashCountChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  playerCollider: {fileID: 3360410157935972661}
+  cameraHolderTransform: {fileID: 2178788542163159302}
+  standingHeight: 2
+  slidingHeight: 1
+  standingCamY: 0.6
+  slideCamY: -0.2
 --- !u!1 &7185591650369897874
 GameObject:
   m_ObjectHideFlags: 0
