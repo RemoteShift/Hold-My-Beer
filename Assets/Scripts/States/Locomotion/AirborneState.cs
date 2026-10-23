@@ -24,11 +24,6 @@ public class AirborneState : PlayerLocomState
             return;
         }
 
-        if (player.input.SlidePressed)
-        {
-            player.SwitchState(new GroundSlamState(player, Rb));
-            return;
-        }
     }
     
     public override void FixedUpdate()
@@ -47,9 +42,9 @@ public class AirborneState : PlayerLocomState
         Vector3 currentHorizontalVel = new Vector3(Rb.linearVelocity.x, 0f, Rb.linearVelocity.z);
 
         // If total horizontal speed exceeds maxAirSpeed (diagonally or straight), clamp total magnitude
-        if (currentHorizontalVel.magnitude > player.moveSpeed)
+        if (currentHorizontalVel.magnitude > player.MovementSpeed)
         {
-            Vector3 clampedVel = currentHorizontalVel.normalized * player.moveSpeed;
+            Vector3 clampedVel = currentHorizontalVel.normalized * player.MovementSpeed;
             Rb.linearVelocity = new Vector3(clampedVel.x, Rb.linearVelocity.y, clampedVel.z);
         }
     }

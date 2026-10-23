@@ -23,11 +23,6 @@ public class GroundedState : PlayerLocomState
             return;
         }
 
-        if (player.input.SlidePressed)
-        {
-            player.SwitchState(new SlideState(player, Rb));
-            return;
-        }
     }
 
     public override void FixedUpdate()
@@ -43,7 +38,7 @@ public class GroundedState : PlayerLocomState
         if (moveDirection.sqrMagnitude > 0.01f)
         {
             moveDirection.Normalize();
-            Rb.linearVelocity = moveDirection * player.moveSpeed + verticalVelocity;
+            Rb.linearVelocity = moveDirection * player.MovementSpeed + verticalVelocity;
         }
         else
         {

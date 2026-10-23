@@ -19,11 +19,6 @@ public abstract class PlayerLocomState : IState
     {
         CachedCameraMoveDirection = GetCameraRelativeMoveDirection();
 
-        if (player.input.DashPressed)
-        {
-            player.Dash();
-            return;
-        }
     }
 
     public virtual void FixedUpdate() {}
@@ -52,26 +47,4 @@ public abstract class PlayerLocomState : IState
         return Vector3.zero;
     }
 
-    protected Vector3 GetMoveDirection()
-    {
-        var input = player.input.moveInput;
-        if (input.magnitude > 0.1f)
-        {
-            var moveDir = (player.transform.right * input.x) + (player.transform.forward * input.y);
-            return moveDir.normalized;
-        }
-
-        if (Camera.main)
-        {
-            Vector3 camForward = Camera.main.transform.forward;
-            camForward.y = 0f;
-
-            if (camForward.sqrMagnitude > 0.0001f)
-            {
-                return camForward.normalized;
-            }
-        }
-
-        return player.transform.forward;
-    }
 }

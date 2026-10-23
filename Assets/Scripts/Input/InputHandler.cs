@@ -1,33 +1,29 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 
+[DefaultExecutionOrder(-100)]
 public class InputHandler : Singleton<InputHandler>
 {
     [Header("Action References")] 
     [SerializeField] private InputActionReference LookInput;
     [SerializeField] private InputActionReference MoveInput;
     [SerializeField] private InputActionReference JumpInput;
-    [SerializeField] private InputActionReference DashInput;
-    [SerializeField] private InputActionReference SlideInput;
+    [SerializeField] private InputActionReference SprintInput;
     
     public event Action<Vector2, bool> OnLookInputChanged;
     public event Action<bool> OnLeftClickInput;
     
     public Vector2 moveInput { get; private set; }
     public bool JumpPressed { get; private set; }
-    public bool SlidePressed { get; private set; }
-    public bool IsHoldingSlide { get; private set; } // Track continuous press state
-    public bool DashPressed { get; private set; }
+    public bool IsSprinting { get; private set; }
 
     private void OnEnable()
     {
         LookInput.action.Enable();
         MoveInput.action.Enable();
         JumpInput.action.Enable();
-        DashInput.action.Enable();
-        SlideInput.action.Enable();
+        SprintInput.action.Enable();
 
         LookInput.action.performed += HandleLookInput;
         LookInput.action.canceled += HandleLookInput;
@@ -41,8 +37,10 @@ public class InputHandler : Singleton<InputHandler>
         LookInput.action.Disable();
         MoveInput.action.Disable();
         JumpInput.action.Disable();
-        DashInput.action.Disable();
-        SlideInput.action.Disable();
+        SprintInput.action.Disable();
+        ResetSprint();
+        moveInput = Vector2.zero;
+        JumpPressed = false;
     }
 
     private void Update()
@@ -50,11 +48,15 @@ public class InputHandler : Singleton<InputHandler>
         moveInput = MoveInput.action.ReadValue<Vector2>();
         
         JumpPressed  = JumpInput.action.WasPressedThisFrame();
-        DashPressed  = DashInput.action.WasPressedThisFrame();
-        SlidePressed = SlideInput.action.WasPressedThisFrame();
+        if (SprintInput.action.WasPressedThisFrame())
+            IsSprinting = !IsSprinting;
         
-        // Is user holding the key right now?
-        IsHoldingSlide = SlideInput.action.IsPressed(); 
+
+    }
+
+    public void ResetSprint()
+    {
+        IsSprinting = false;
     }
 
     private void HandleLookInput(InputAction.CallbackContext context)
