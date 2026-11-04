@@ -13,6 +13,11 @@ public class LocomotionController : Singleton<LocomotionController>
     
     public InputHandler input => InputHandler.Instance;
 
+    [Header("Audio")]
+    [SerializeField] public AudioSource audioSource;
+    [SerializeField] public AudioClip jumpSound;
+    [SerializeField] public AudioClip walkSound;
+
     #region Movement Settings
 
     [Header("Movement Settings")]
@@ -75,6 +80,8 @@ public class LocomotionController : Singleton<LocomotionController>
     {
         GroundCheck.SetGroundedState(false);
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpSpeed, rb.linearVelocity.z);
+        if (jumpSound != null && audioSource != null)
+            audioSource.PlayOneShot(jumpSound);
     }
     
     public void SwitchState(PlayerLocomState newState)
