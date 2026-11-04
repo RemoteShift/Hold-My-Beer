@@ -2042,6 +2042,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 2.41
       objectReference: {fileID: 0}
+    - target: {fileID: 1068022072754729160, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: SprintInput
+      value: 
+      objectReference: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     - target: {fileID: 2118649227976206073, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
