@@ -10,8 +10,12 @@ public class InputHandler : Singleton<InputHandler>
     [SerializeField] private InputActionReference MoveInput;
     [SerializeField] private InputActionReference JumpInput;
     [SerializeField] private InputActionReference SprintInput;
-    
+    [SerializeField] private InputActionReference BeerInput;
+    [SerializeField] private InputActionReference InteractInput;
+
     public event Action<Vector2, bool> OnLookInputChanged;
+    public event Action OnBeerPressed;
+    public event Action OnInteractPressed;
     public event Action<bool> OnLeftClickInput;
     
     public Vector2 moveInput { get; private set; }
@@ -23,7 +27,9 @@ public class InputHandler : Singleton<InputHandler>
         LookInput.action.Enable();
         MoveInput.action.Enable();
         JumpInput.action.Enable();
-        SprintInput.action.Enable();
+        if (SprintInput) SprintInput.action.Enable();
+        if (BeerInput) BeerInput.action.Enable();
+        if (InteractInput) InteractInput.action.Enable();
 
         LookInput.action.performed += HandleLookInput;
         LookInput.action.canceled += HandleLookInput;
@@ -37,7 +43,9 @@ public class InputHandler : Singleton<InputHandler>
         LookInput.action.Disable();
         MoveInput.action.Disable();
         JumpInput.action.Disable();
-        SprintInput.action.Disable();
+        if (SprintInput) SprintInput.action.Disable();
+        if (BeerInput) BeerInput.action.Disable();
+        if (InteractInput) InteractInput.action.Disable();
         ResetSprint();
         moveInput = Vector2.zero;
         JumpPressed = false;
@@ -48,10 +56,15 @@ public class InputHandler : Singleton<InputHandler>
         moveInput = MoveInput.action.ReadValue<Vector2>();
         
         JumpPressed  = JumpInput.action.WasPressedThisFrame();
-        if (SprintInput.action.WasPressedThisFrame())
+        if (SprintInput && SprintInput.action.WasPressedThisFrame())
             IsSprinting = !IsSprinting;
-        
 
+        // WasPressedThisFrame reports the press even if the action has a Hold interaction
+        if (BeerInput && BeerInput.action.WasPressedThisFrame())
+            OnBeerPressed?.Invoke();
+
+        if (InteractInput && InteractInput.action.WasPressedThisFrame())
+            OnInteractPressed?.Invoke();
     }
 
     public void ResetSprint()
