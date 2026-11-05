@@ -39,11 +39,19 @@ public class GroundedState : PlayerLocomState
         {
             moveDirection.Normalize();
             Rb.linearVelocity = moveDirection * player.MovementSpeed + verticalVelocity;
+            if (player.walkSound != null && player.audioSource != null && !player.audioSource.isPlaying)
+            {
+                player.audioSource.clip = player.walkSound;
+                player.audioSource.loop = true;
+                player.audioSource.Play();
+            }
         }
         else
         {
             var groundedVelocity = Vector3.ProjectOnPlane(currentVelocity, groundNormal) * 0.15f;
             Rb.linearVelocity = groundedVelocity + verticalVelocity;
+            if (player.audioSource != null && player.audioSource.isPlaying && player.audioSource.clip == player.walkSound)
+                player.audioSource.Stop();
         }
 
         if (player.GroundCheck.IsGrounded && Vector3.Dot(currentVelocity, groundNormal) <= 0f)
