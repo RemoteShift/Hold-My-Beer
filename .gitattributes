@@ -169,3 +169,4 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+"Assets/Plugins/polyperfect/Poly Universal Pack/- Demo Scenes/08 Fantasy Battlefield.unity" -text -diff -merge
