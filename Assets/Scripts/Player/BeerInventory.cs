@@ -38,21 +38,16 @@ public class BeerInventory : MonoBehaviour
         }
     }
 
-    /// <summary>Removes the fullest glass so it can be handed to an enemy.</summary>
+    /// <summary>Removes the rightmost glass on the HUD, however full it is, so it can be handed to an enemy.</summary>
     /// <returns>False if the player has no beer.</returns>
-    public bool TryTakeFullest(out float fill)
+    public bool TryTakeRightmost(out float fill)
     {
         fill = 0f;
         if (!HasBeer) return false;
 
-        var fullestIndex = 0;
-        for (var i = 1; i < glasses.Count; i++)
-        {
-            if (glasses[i] > glasses[fullestIndex]) fullestIndex = i;
-        }
-
-        fill = glasses[fullestIndex];
-        glasses.RemoveAt(fullestIndex);
+        var rightmost = glasses.Count - 1;
+        fill = glasses[rightmost];
+        glasses.RemoveAt(rightmost);
         OnChanged?.Invoke();
         return true;
     }

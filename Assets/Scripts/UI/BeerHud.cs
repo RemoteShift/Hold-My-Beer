@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -14,7 +13,6 @@ public class BeerHud : MonoBehaviour
     [SerializeField] private TMP_Text feedbackText;
     [SerializeField] private float feedbackSeconds = 0.9f;
 
-    private readonly List<float> sortedGlasses = new List<float>();
     private float feedbackHideTime;
 
     private void OnEnable()
@@ -45,16 +43,14 @@ public class BeerHud : MonoBehaviour
         }
     }
 
-    // Fullest first, so the left-most glass is always the next one handed over
+    // Same order as the inventory, so the rightmost filled glass is always the next one handed over
     private void RefreshGlasses()
     {
-        sortedGlasses.Clear();
-        sortedGlasses.AddRange(inventory.Glasses);
-        sortedGlasses.Sort((a, b) => b.CompareTo(a));
+        var glasses = inventory.Glasses;
 
         for (var i = 0; i < glassFills.Length; i++)
         {
-            var fill = i < sortedGlasses.Count ? sortedGlasses[i] : 0f;
+            var fill = i < glasses.Count ? glasses[i] : 0f;
             glassFills[i].anchorMax = new Vector2(1f, fill);
         }
     }

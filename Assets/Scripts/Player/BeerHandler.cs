@@ -68,7 +68,7 @@ public class BeerHandler : MonoBehaviour
         }
         else
         {
-            inventory.TryTakeFullest(out var fill);
+            inventory.TryTakeRightmost(out var fill);
             enemy.TryReceiveBeer(fill);
             OnFeedback?.Invoke("Parried!");
         }
