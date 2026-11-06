@@ -1161,6 +1161,9 @@ MonoBehaviour:
   currentStateName: GroundedState
   rb: {fileID: 6057291999746676834}
   GroundCheck: {fileID: 2537236449888375985}
+  audioSource: {fileID: 0}
+  jumpSound: {fileID: 0}
+  walkSound: {fileID: 0}
   moveSpeed: 7
   jumpSpeed: 7
   sprintMultiplier: 1.5
