@@ -93,10 +93,10 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 116
+  m_Constraints: 0
   m_CollisionDetection: 3
 --- !u!114 &5367221099188070523
 MonoBehaviour:
@@ -110,6 +110,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b56c5229f95708d4681cd4b6ce9407f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pushable
+  slideDeceleration: 12
 --- !u!208 &2341726264575585476
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -117,7 +118,7 @@ NavMeshObstacle:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6769920313922427015}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Shape: 1
   m_Extents: {x: 0.26988715, y: 0.4782859, z: 0.248875}
