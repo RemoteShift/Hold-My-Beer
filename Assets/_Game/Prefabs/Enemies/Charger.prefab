@@ -497,6 +497,10 @@ MonoBehaviour:
   agent: {fileID: 7743911909712982342}
   target: {fileID: 0}
   maxHealth: 50
+  moveSpeed: 6
+  turnSpeed: 10
+  damage: 20
+  defense: 1
   currentHealth: 0
   detectRange: 25
   attackCooldown: 1.5
@@ -512,10 +516,9 @@ MonoBehaviour:
   glassHoldPoint: {fileID: 5364806148625730800}
   repathInterval: 0.15
   attackRange: 3.5
-  windupDuration: 0.8
-  chargeSpeed: 14
+  windupDuration: 0.5
+  chargeSpeed: 20
   chargeDistance: 10
-  damage: 20
   wallSlamDamage: 20
   hitRadius: 0.9
   hitForwardOffset: 0.6

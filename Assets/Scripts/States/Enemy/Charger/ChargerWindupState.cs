@@ -31,7 +31,7 @@ public class ChargerWindupState : EnemyState
     {
         if (!aimLocked) base.Update();
 
-        remaining -= Time.deltaTime;
+        remaining -= charger.WindupDeltaTime;
 
         if (remaining <= 0f)
         {

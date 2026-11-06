@@ -13,8 +13,7 @@ public class ChargerEnemy : EnemyBrain
     public float windupDuration = 0.8f;
     public float chargeSpeed = 14f;
     public float chargeDistance = 10f;
-    public float damage = 20f;
-    [Tooltip("Damage the charger takes for running into a wall or fixed obstacle. Pushable furniture does no damage.")]
+    [Tooltip("Damage the charger takes for running into a wall or other solid obstacle.")]
     public float wallSlamDamage = 20f;
 
     [Header("Charge Hit Detection")]
@@ -32,6 +31,8 @@ public class ChargerEnemy : EnemyBrain
     public Color chargeColor = new Color(1f, 0.25f, 0.1f);
     public Color recoverColor = new Color(0.45f, 0.45f, 0.5f);
 
+    private static readonly Collider[] HitBuffer = new Collider[16];
+
     public override void ReturnToDefaultState()
     {
         SwitchState(new ChargerChaseState(this));
@@ -40,13 +41,16 @@ public class ChargerEnemy : EnemyBrain
     /// <summary>True when the player is close enough and nothing blocks a straight run at them.</summary>
     public bool CanStartCharge()
     {
-        if (!target) return false;
+        if (!target || !CanNavigate) return false;
 
         var toTarget = target.position - transform.position;
         toTarget.y = 0f;
         if (toTarget.sqrMagnitude > attackRange * attackRange) return false;
 
-        return !agent.Raycast(target.position, out _);
+        // A player can stand just outside the baked NavMesh (or beside moved furniture).
+        // NavMesh raycasts reject that endpoint even when the player is plainly visible.
+        // Use physical visibility to start the attack; charge movement still respects NavMesh walls.
+        return CombatQuery.IsClear(transform.position, target.position, transform, target);
     }
 
     /// <summary>Damages everything in front of the charger that has not already been hit.</summary>
@@ -65,7 +69,7 @@ public class ChargerEnemy : EnemyBrain
             if (damageable == null || ReferenceEquals(damageable, this)) continue;
             if (!alreadyHit.Add(damageable)) continue;
 
-            damageable.TakeDamage(damage);
+            damageable.TakeDamage(EffectiveDamage);
             hitSomething = true;
         }
 

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public abstract class EnemyBrain : MonoBehaviour, IDamageable
@@ -15,7 +16,15 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     public Transform target;
     
     [Header("Base Stats & Detection")]
-    public float maxHealth = 100f;
+    [Min(0.01f)] public float maxHealth = 100f;
+    [Tooltip("Base navigation speed in metres/second. Music multiplies this value; it does not overwrite it.")]
+    [FormerlySerializedAs("sprintSpeed"), Min(0f)] public float moveSpeed = 4f;
+    [Tooltip("Facing interpolation rate. Independent of movement and attack speed.")]
+    [Min(0f)] public float turnSpeed = 10f;
+    [Tooltip("Base outgoing attack damage, before music buffs.")]
+    [FormerlySerializedAs("explosionDamage"), Min(0f)] public float damage = 20f;
+    [Tooltip("Incoming damage is divided by this value and the music defense multiplier.")]
+    [Min(1f)] public float defense = 1f;
     public float currentHealth;
     public float detectRange = 25f;
     public float attackCooldown = 1.5f;
@@ -43,12 +52,34 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     private Renderer _bodyRenderer;
     private Color _bodyColor = Color.white;
+    private float appliedMaxHealth;
+    public bool IsDead { get; private set; }
+    public EnemyBuffs Buffs => PianoPlayerEnemy.GetBuffs(this);
+    public float MoveSpeedMultiplier => Buffs.moveSpeed;
+    public float WindupDeltaTime => Time.deltaTime * Buffs.windupSpeed;
+    public float AttackDeltaTime => Time.deltaTime * Buffs.attackSpeed;
+    public float RecoveryDeltaTime => Time.deltaTime * Buffs.recoverySpeed;
+    public float EffectiveDamage => damage * Buffs.damage;
+    public float EffectiveMaxHealth => Mathf.Max(0.01f, maxHealth * Buffs.maxHealth);
+    public bool CanNavigate => agent && agent.isActiveAndEnabled && agent.isOnNavMesh;
+
+    /// <summary>Preserve HP percentage when capacity changes, so toggling an aura cannot heal wounds.</summary>
+    public void RefreshHealthCapacity()
+    {
+        if (IsDead) return;
+        var capacity = EffectiveMaxHealth;
+        if (appliedMaxHealth > 0f && !Mathf.Approximately(capacity, appliedMaxHealth))
+            currentHealth *= capacity / appliedMaxHealth;
+        appliedMaxHealth = capacity;
+    }
 
     protected virtual void Awake()
     {
         currentHealth = maxHealth;
+        appliedMaxHealth = Mathf.Max(0.01f, maxHealth);
 
         if (!agent) agent = GetComponent<NavMeshAgent>();
+        agent.speed = moveSpeed;
 
         _bodyRenderer = GetComponent<Renderer>();
         if (_bodyRenderer) _bodyColor = _bodyRenderer.material.color;
@@ -57,24 +88,32 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     protected virtual void Start()
     {
         agent.updateRotation = false;
-        target = LocomotionController.Instance.gameObject.transform;
+        if (!target)
+        {
+            var player = FindFirstObjectByType<LocomotionController>();
+            if (player) target = player.transform;
+        }
         ReturnToDefaultState();
     }
 
     protected void Update()
     {
+        if (IsDead) return;
+        RefreshHealthCapacity();
+        agent.speed = Mathf.Max(0f, moveSpeed) * Buffs.moveSpeed;
         currentState?.Update();
     }
 
     protected void FixedUpdate()
     {
-        currentState?.FixedUpdate();
+        if (!IsDead) currentState?.FixedUpdate();
     }
 
     #region State Machine Logic
 
     public void SwitchState(EnemyState newState)
     {
+        if (IsDead && newState != null) return;
         currentState?.Exit();
         currentState = newState;
         currentState?.Enter();
@@ -88,7 +127,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     #region Beer
 
-    public bool CanBeBeered => currentState != null && currentState.IsAttacking;
+    public bool CanBeBeered => !IsDead && isActiveAndEnabled && currentState != null && currentState.IsAttacking;
     public bool IsBeered => currentState is EnemyBeeredState;
 
     /// <summary>Beer left in the glass this enemy is holding, from 0 to 1.</summary>
@@ -99,7 +138,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     /// <returns>False if the enemy isn't attacking, so the glass stays with the player.</returns>
     public bool TryReceiveBeer(float fill)
     {
-        if (!CanBeBeered) return false;
+        if (!CanBeBeered || fill <= 0f || float.IsNaN(fill)) return false;
+        fill = Mathf.Clamp01(fill);
 
         SwitchState(new EnemyBeeredState(this, fill, currentState));
         return true;
@@ -174,7 +214,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public virtual void PathfindToTarget()
     {
-        if (!target || !agent.isActiveAndEnabled) return;
+        if (!target || !CanNavigate) return;
 
         agent.isStopped = false;
 
@@ -187,7 +227,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public virtual void StopPathfinding()
     {
-        if (agent.isActiveAndEnabled)
+        if (CanNavigate)
         {
             agent.isStopped = true;
             agent.ResetPath();
@@ -205,7 +245,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         if (dir != Vector3.zero)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 
-                Time.deltaTime * 10f);
+                Time.deltaTime * turnSpeed * Buffs.turnSpeed);
         }
     }
 
@@ -214,12 +254,16 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     #region IDamageable Implementation
 
     /// <summary>Health remaining, from 0 to 1.</summary>
-    public float HealthFraction => Mathf.Clamp01(currentHealth / maxHealth);
+    public float HealthFraction
+    {
+        get { RefreshHealthCapacity(); return Mathf.Clamp01(currentHealth / EffectiveMaxHealth); }
+    }
 
     public virtual void TakeDamage(float damage)
     {
-        Debug.Log("Enemy took damage: " + damage);
-        currentHealth -= damage;
+        if (IsDead || damage <= 0f) return;
+        RefreshHealthCapacity();
+        currentHealth -= damage / (Mathf.Max(1f, defense) * Buffs.defense);
 
         StartCoroutine(BlinkRed());
         
@@ -251,9 +295,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
         if (agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
-            if (NavMesh.SamplePosition(desiredPosition, out var navHit, distance, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(desiredPosition, out var navHit, distance, agent.areaMask))
             {
-                agent.Warp(navHit.position);
+                // Stop at walls instead of warping through them during a shove.
+                var end = agent.Raycast(navHit.position, out var obstruction) ? obstruction.position : navHit.position;
+                agent.Warp(end);
                 return;
             }
         }
@@ -263,6 +309,10 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     
     public virtual void Die()
     {
+        if (IsDead) return;
+        IsDead = true;
+        StopPathfinding();
+        SwitchState(null);
         Destroy(gameObject);
     }
     
@@ -292,13 +342,4 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     #endregion
     
-    #region Gizmos
-
-    protected virtual void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, detectRange);
-    }
-
-    #endregion
 }
