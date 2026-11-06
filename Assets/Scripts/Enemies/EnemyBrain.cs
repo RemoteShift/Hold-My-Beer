@@ -38,7 +38,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     private float repathInterval = 0.15f;
     private float _nextRepathTime;
 
-    private static readonly Collider[] PushHitBuffer = new Collider[16];
+    /// <summary>Shared by non-allocating overlap checks. Only valid until the next check runs.</summary>
+    protected static readonly Collider[] OverlapBuffer = new Collider[16];
 
     private Renderer _bodyRenderer;
     private Color _bodyColor = Color.white;
@@ -130,14 +131,14 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     public bool StunEnemiesAhead(Vector3 direction)
     {
         var center = transform.position + direction * pushHitForwardOffset;
-        var count = Physics.OverlapSphereNonAlloc(center, pushHitRadius, PushHitBuffer, ~0,
+        var count = Physics.OverlapSphereNonAlloc(center, pushHitRadius, OverlapBuffer, ~0,
             QueryTriggerInteraction.Ignore);
 
         var hitEnemy = false;
 
         for (var i = 0; i < count; i++)
         {
-            var other = PushHitBuffer[i].GetComponentInParent<EnemyBrain>();
+            var other = OverlapBuffer[i].GetComponentInParent<EnemyBrain>();
             if (!other || other == this) continue;
 
             other.Stun();

@@ -38,7 +38,7 @@ public class PushHandler : MonoBehaviour
 
     private void Update()
     {
-        Prompt = BuildPrompt(aim.FindAimedCollider());
+        Prompt = Time.time < nextPushTime ? string.Empty : BuildPrompt(aim.FindAimedCollider());
     }
 
     private void HandlePushPressed()

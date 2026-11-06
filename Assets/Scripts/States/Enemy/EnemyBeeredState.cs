@@ -8,7 +8,6 @@ using UnityEngine;
 public class EnemyBeeredState : EnemyState
 {
     private const float EmptyGlassHeight = 0.35f;
-    private const float BlockedDistanceRatio = 0.25f;
 
     private readonly EnemyState interruptedAttack;
     private GameObject heldGlass;
@@ -74,8 +73,7 @@ public class EnemyBeeredState : EnemyState
             return;
         }
 
-        // Speed that comes to rest exactly at the end of the distance left
-        var speed = Mathf.Sqrt(2f * enemy.pushSlideDeceleration * slideDistanceLeft);
+        var speed = SlideMotion.SpeedToStopWithin(slideDistanceLeft, enemy.pushSlideDeceleration);
         var step = Mathf.Min(speed * Time.deltaTime, slideDistanceLeft);
         var before = enemy.transform.position;
 
@@ -88,7 +86,7 @@ public class EnemyBeeredState : EnemyState
         enemy.agent.Move(slideDirection * step);
 
         var moved = Vector3.Distance(before, enemy.transform.position);
-        slideDistanceLeft = moved < step * BlockedDistanceRatio ? 0f : slideDistanceLeft - moved;
+        slideDistanceLeft = SlideMotion.IsBlocked(moved, step) ? 0f : slideDistanceLeft - moved;
     }
 
     /// <summary>Unbeers the enemy: their attack resumes and the caller gets the remaining beer.</summary>

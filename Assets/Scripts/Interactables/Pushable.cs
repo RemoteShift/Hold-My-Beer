@@ -7,8 +7,6 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Pushable : MonoBehaviour
 {
-    private const float BlockedDistanceRatio = 0.2f;
-
     [Tooltip("How quickly a shoved piece slows down, in metres per second per second.")]
     [SerializeField, Min(0.1f)] private float slideDeceleration = 12f;
 
@@ -49,16 +47,13 @@ public class Pushable : MonoBehaviour
         lastPosition = body.position;
         distanceLeft -= moved;
 
-        var blocked = expectedStep > 0f && moved < expectedStep * BlockedDistanceRatio;
-
-        if (distanceLeft <= 0f || blocked)
+        if (distanceLeft <= 0f || SlideMotion.IsBlocked(moved, expectedStep))
         {
             StopSliding();
             return;
         }
 
-        // Speed that comes to rest exactly at the end of the distance left
-        var speed = Mathf.Sqrt(2f * slideDeceleration * distanceLeft);
+        var speed = SlideMotion.SpeedToStopWithin(distanceLeft, slideDeceleration);
         body.linearVelocity = slideDirection * speed;
         expectedStep = speed * Time.fixedDeltaTime;
     }

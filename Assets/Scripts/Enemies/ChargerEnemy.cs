@@ -20,17 +20,17 @@ public class ChargerEnemy : EnemyBrain
     [Header("Charge Hit Detection")]
     [SerializeField] private float hitRadius = 0.9f;
     [SerializeField] private float hitForwardOffset = 0.6f;
-    [SerializeField] private float pushableCheckRadius = 0.35f;
-    [SerializeField] private float pushableCheckForwardOffset = 0.65f;
+    [Tooltip("Slightly under the agent radius, so walls running alongside the charge don't count as ahead.")]
+    [SerializeField] private float pushableCheckRadius = 0.45f;
+    [SerializeField] private float pushableCheckDistance = 0.65f;
     [SerializeField] private float pushableCheckHeight = 1.5f;
+    [SerializeField] private float pushableCheckFloorClearance = 0.05f;
 
     [Header("Placeholder Colors")]
     public Color chaseColor = new Color(0.75f, 0.35f, 0.2f);
     public Color windupColor = new Color(1f, 0.8f, 0.1f);
     public Color chargeColor = new Color(1f, 0.25f, 0.1f);
     public Color recoverColor = new Color(0.45f, 0.45f, 0.5f);
-
-    private static readonly Collider[] HitBuffer = new Collider[16];
 
     public override void ReturnToDefaultState()
     {
@@ -54,13 +54,13 @@ public class ChargerEnemy : EnemyBrain
     public bool HitTargetsInFront(HashSet<IDamageable> alreadyHit)
     {
         var center = transform.position + transform.forward * hitForwardOffset;
-        var count = Physics.OverlapSphereNonAlloc(center, hitRadius, HitBuffer, ~0, QueryTriggerInteraction.Ignore);
+        var count = Physics.OverlapSphereNonAlloc(center, hitRadius, OverlapBuffer, ~0, QueryTriggerInteraction.Ignore);
 
         var hitSomething = false;
 
         for (var i = 0; i < count; i++)
         {
-            var damageable = HitBuffer[i].GetComponentInParent<IDamageable>();
+            var damageable = OverlapBuffer[i].GetComponentInParent<IDamageable>();
 
             if (damageable == null || ReferenceEquals(damageable, this)) continue;
             if (!alreadyHit.Add(damageable)) continue;
@@ -72,22 +72,18 @@ public class ChargerEnemy : EnemyBrain
         return hitSomething;
     }
 
-    /// <summary>True if the thing the charger just ran into is pushable furniture rather than something fixed.</summary>
+    /// <summary>True if the first thing in the charger's path is pushable furniture rather than something fixed.</summary>
     public bool IsPushableAhead()
     {
         var feet = transform.position - Vector3.up * agent.baseOffset;
-        var bottom = feet + transform.forward * pushableCheckForwardOffset + Vector3.up * pushableCheckRadius;
+        var bottom = feet + Vector3.up * (pushableCheckRadius + pushableCheckFloorClearance);
         var top = bottom + Vector3.up * pushableCheckHeight;
 
-        var count = Physics.OverlapCapsuleNonAlloc(bottom, top, pushableCheckRadius, HitBuffer, ~0,
-            QueryTriggerInteraction.Ignore);
+        // Leaves out the enemy layer so the sweep can't stop on the charger's own body
+        var hitSomething = Physics.CapsuleCast(bottom, top, pushableCheckRadius, transform.forward, out var hit,
+            pushableCheckDistance, ~(1 << gameObject.layer), QueryTriggerInteraction.Ignore);
 
-        for (var i = 0; i < count; i++)
-        {
-            if (HitBuffer[i].GetComponentInParent<Pushable>()) return true;
-        }
-
-        return false;
+        return hitSomething && hit.collider.GetComponentInParent<Pushable>();
     }
 
     protected override void OnDrawGizmosSelected()
