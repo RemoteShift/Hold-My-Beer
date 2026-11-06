@@ -827,7 +827,7 @@ MonoBehaviour:
   LookInput: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   MoveInput: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   JumpInput: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  SprintInput: {fileID: 0}
+  SprintInput: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   BeerInput: {fileID: 1903506563957944628, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   InteractInput: {fileID: -5548793354506133487, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1 &6018976102791478332

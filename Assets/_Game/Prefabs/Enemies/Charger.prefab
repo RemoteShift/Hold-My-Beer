@@ -442,11 +442,11 @@ GameObject:
   m_Component:
   - component: {fileID: 5261584698294753236}
   - component: {fileID: 4495818357912655121}
+  - component: {fileID: 8265806511141487425}
   - component: {fileID: 7548513925694331984}
   - component: {fileID: 8013798487332934505}
   - component: {fileID: 1046323363494080274}
   - component: {fileID: 7743911909712982342}
-  - component: {fileID: 8265806511141487425}
   m_Layer: 6
   m_Name: Charger
   m_TagString: Untagged
@@ -481,6 +481,43 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3205548381316009203}
   m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &8265806511141487425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3205548381316009203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ede1f9056dde4e4fb981fc32e22fc64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChargerEnemy
+  currentStateName: 
+  agent: {fileID: 7743911909712982342}
+  target: {fileID: 0}
+  maxHealth: 50
+  currentHealth: 0
+  detectRange: 25
+  attackCooldown: 1.5
+  stunDuration: 0.5
+  fullBeerFreezeSeconds: 3
+  beeredColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
+  heldGlassPrefab: {fileID: 8049199679787095025, guid: 1795783f24a48fd49a258ac89a798172, type: 3}
+  glassHoldPoint: {fileID: 5364806148625730800}
+  repathInterval: 0.15
+  attackRange: 3.5
+  windupDuration: 0.8
+  chargeSpeed: 14
+  chargeDistance: 10
+  damage: 20
+  wallSlamDamage: 20
+  hitRadius: 0.9
+  hitForwardOffset: 0.6
+  chaseColor: {r: 0.75, g: 0.35, b: 0.2, a: 1}
+  windupColor: {r: 1, g: 0.8, b: 0.1, a: 1}
+  chargeColor: {r: 1, g: 0.25, b: 0.1, a: 1}
+  recoverColor: {r: 0.45, g: 0.45, b: 0.5, a: 1}
 --- !u!136 &7548513925694331984
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -602,42 +639,6 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &8265806511141487425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3205548381316009203}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ede1f9056dde4e4fb981fc32e22fc64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChargerEnemy
-  currentStateName: 
-  agent: {fileID: 7743911909712982342}
-  target: {fileID: 0}
-  maxHealth: 100
-  currentHealth: 0
-  detectRange: 25
-  attackCooldown: 1.5
-  stunDuration: 0.5
-  fullBeerFreezeSeconds: 3
-  beeredColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
-  heldGlassPrefab: {fileID: 8049199679787095025, guid: 1795783f24a48fd49a258ac89a798172, type: 3}
-  glassHoldPoint: {fileID: 5364806148625730800}
-  repathInterval: 0.15
-  attackRange: 3.5
-  windupDuration: 0.8
-  chargeSpeed: 14
-  chargeDistance: 10
-  damage: 20
-  hitRadius: 0.9
-  hitForwardOffset: 0.6
-  chaseColor: {r: 0.75, g: 0.35, b: 0.2, a: 1}
-  windupColor: {r: 1, g: 0.8, b: 0.1, a: 1}
-  chargeColor: {r: 1, g: 0.25, b: 0.1, a: 1}
-  recoverColor: {r: 0.45, g: 0.45, b: 0.5, a: 1}
 --- !u!1 &4717544498026066332
 GameObject:
   m_ObjectHideFlags: 0
