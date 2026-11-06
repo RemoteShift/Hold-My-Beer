@@ -508,7 +508,7 @@ MonoBehaviour:
   stunnedColor: {r: 0.45, g: 0.6, b: 1, a: 1}
   fullBeerFreezeSeconds: 3
   beeredColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
-  pushWeight: 10
+  mass: 10
   pushSlideDeceleration: 12
   pushHitRadius: 0.35
   pushHitForwardOffset: 0.5

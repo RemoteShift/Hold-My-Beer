@@ -58,13 +58,13 @@ public class ChargerEnemy : EnemyBrain
     public bool HitTargetsInFront(HashSet<IDamageable> alreadyHit)
     {
         var center = transform.position + transform.forward * hitForwardOffset;
-        var count = Physics.OverlapSphereNonAlloc(center, hitRadius, OverlapBuffer, ~0, QueryTriggerInteraction.Ignore);
+        var count = Physics.OverlapSphereNonAlloc(center, hitRadius, HitBuffer, ~0, QueryTriggerInteraction.Ignore);
 
         var hitSomething = false;
 
         for (var i = 0; i < count; i++)
         {
-            var damageable = OverlapBuffer[i].GetComponentInParent<IDamageable>();
+            var damageable = HitBuffer[i].GetComponentInParent<IDamageable>();
 
             if (damageable == null || ReferenceEquals(damageable, this)) continue;
             if (!alreadyHit.Add(damageable)) continue;
@@ -87,17 +87,7 @@ public class ChargerEnemy : EnemyBrain
         var hitSomething = Physics.CapsuleCast(bottom, top, pushableCheckRadius, transform.forward, out var hit,
             pushableCheckDistance, ~(1 << gameObject.layer), QueryTriggerInteraction.Ignore);
 
-        return hitSomething && hit.collider.GetComponentInParent<Pushable>();
+        return hitSomething && (hit.collider.GetComponentInParent<Pushable>() || hit.collider.GetComponentInParent<ThrowableFurniture>());
     }
 
-    protected override void OnDrawGizmosSelected()
-    {
-        base.OnDrawGizmosSelected();
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position + transform.forward * hitForwardOffset, hitRadius);
-    }
 }

@@ -1444,7 +1444,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: d91a85e7ac25c7d43b9dbf94c2ca95c7, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: dd44b993a3246182e9a714b44571184a, type: 2}
   m_BuildHeightMesh: 0
 --- !u!4 &161965957
 Transform:
@@ -3020,9 +3020,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6564302963227462502, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1414884294}
-    - targetCorrespondingSourceObject: {fileID: 6564302963227462502, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1414884295}
   m_SourcePrefab: {fileID: 100100000, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
 --- !u!1001 &556317637
 PrefabInstance:
@@ -12503,22 +12500,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1414884295
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1414884288}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ae0df05d0a31fba2a909e34673bd979, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ShoveHandler
-  range: 3
-  cooldown: 0.45
-  furnitureImpulse: 12
-  patronDistance: 2.5
 --- !u!43 &1442906247
 Mesh:
   m_ObjectHideFlags: 0

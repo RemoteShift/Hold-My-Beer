@@ -4,9 +4,9 @@
 
 Open `Assets/_Testing/Scenes/Enemy Sandbox.unity` and press Play. This is a copy of Level 1 with the original chargers, all four new enemies, a falling chandelier, and throwable chairs/stools. The original Level 1 is unchanged.
 
-Existing controls remain: LMB hands over beer during an attack; E takes it back or refills at a beer source. RMB, F, or gamepad west shoves the aimed patron or furniture. Shoving a frozen patron preserves their facing. Aim at the chandelier and shove to release it.
+Existing controls remain: LMB hands over beer during an attack; E takes it back or refills at a beer source. RMB, F, or gamepad west pushes the aimed beered patron or furniture through the unified PushHandler. Unbeered enemies cannot be player-pushed. Shoving a frozen patron preserves their facing. Aim at the chandelier and shove to release it.
 
-Prefabs live in `Assets/_Game/Prefabs/Enemies/`; reusable furniture is in `Assets/_Game/Prefabs/Combat/`. Drag enemy prefabs onto a baked NavMesh. Each has the existing health and beer timer UI and held-glass references. Add `ShoveHandler` to a player in other scenes, and `ThrowableFurniture` to chairs/stools with rigidbodies and colliders. Mark fixed hazards `canBePickedUp = false`.
+Prefabs live in `Assets/_Game/Prefabs/Enemies/`; reusable furniture is in `Assets/_Game/Prefabs/Combat/`. Drag enemy prefabs onto a baked NavMesh. Each has the existing health and beer timer UI and held-glass references. Add `PushHandler` to a player in other scenes, and `ThrowableFurniture` to chairs/stools with rigidbodies and colliders. Mark fixed hazards `canBePickedUp = false`.
 
 ## Gameplay
 
@@ -24,15 +24,15 @@ The project's first-party gameplay code is under `Assets/Scripts`:
 - `Input/InputHandler` reads Input System action references. `Movement/LocomotionController`, grounded/airborne states, ground contact tracking, and `CameraLook` provide Rigidbody-based first-person movement, sprinting, jumping, and aiming.
 - `Player/BeerInventory` stores each glass's fullness. `BeerHandler` sphere-casts from the camera and hands beer to attacking enemies, retrieves it, or refills at `Interactables/BeerSource`. UI scripts show health, inventory, context prompts, and freeze duration.
 - `Enemies/EnemyBrain` owns health, NavMesh movement, targeting, beer interaction, and state transitions. `EnemyBeeredState` holds the interrupted state object, consumes fullness, and resumes that same object. New archetypes use this existing mechanism; their timers advance only when their active state updates.
-- Charger chase/windup/charge/recovery states remain in `States/Enemy/Charger`. The four new enemies keep their compact archetype states inside their respective scripts. Separate `WindupDeltaTime`, `AttackDeltaTime`, and `RecoveryDeltaTime` apply the corresponding pianist bonuses without altering beer/fuse timers. `EnemyBrain` owns shared `moveSpeed`, `turnSpeed`, `damage`, `defense`, and health values. Navigation reads the brain's move speed each frame; tuning only NavMeshAgent.speed is no longer the source of truth.
-- `Combat/CombatQuery` handles shared blast damage deduplication and scenery occlusion. `ThrowableFurniture` owns pickup, physical release, shoving, and collision damage. `FallingChandelier` releases a suspended furniture body when damaged or shoved. `DetachFurnitureOnStart` makes the packaged piano stool independent in play.
+- Charger chase/windup/charge/recovery states remain in `States/Enemy/Charger`. The four new enemies keep their compact archetype states inside their respective scripts. Separate `WindupDeltaTime`, `AttackDeltaTime`, and `RecoveryDeltaTime` apply the corresponding pianist bonuses without altering beer/fuse timers. `EnemyBrain` owns shared `moveSpeed`, `turnSpeed`, `damage`, `defense`, health values, and enemy mass. Navigation reads the brain's move speed each frame; tuning only NavMeshAgent.speed is no longer the source of truth.
+- `Combat/CombatQuery` handles shared blast damage deduplication and scenery occlusion. `ThrowableFurniture` owns pickup, physical release, shoving, and collision damage. The merged `Pushable` floor-slide controller delegates impact damage to it and relinquishes physics control on pickup, throw, or blast. `FallingChandelier` releases a suspended furniture body when damaged or shoved. `DetachFurnitureOnStart` makes the packaged piano stool independent in play.
 - `Editor/EnemyRosterBuilder` provides **Hold My Beer > Build Enemy Prefabs** and **Create Enemy Sandbox From Current Level**. These rebuild generated assets / overwrite the sandbox; edit prefab art directly only if you do not intend to rebuild it.
 
 Third-party content is under `Assets/Plugins` (Poly Universal Pack, NaughtyAttributes, DOTween, inspector tools, sky assets) and Unity packages. Level 1 and Football are testing scenes; Persistents supplies the player/input setup. No vendor code was changed.
 
 ## Verification
 
-In Play mode, run **Hold My Beer > Run Enemy Behaviour Checks (Play Mode)**. The test harness uses the actual prefabs in an isolated region, checks their gameplay interactions, cleans up test objects, and restores the encounter enemies. Verified in Unity 6000.3.11f1: all 66 assertions passed. The checks cover locked attacks, automatic beer expiry, paused fuses, death explosions, blast occlusion and furniture falloff, held grip alignment, independent buffs, HP/defense behavior, furniture disarming/rearming, a chandelier defeating the pianist, first-step high-speed impacts, multi-collider hit deduplication, stationary-target charges at NavMesh edges, and autonomous pickup of low stools and offset-pivot furniture. Results appear as `PASS` lines and a final assertion count in the Console. Stop Play to restore the initial encounter.
+In Play mode, run **Hold My Beer > Run Enemy Behaviour Checks (Play Mode)**. The test harness uses the actual prefabs in an isolated region, checks their gameplay interactions, cleans up test objects, and restores the encounter enemies. Verified in Unity 6000.3.11f1: all 96 assertions passed. The checks cover locked attacks, automatic beer expiry, paused fuses, death explosions, blast occlusion and furniture falloff, held grip alignment, independent buffs, HP/defense behavior, furniture disarming/rearming, a chandelier defeating the pianist, first-step high-speed impacts, multi-collider hit deduplication, stationary-target charges at NavMesh edges, and autonomous pickup of low stools and offset-pivot furniture, completed push cleanup, tiny knockback cleanup, and resumed pursuit after pushing. Results appear as `PASS` lines and a final assertion count in the Console. Stop Play to restore the initial encounter.
 
 ## Scene view gizmos
 
@@ -67,3 +67,20 @@ Every row under **Music Buffs** has its own checkbox and multiplier. Disabled ef
 | Max Health | Effective maximum HP; both current/max HP scale together when added or removed |
 
 HP percentage is preserved across aura changes, so entering/exiting or toggling HP cannot heal existing wounds. Defense and HP are separate effects. Beer/fuse countdowns and the music playback rate are never sped up by these settings. Existing project tuning was migrated to the shared stats; rebuilding prefabs from the menu deliberately restores builder defaults.
+
+
+## Shared enemy mass and merged pushing
+
+Every enemy inherits **Push Physics > Mass** from `EnemyBrain`. NavMesh enemies use this value as the authoritative mass; they do not need a dynamic Rigidbody. Existing `pushWeight` data migrates to `mass` automatically.
+
+Unobstructed push travel in metres is `pushStrength / mass`. Strength 30 moves mass 5 by 6 metres and mass 50 by 0.6 metres. Shared slide deceleration controls the slide's timing, not this distance ratio. Obstacles and other patrons can stop a slide early. Direction is normalized so looking/passing a longer vector does not increase force. Zero-strength pushes are ignored, and repeat input during an active slide is rejected.
+
+The motion is owned by `EnemyBrain` for every archetype. A beered push keeps the frozen pose and consumes beer normally; taking the beer back does not teleport or reset the slide. Explosion knockback uses the same inverse-mass rule, without requiring the victim to be beered. Pushed patrons stun enemies in their path. Stuns interrupt normal attacks but do not replace a beer freeze; a lit keg continues burning while stunned.
+
+There is one input/cooldown owner: `PushHandler` uses the merged `InputHandler.OnPushPressed` action and `PlayerAim`. **Hold My Beer > Repair Merged Push References** repairs first-party prefab/test-scene component and HUD wiring without rebuilding enemy artwork or resetting tuning.
+
+`Pushable` furniture keeps its Rigidbody mass, uses the merged slide behavior, and shares `ThrowableFurniture` damage/holding logic. Picking up or blasting it cancels the floor slide so it cannot overwrite thrown velocity. Furniture returns to its pre-slide dynamic/kinematic mode rather than always becoming frozen. Non-damageable contact still disarms collision damage as before.
+
+The Enemy Sandbox has its own baked NavMesh asset in `Assets/_Testing/Scenes/Enemy Sandbox/`. Keep that asset and its `.meta` in version control with the scene. Rebake the NavMesh Surface after changing walkable level geometry. Shared enemy push movement clears sub-millimetre remaining distances so rounding cannot leave navigation locked.
+
+Player `PushHandler > Enemy Push Impact Damage` controls damage per enemy collision (default 20, before defense). Walls damage and stun the pushed enemy; enemy collisions damage and stun both patrons once. Stun duration uses each enemy’s shared `Stun Duration`. A beered impact victim retains its glass and attack pose, and its beer timer pauses during the stun. Taking back the beer does not remove the remaining stun. Navigation boundaries without physical obstacles do not cause impact damage.

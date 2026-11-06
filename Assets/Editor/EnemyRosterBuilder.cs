@@ -175,7 +175,7 @@ public static class EnemyRosterBuilder
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), path, true);
         var scene = EditorSceneManager.OpenScene(path);
         var player = Object.FindFirstObjectByType<LocomotionController>();
-        if (player && !player.GetComponent<ShoveHandler>()) player.gameObject.AddComponent<ShoveHandler>();
+        if (player && !player.GetComponent<PushHandler>()) player.gameObject.AddComponent<PushHandler>();
         foreach (var body in Object.FindObjectsByType<Rigidbody>(FindObjectsSortMode.None))
         {
             var propName = body.name.ToLowerInvariant();

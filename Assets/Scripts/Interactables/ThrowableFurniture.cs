@@ -16,6 +16,8 @@ public class ThrowableFurniture : MonoBehaviour
     public Vector3 heldRotationOffset;
 
     public bool IsHeld => holder;
+    public bool IsAvailableForPickup => isActiveAndEnabled && canBePickedUp && !IsHeld && Body &&
+        (!Body.isKinematic || GetComponent<Pushable>());
     public bool IsDangerous { get; private set; }
     public Rigidbody Body { get; private set; }
     private EnemyBrain holder;
@@ -58,6 +60,7 @@ public class ThrowableFurniture : MonoBehaviour
     public bool TryHold(EnemyBrain owner, Transform point)
     {
         if (!canBePickedUp || IsHeld || !owner || !point || !isActiveAndEnabled) return false;
+        GetComponent<Pushable>()?.ReleaseToPhysics();
         holder = owner; holdPoint = point;
         IsDangerous = false;
         pendingVelocityChange = Vector3.zero;
@@ -137,7 +140,9 @@ public class ThrowableFurniture : MonoBehaviour
 
     public void Shove(Vector3 impulse)
     {
-        if (IsHeld || Body.isKinematic) return;
+        if (IsHeld) return;
+        GetComponent<Pushable>()?.ReleaseToPhysics();
+        if (Body.isKinematic) return;
         thrower = null;
         Arm(impactDamage);
         TrackPendingImpulse(impulse / Body.mass);
@@ -146,12 +151,20 @@ public class ThrowableFurniture : MonoBehaviour
 
     public void ApplyBlast(Vector3 velocityChange)
     {
-        if (IsHeld || Body.isKinematic || velocityChange.sqrMagnitude <= 0f) return;
+        if (IsHeld || velocityChange.sqrMagnitude <= 0f) return;
+        GetComponent<Pushable>()?.ReleaseToPhysics();
+        if (Body.isKinematic) return;
         thrower = null;
         Arm(impactDamage);
         Body.WakeUp();
         TrackPendingImpulse(velocityChange);
         Body.AddForce(velocityChange, ForceMode.VelocityChange);
+    }
+
+    public void SetSlideVelocity(Vector3 velocity)
+    {
+        Body.linearVelocity = velocity;
+        speedBeforePhysics = velocity.magnitude;
     }
 
     private void TrackPendingImpulse(Vector3 velocityChange)

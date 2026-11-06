@@ -1,83 +1,70 @@
 using System;
 using UnityEngine;
 
-/// <summary>Shoves the furniture or beered enemy the player is looking at, away from them.</summary>
+/// <summary>One input/cooldown path for furniture, chandeliers, and beered patrons.</summary>
 [RequireComponent(typeof(PlayerAim))]
+[DisallowMultipleComponent]
 public class PushHandler : MonoBehaviour
 {
-    [Tooltip("Shove distance is this divided by the object's weight.")]
+    [Tooltip("Enemy/slide travel = strength divided by mass.")]
     [SerializeField, Min(0f)] private float pushStrength = 30f;
-    [Tooltip("Seconds after a successful push before the player can push again.")]
     [SerializeField, Min(0f)] private float pushCooldown = 1f;
-
-    /// <summary>What the player can push right now. Empty if nothing.</summary>
+    [Tooltip("Damage dealt to the pushed enemy and any enemy it hits. Wall hits damage the pushed enemy once.")]
+    [SerializeField, Min(0f)] private float enemyPushImpactDamage = 20f;
     public string Prompt { get; private set; } = string.Empty;
-
-    /// <summary>Raised with a short message saying how a press turned out.</summary>
     public event Action<string> OnFeedback;
-
     private PlayerAim aim;
     private InputHandler input;
     private float nextPushTime;
 
-    private void Awake()
-    {
-        aim = GetComponent<PlayerAim>();
-    }
-
+    private void Awake() { aim = GetComponent<PlayerAim>(); }
     private void OnEnable()
     {
         input = InputHandler.Instance;
         input.OnPushPressed += HandlePushPressed;
     }
+    private void OnDisable() { if (input) input.OnPushPressed -= HandlePushPressed; }
+    private void Update() { Prompt = Time.time < nextPushTime ? string.Empty : BuildPrompt(aim.FindAimedCollider()); }
+    private void HandlePushPressed() { TryPushAimed(); }
 
-    private void OnDisable()
+    public bool TryPushAimed()
     {
-        if (input) input.OnPushPressed -= HandlePushPressed;
-    }
-
-    private void Update()
-    {
-        Prompt = Time.time < nextPushTime ? string.Empty : BuildPrompt(aim.FindAimedCollider());
-    }
-
-    private void HandlePushPressed()
-    {
-        if (Time.time < nextPushTime) return;
-
-        var pushable = aim.FindAimed<Pushable>();
-        if (pushable)
+        if (Time.time < nextPushTime) return false;
+        var hit = aim.FindAimedCollider();
+        if (!hit) return false;
+        var enemy = hit.GetComponentInParent<EnemyBrain>();
+        var succeeded = false;
+        if (enemy)
         {
-            if (pushable.TryPush(aim.FlatForward, pushStrength)) StartCooldown();
-            return;
-        }
-
-        var enemy = aim.FindAimed<EnemyBrain>();
-        if (!enemy) return;
-
-        if (enemy.TryPush(aim.FlatForward, pushStrength))
-        {
-            StartCooldown();
+            succeeded = enemy.TryPush(aim.FlatForward, pushStrength, enemyPushImpactDamage);
+            if (!succeeded) OnFeedback?.Invoke(enemy.IsBeingPushed ? "Already sliding" : "Only beered enemies");
         }
         else
         {
-            OnFeedback?.Invoke("Only beered enemies");
+            var chandelier = hit.GetComponentInParent<FallingChandelier>();
+            var pushable = hit.GetComponentInParent<Pushable>();
+            var furniture = hit.GetComponentInParent<ThrowableFurniture>();
+            if (chandelier) { chandelier.Drop(); succeeded = true; }
+            else if (pushable) succeeded = pushable.TryPush(aim.FlatForward, pushStrength);
+            else if (furniture && !furniture.IsHeld && !furniture.Body.isKinematic)
+            {
+                furniture.Shove((aim.FlatForward + Vector3.up * 0.15f).normalized * pushStrength);
+                succeeded = true;
+            }
         }
-    }
-
-    private void StartCooldown()
-    {
-        nextPushTime = Time.time + pushCooldown;
+        if (succeeded) nextPushTime = Time.time + pushCooldown;
+        return succeeded;
     }
 
     private static string BuildPrompt(Collider aimed)
     {
         if (!aimed) return string.Empty;
-
-        var pushable = aimed.GetComponentInParent<Pushable>();
-        if (pushable) return pushable.IsSliding ? string.Empty : "[RMB] Push";
-
         var enemy = aimed.GetComponentInParent<EnemyBrain>();
-        return enemy && enemy.IsBeered ? "[RMB] Push" : string.Empty;
+        if (enemy) return enemy.IsBeered && !enemy.IsBeingPushed && !enemy.IsImpactStunned ? "[RMB] Push" : string.Empty;
+        if (aimed.GetComponentInParent<FallingChandelier>()) return "[RMB] Drop chandelier";
+        var pushable = aimed.GetComponentInParent<Pushable>();
+        if (pushable) return pushable.CanPush ? "[RMB] Push" : string.Empty;
+        var furniture = aimed.GetComponentInParent<ThrowableFurniture>();
+        return furniture && !furniture.IsHeld && !furniture.Body.isKinematic ? "[RMB] Push" : string.Empty;
     }
 }

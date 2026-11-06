@@ -29,12 +29,15 @@ public class PowderKegEnemy : EnemyBrain
         // Mark dead before damaging neighbours: chain reactions must not re-enter this explosion.
         base.Die();
         CombatQuery.DamageArea(this, transform.position, explosionRadius, blastDamage,
-            new HashSet<IDamageable>(), 360f, 2f);
+            new HashSet<IDamageable>(), 360f, 20f);
         var pushedBodies = new HashSet<Rigidbody>();
         foreach (var c in Physics.OverlapSphere(transform.position, explosionRadius))
         {
             var body = c.attachedRigidbody;
-            if (!body || body.isKinematic || !pushedBodies.Add(body)) continue;
+            if (!body || !pushedBodies.Add(body)) continue;
+            var pushable = body.GetComponent<Pushable>();
+            if (pushable && !body.GetComponent<ThrowableFurniture>().IsHeld) pushable.ReleaseToPhysics();
+            if (body.isKinematic) continue;
             if (body.GetComponentInParent<EnemyBrain>() || body.GetComponentInParent<PlayerHealth>()) continue;
             var offset = body.worldCenterOfMass - transform.position;
             var falloff = Mathf.Pow(Mathf.Clamp01(1f - offset.magnitude / Mathf.Max(0.01f, explosionRadius)), furnitureBlastFalloff);
@@ -57,6 +60,18 @@ public class PowderKegEnemy : EnemyBrain
         Destroy(flash, 0.12f);
     }
 
+    protected override void Update()
+    {
+        base.Update();
+        if (!IsLit || IsBeered || IsDead) return;
+        // Stuns interrupt movement, but only beer pauses an already lit fuse.
+        FuseRemaining = Mathf.Max(0f, FuseRemaining - Time.deltaTime);
+        if (fuseVisual)
+            fuseVisual.localScale = new Vector3(1f, Mathf.Max(0.02f, FuseRemaining / fuseSeconds), 1f);
+        if (fuseLight) fuseLight.intensity = 1f + Mathf.PingPong(FuseRemaining * 12f, 3f);
+        if (FuseRemaining <= 0f) { Explode(); return; }
+    }
+
     private sealed class FuseState : EnemyState
     {
         private readonly PowderKegEnemy keg;
@@ -73,12 +88,6 @@ public class PowderKegEnemy : EnemyBrain
                 if (!keg.CanSeeTarget()) return;
                 keg.IsLit = true; keg.FuseRemaining = keg.fuseSeconds;
             }
-            // Real seconds, unaffected by music. Only this state burns the fuse; beer suspends it.
-            keg.FuseRemaining = Mathf.Max(0f, keg.FuseRemaining - Time.deltaTime);
-            if (keg.fuseVisual)
-                keg.fuseVisual.localScale = new Vector3(1f, Mathf.Max(0.02f, keg.FuseRemaining / keg.fuseSeconds), 1f);
-            if (keg.fuseLight) keg.fuseLight.intensity = 1f + Mathf.PingPong(keg.FuseRemaining * 12f, 3f);
-            if (keg.FuseRemaining <= 0f) { keg.Explode(); return; }
             keg.LookAtTarget(); keg.PathfindToTarget();
         }
     }

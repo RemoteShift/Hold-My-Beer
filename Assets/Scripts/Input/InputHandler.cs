@@ -70,7 +70,8 @@ public class InputHandler : Singleton<InputHandler>
         if (InteractInput && InteractInput.action.WasPressedThisFrame())
             OnInteractPressed?.Invoke();
 
-        if (PushInput && PushInput.action.WasPressedThisFrame())
+        var pushPressed = PushInput ? PushInput.action.WasPressedThisFrame() : Mouse.current?.rightButton.wasPressedThisFrame == true;
+        if (pushPressed || Keyboard.current?.fKey.wasPressedThisFrame == true || Gamepad.current?.buttonWest.wasPressedThisFrame == true)
             OnPushPressed?.Invoke();
     }
 

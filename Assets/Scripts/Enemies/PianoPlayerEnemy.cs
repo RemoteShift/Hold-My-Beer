@@ -26,7 +26,7 @@ public class PianoPlayerEnemy : EnemyBrain
     public AudioSource music;
     public Transform leftHand;
     public Transform rightHand;
-    public bool IsPlayingMusic => isActiveAndEnabled && !IsDead && CurrentState is PlayingState;
+    public bool IsPlayingMusic => isActiveAndEnabled && !IsDead && !IsImpactStunned && CurrentState is PlayingState;
 
     private void OnEnable() { Players.Add(this); }
     private void OnDisable() { Players.Remove(this); if (music) music.Pause(); }

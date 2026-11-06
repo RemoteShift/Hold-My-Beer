@@ -31,7 +31,7 @@ public static class EnemyRangeGizmos
             Arrow(origin, origin + forward * 1.5f, Color.white);
             var status = enemy.IsBeered ? $"BEERED — {enemy.BeerSecondsLeft:0.0}s" :
                 enemy.CurrentState != null ? enemy.CurrentState.GetType().Name : "Facing";
-            Label(origin + Vector3.up * 2.5f, enemy.name + "\n" + status, enemy.IsBeered ? Attack : Color.white);
+            Label(origin + Vector3.up * 2.5f, enemy.name + "\n" + status + $"\nMass {enemy.mass:0.##}", enemy.IsBeered ? Attack : Color.white);
 
             switch (enemy)
             {

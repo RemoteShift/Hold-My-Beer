@@ -531,13 +531,21 @@ MonoBehaviour:
   agent: {fileID: 3226609710992607921}
   target: {fileID: 0}
   maxHealth: 40
-  currentHealth: 0
   moveSpeed: 4
+  turnSpeed: 10
+  damage: 30
+  defense: 1
+  currentHealth: 0
   detectRange: 25
   attackCooldown: 1.5
   stunDuration: 0.5
+  stunnedColor: {r: 0.45, g: 0.6, b: 1, a: 1}
   fullBeerFreezeSeconds: 3
   beeredColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
+  mass: 8
+  pushSlideDeceleration: 12
+  pushHitRadius: 0.35
+  pushHitForwardOffset: 0.5
   heldGlassPrefab: {fileID: 8049199679787095025, guid: 1795783f24a48fd49a258ac89a798172, type: 3}
   glassHoldPoint: {fileID: 1163442500790871165}
   repathInterval: 0.15
@@ -548,7 +556,6 @@ MonoBehaviour:
   throwRange: 14
   chargeSeconds: 1
   flightSeconds: 0.8
-  damage: 30
 --- !u!136 &7368676114869092657
 CapsuleCollider:
   m_ObjectHideFlags: 0

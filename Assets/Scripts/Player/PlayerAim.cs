@@ -12,10 +12,17 @@ public class PlayerAim : MonoBehaviour
     private int aimedFrame = -1;
 
     /// <summary>
-    /// The way the player is facing along the floor. Comes from the player's yaw rather than
-    /// the camera, which has no flat direction when looking straight down.
+    /// Camera aim projected along the floor. Falls back to player yaw when looking straight down.
     /// </summary>
-    public Vector3 FlatForward => transform.forward;
+    public Vector3 FlatForward
+    {
+        get
+        {
+            var camera = Camera.main;
+            var forward = Vector3.ProjectOnPlane(camera ? camera.transform.forward : transform.forward, Vector3.up);
+            return forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        }
+    }
 
     public T FindAimed<T>() where T : Component
     {

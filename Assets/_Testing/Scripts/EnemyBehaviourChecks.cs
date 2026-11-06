@@ -373,6 +373,150 @@ public class EnemyBehaviourChecks : MonoBehaviour
         while (!offsetCollector.HeldChair && Time.time < deadline) yield return null;
         Assert(offsetCollector.HeldChair == offsetStool, "Furniture search and pickup use reachable collider geometry instead of the root pivot");
         offsetCollector.gameObject.SetActive(false);
+        var mergeChecks = CheckMergedPushes(centre.position, stationaryTarget.transform);
+        while (mergeChecks.MoveNext()) yield return mergeChecks.Current;
+    }
+
+    private IEnumerator CheckMergedPushes(Vector3 centre, Transform target)
+    {
+        var light = Spawn<ChargerEnemy>("Charger", centre + new Vector3(-4f, 1f, -3f), target);
+        var heavy = Spawn<ChargerEnemy>("Charger", centre + new Vector3(-4f, 1f, 3f), target);
+        light.mass = 5f; heavy.mass = 50f;
+        foreach (var enemy in new[] { light, heavy })
+        {
+            enemy.detectRange = 0f; enemy.fullBeerFreezeSeconds = 20f;
+            enemy.agent.enabled = true;
+            enemy.agent.Warp(enemy.transform.position - Vector3.up);
+        }
+        yield return null;
+        Assert(!light.TryPush(Vector3.right, 30f), "Unified player push rejects an unbeered enemy");
+        foreach (var enemy in new[] { light, heavy })
+        {
+            enemy.SwitchState(new ChargerWindupState(enemy));
+            Assert(enemy.TryReceiveBeer(1f), "Mass test patron can be beered before pushing");
+        }
+        var lightStart = light.transform.position;
+        var heavyStart = heavy.transform.position;
+        var rotation = light.transform.rotation;
+        Assert(light.TryPush(Vector3.right * 9f, 30f) && heavy.TryPush(Vector3.right, 30f), "Common push accepts both enemy masses and normalizes direction");
+        Assert(!light.TryPush(Vector3.right, 30f), "An enemy already sliding cannot receive a duplicate input push");
+        var deadline = Time.time + 4f;
+        while ((light.IsBeingPushed || heavy.IsBeingPushed) && Time.time < deadline) yield return null;
+        Assert(!light.IsBeingPushed && !heavy.IsBeingPushed, "Completed pushes clear movement locks for both masses");
+        var lightTravel = Vector3.Distance(lightStart, light.transform.position);
+        var heavyTravel = Vector3.Distance(heavyStart, heavy.transform.position);
+        Assert(Mathf.Abs(lightTravel - 6f) < 0.05f && Mathf.Abs(heavyTravel - 0.6f) < 0.05f,
+            $"Mass 5 travels 6m while mass 50 travels 0.6m (actual {lightTravel:0.000}, {heavyTravel:0.000})");
+        Assert(light.IsBeered && light.BeerFill < 1f && Quaternion.Angle(rotation, light.transform.rotation) < 0.01f,
+            "Pushed patrons keep their frozen pose while beer continues draining");
+        Assert(!heavy.TryPush(Vector3.zero, 30f) && !heavy.TryPush(Vector3.right, 0f), "Zero-direction and zero-strength pushes are rejected");
+        heavy.KnockbackFrom(heavy.transform.position - Vector3.right, 0.0005f);
+        yield return null; yield return null;
+        Assert(!heavy.IsBeingPushed && heavy.PushDistanceLeft == 0f, "Sub-millimetre pushes clear their movement lock");
+        heavy.SwitchState(new ChargerChaseState(heavy));
+        heavy.detectRange = 100f;
+        heavy.target.position = heavy.transform.position + Vector3.left * 5f;
+        var resumeStart = heavy.transform.position;
+        yield return new WaitForSeconds(0.5f);
+        Assert(Vector3.Distance(resumeStart, heavy.transform.position) > 0.1f,
+            "Enemy resumes chasing after its push and beer end");
+        light.gameObject.SetActive(false); heavy.gameObject.SetActive(false);
+
+        var slammed = Spawn<ChargerEnemy>("Charger", centre + new Vector3(-4f, 1f, -3f), target);
+        slammed.agent.enabled = true;
+        slammed.agent.Warp(slammed.transform.position - Vector3.up);
+        slammed.fullBeerFreezeSeconds = 20f;
+        slammed.stunDuration = 0.5f;
+        yield return null;
+        slammed.SwitchState(new ChargerWindupState(slammed));
+        slammed.TryReceiveBeer(1f);
+        var wall = GameObject.CreatePrimitive(PrimitiveType.Cube); created.Add(wall);
+        wall.transform.position = slammed.transform.position + Vector3.right;
+        wall.transform.localScale = new Vector3(0.2f, 3f, 3f);
+        Physics.SyncTransforms();
+        var slamHealth = slammed.currentHealth;
+        Assert(slammed.TryPush(Vector3.right, 30f, 17f), "Player-configured damage can accompany an enemy push");
+        deadline = Time.time + 2f;
+        while (slammed.IsBeingPushed && Time.time < deadline) yield return null;
+        Assert(slammed.IsImpactStunned && slammed.IsBeered && slammed.currentHealth == slamHealth - 17f,
+            "Wall impact damages and stuns the pushed enemy without removing its beer");
+        var impactFill = slammed.BeerFill;
+        yield return new WaitForSeconds(0.2f);
+        Assert(slammed.BeerFill == impactFill && slammed.currentHealth == slamHealth - 17f,
+            "Wall stun pauses beer drain and does not repeat impact damage");
+        yield return new WaitForSeconds(0.4f);
+        Assert(!slammed.IsImpactStunned && slammed.BeerFill < impactFill,
+            "Beer drain resumes after impact stun expires");
+        wall.SetActive(false);
+        var struck = Spawn<ChargerEnemy>("Charger", slammed.transform.position + Vector3.right, target);
+        struck.stunDuration = 0.5f;
+        yield return null;
+        struck.SwitchState(new ChargerWindupState(struck));
+        struck.TryReceiveBeer(1f);
+        var struckHealth = struck.currentHealth;
+        slamHealth = slammed.currentHealth;
+        Physics.SyncTransforms();
+        slammed.TryPush(Vector3.right, 30f, 13f);
+        deadline = Time.time + 2f;
+        while (slammed.IsBeingPushed && Time.time < deadline) yield return null;
+        Assert(slammed.currentHealth == slamHealth - 13f && struck.currentHealth == struckHealth - 13f,
+            "Enemy collision damages both patrons exactly once");
+        Assert(slammed.IsImpactStunned && struck.IsImpactStunned && struck.IsBeered,
+            "Enemy collision stuns both patrons while preserving their beers");
+        Assert(struck.TryTakeBackBeer(out _) && struck.IsImpactStunned,
+            "Taking beer back during impact stun does not cancel the remaining stun");
+        slammed.gameObject.SetActive(false); struck.gameObject.SetActive(false);
+
+        foreach (var name in new[] { "Charger", "Haymaker", "Chair Thrower", "Powder Keg", "Piano Player" })
+        {
+            var enemy = Spawn<EnemyBrain>(name, centre + Vector3.up, target);
+            enemy.enabled = false;
+            enemy.mass = 50f; var heavyDistance = enemy.PushDistanceFor(30f);
+            enemy.mass = 5f;
+            Assert(Mathf.Approximately(enemy.PushDistanceFor(30f), heavyDistance * 10f), name + " inherits the same inverse-mass push response");
+            enemy.gameObject.SetActive(false);
+        }
+
+        var prop = Prop(origin + Vector3.right * 110f, false);
+        var slide = prop.gameObject.AddComponent<Pushable>();
+        prop.Body.mass = 5f;
+        Assert(slide.TryPush(Vector3.forward * 5f, 30f) && prop.IsDangerous, "Merged furniture push arms impact damage");
+        yield return new WaitForFixedUpdate(); yield return null;
+        var owner = Spawn<ChairThrowerEnemy>("Chair Thrower", prop.transform.position + Vector3.right, target);
+        owner.enabled = false;
+        Assert(prop.TryHold(owner, owner.chairHoldPoint) && !slide.IsSliding, "Picking up a sliding prop cancels its floor-slide controller");
+        prop.Release(Vector3.forward * 10f, 20f);
+        yield return new WaitForFixedUpdate(); yield return null;
+        Assert(!prop.Body.isKinematic && prop.Body.linearVelocity.z > 5f, "Floor-slide controller cannot freeze or overwrite a thrown prop");
+        slide.TryPush(Vector3.forward, 30f);
+        prop.ApplyBlast(Vector3.up * 12f);
+        Assert(!slide.IsSliding, "Blast takes ownership from the floor-slide controller");
+        prop.Body.isKinematic = true;
+        Assert(prop.IsAvailableForPickup, "Resting kinematic Pushable furniture remains available to the thrower");
+        prop.gameObject.SetActive(false); owner.gameObject.SetActive(false);
+
+        var pushedProp = Prop(origin + Vector3.right * 160f, false);
+        var pushedSlide = pushedProp.gameObject.AddComponent<Pushable>();
+        var pushVictim = Spawn<ChargerEnemy>("Charger", pushedProp.transform.position + Vector3.forward * 1.2f, target);
+        pushVictim.enabled = false;
+        Physics.SyncTransforms();
+        pushedSlide.TryPush(Vector3.forward, 30f);
+        deadline = Time.time + 1f;
+        while (pushVictim.currentHealth == pushVictim.maxHealth && Time.time < deadline) yield return new WaitForFixedUpdate();
+        yield return null;
+        Assert(pushVictim.currentHealth < pushVictim.maxHealth && pushVictim.CurrentState is EnemyStunState,
+            "Merged airborne furniture slide both damages and stuns the enemy it hits");
+        pushedProp.gameObject.SetActive(false); pushVictim.gameObject.SetActive(false);
+
+        var keg = Spawn<PowderKegEnemy>("Powder Keg", origin + Vector3.right * 140f, target);
+        keg.target = keg.transform; keg.fuseSeconds = 10f;
+        yield return null;
+        var remaining = keg.FuseRemaining;
+        keg.Stun();
+        yield return new WaitForSeconds(0.2f);
+        Assert(keg.FuseRemaining < remaining && keg.CurrentState is EnemyStunState,
+            "Stunning a lit powder keg does not pause its fuse");
+        keg.gameObject.SetActive(false);
     }
 
     private T Spawn<T>(string name, Vector3 position, Transform target) where T : EnemyBrain

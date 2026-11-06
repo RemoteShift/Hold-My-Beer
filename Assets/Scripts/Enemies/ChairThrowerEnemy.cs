@@ -60,7 +60,7 @@ public class ChairThrowerEnemy : EnemyBrain
         private bool TryGetPickupGoal(ThrowableFurniture chair, out Vector3 goal)
         {
             goal = default;
-            if (!thrower.CanNavigate) return false;
+            if (!thrower.CanNavigate || thrower.IsBeingPushed) return false;
             var point = chair.GetPickupPoint(thrower.transform.position);
             if (!NavMesh.SamplePosition(point, out var hit, Mathf.Max(thrower.pickupReach, thrower.agent.height), thrower.agent.areaMask)) return false;
             if (!thrower.agent.CalculatePath(hit.position, pickupPath) || pickupPath.status == NavMeshPathStatus.PathInvalid) return false;
@@ -87,7 +87,7 @@ public class ChairThrowerEnemy : EnemyBrain
                 var goal = Vector3.zero;
                 foreach (var chair in Object.FindObjectsByType<ThrowableFurniture>(FindObjectsSortMode.None))
                 {
-                    if (chair.IsHeld || !chair.canBePickedUp || !chair.Body || chair.Body.isKinematic) continue;
+                    if (!chair.IsAvailableForPickup) continue;
                     var point = chair.GetPickupPoint(thrower.transform.position);
                     var d = Vector3.Distance(thrower.transform.position, point);
                     if (d > distance) continue;
@@ -105,7 +105,7 @@ public class ChairThrowerEnemy : EnemyBrain
                         RestoreStoppingDistance();
                     }
                 }
-                else if (thrower.CanNavigate)
+                else if (thrower.CanNavigate && !thrower.IsBeingPushed)
                 {
                     // Pickup uses 3D surface reach; the normal combat stopping distance may
                     // stop outside that reach, especially for low stools or off-centre pivots.

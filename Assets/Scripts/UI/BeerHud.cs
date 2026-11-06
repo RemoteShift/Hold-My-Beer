@@ -18,16 +18,17 @@ public class BeerHud : MonoBehaviour
 
     private void OnEnable()
     {
+        if (!pushHandler && handler) pushHandler = handler.GetComponent<PushHandler>();
         inventory.OnChanged += RefreshGlasses;
         handler.OnFeedback += ShowFeedback;
-        pushHandler.OnFeedback += ShowFeedback;
+        if (pushHandler) pushHandler.OnFeedback += ShowFeedback;
     }
 
     private void OnDisable()
     {
         inventory.OnChanged -= RefreshGlasses;
         handler.OnFeedback -= ShowFeedback;
-        pushHandler.OnFeedback -= ShowFeedback;
+        if (pushHandler) pushHandler.OnFeedback -= ShowFeedback;
     }
 
     private void Start()
@@ -38,7 +39,7 @@ public class BeerHud : MonoBehaviour
 
     private void Update()
     {
-        promptText.text = CombinePrompts(handler.Prompt, pushHandler.Prompt);
+        promptText.text = CombinePrompts(handler.Prompt, pushHandler ? pushHandler.Prompt : string.Empty);
 
         if (Time.time >= feedbackHideTime)
         {

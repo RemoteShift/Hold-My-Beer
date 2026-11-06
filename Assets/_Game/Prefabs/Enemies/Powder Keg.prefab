@@ -1057,19 +1057,29 @@ MonoBehaviour:
   agent: {fileID: 5610776281831173138}
   target: {fileID: 0}
   maxHealth: 20
+  moveSpeed: 5
+  turnSpeed: 10
+  damage: 80
+  defense: 1
   currentHealth: 0
   detectRange: 25
   attackCooldown: 1.5
   stunDuration: 0.5
+  stunnedColor: {r: 0.45, g: 0.6, b: 1, a: 1}
   fullBeerFreezeSeconds: 3
   beeredColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
+  mass: 5
+  pushSlideDeceleration: 12
+  pushHitRadius: 0.35
+  pushHitForwardOffset: 0.5
   heldGlassPrefab: {fileID: 8049199679787095025, guid: 1795783f24a48fd49a258ac89a798172, type: 3}
   glassHoldPoint: {fileID: 943563087325544169}
   repathInterval: 0.15
   fuseSeconds: 4
-  moveSpeed: 5
   explosionRadius: 5
-  damage: 80
+  furnitureBlastSpeed: 14
+  furnitureBlastLift: 0.6
+  furnitureBlastFalloff: 1
   fuseVisual: {fileID: 5172314858765886305}
   fuseLight: {fileID: 3717680019958931599}
 --- !u!1 &6171056856043354551

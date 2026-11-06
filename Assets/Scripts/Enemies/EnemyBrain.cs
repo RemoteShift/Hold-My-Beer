@@ -35,8 +35,9 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     [Tooltip("How long a full glass freezes this enemy. Partly full glasses freeze for proportionally less.")]
     [Min(0.01f)] public float fullBeerFreezeSeconds = 3f;
     public Color beeredColor = new Color(0.95f, 0.65f, 0.15f);
-    [Tooltip("Heavier enemies slide a shorter distance when pushed.")]
-    [Min(0.01f)] public float pushWeight = 10f;
+    [Header("Push Physics")]
+    [Tooltip("Enemy mass. Push travel = strength / mass: mass 50 travels one tenth as far as mass 5.")]
+    [FormerlySerializedAs("pushWeight"), Min(0.01f)] public float mass = 10f;
     [Min(0.1f)] public float pushSlideDeceleration = 12f;
     [SerializeField] private float pushHitRadius = 0.35f;
     [SerializeField] private float pushHitForwardOffset = 0.5f;
@@ -53,6 +54,15 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     private Renderer _bodyRenderer;
     private Color _bodyColor = Color.white;
     private float appliedMaxHealth;
+    private Vector3 pushDirection;
+    private const float PushFinishDistance = 0.001f;
+    private float pushDistanceLeft;
+    private float pushImpactDamage;
+    private float beerImpactStunLeft;
+    public bool IsImpactStunned => beerImpactStunLeft > 0f;
+    public bool IsBeingPushed => pushDistanceLeft > 0f;
+    public float PushDistanceLeft => pushDistanceLeft;
+    public float PushDistanceFor(float strength) => Mathf.Max(0f, strength) / Mathf.Max(0.01f, mass);
     public bool IsDead { get; private set; }
     public EnemyBuffs Buffs => PianoPlayerEnemy.GetBuffs(this);
     public float MoveSpeedMultiplier => Buffs.moveSpeed;
@@ -96,17 +106,24 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         ReturnToDefaultState();
     }
 
-    protected void Update()
+    protected virtual void Update()
     {
         if (IsDead) return;
         RefreshHealthCapacity();
         agent.speed = Mathf.Max(0f, moveSpeed) * Buffs.moveSpeed;
+        if (IsImpactStunned)
+        {
+            beerImpactStunLeft = Mathf.Max(0f, beerImpactStunLeft - Time.deltaTime);
+            if (!IsImpactStunned && IsBeered) SetBodyColor(beeredColor);
+            return;
+        }
         currentState?.Update();
+        if (!IsDead) UpdatePush();
     }
 
     protected void FixedUpdate()
     {
-        if (!IsDead) currentState?.FixedUpdate();
+        if (!IsDead && !IsImpactStunned) currentState?.FixedUpdate();
     }
 
     #region State Machine Logic
@@ -158,34 +175,48 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     /// <summary>Shoves a beered enemy across the floor. They stay frozen and keep drinking.</summary>
     /// <returns>False if the enemy isn't beered.</returns>
-    public bool TryPush(Vector3 direction, float pushStrength)
+    public bool TryPush(Vector3 direction, float pushStrength, float impactDamage = 0f)
     {
-        if (currentState is not EnemyBeeredState beered) return false;
-
-        beered.Shove(direction, pushStrength / pushWeight);
-        return true;
+        if (!IsBeered || IsBeingPushed || IsImpactStunned || !CanNavigate) return false;
+        return BeginPush(direction, pushStrength, impactDamage);
     }
 
-    /// <summary>Stuns any other enemy this enemy is being shoved into.</summary>
-    /// <returns>True if another enemy was in the way.</returns>
-    public bool StunEnemiesAhead(Vector3 direction)
+    private EnemyBrain FindPushVictim(Vector3 direction)
     {
         var center = transform.position + direction * pushHitForwardOffset;
         var count = Physics.OverlapSphereNonAlloc(center, pushHitRadius, OverlapBuffer, ~0,
             QueryTriggerInteraction.Ignore);
-
-        var hitEnemy = false;
-
         for (var i = 0; i < count; i++)
         {
             var other = OverlapBuffer[i].GetComponentInParent<EnemyBrain>();
-            if (!other || other == this) continue;
-
-            other.Stun();
-            hitEnemy = true;
+            if (other && other != this && !other.IsDead) return other;
         }
+        return null;
+    }
 
-        return hitEnemy;
+    private void ReceivePushImpact(float impactDamage)
+    {
+        if (IsDead) return;
+        pushDistanceLeft = 0f;
+        StopPathfinding();
+        TakeDamage(impactDamage);
+        if (IsDead) return;
+        if (IsBeered)
+        {
+            // Keep the glass and interrupted attack intact, pausing their update together.
+            beerImpactStunLeft = Mathf.Max(beerImpactStunLeft, stunDuration);
+            SetBodyColor(stunnedColor);
+        }
+        else Stun();
+    }
+
+    private void ResolvePushImpact(EnemyBrain other)
+    {
+        var impactDamage = pushImpactDamage;
+        pushDistanceLeft = 0f;
+        pushImpactDamage = 0f; // Consume before damage can trigger a death explosion.
+        ReceivePushImpact(impactDamage);
+        if (other && other != this) other.ReceivePushImpact(impactDamage);
     }
 
     public GameObject SpawnHeldGlass()
@@ -214,7 +245,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public virtual void PathfindToTarget()
     {
-        if (!target || !CanNavigate) return;
+        if (!target || !CanNavigate || IsBeingPushed) return;
 
         agent.isStopped = false;
 
@@ -276,41 +307,74 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     /// <summary>Interrupts the enemy. A stun doesn't affect someone already frozen by a beer.</summary>
     public virtual void Stun()
     {
-        if (IsBeered) return;
+        if (IsDead || IsBeered) return;
 
         SwitchState(new EnemyStunState(this, stunDuration));
     }
 
-    public virtual void KnockbackFrom(Vector3 origin, float distance)
+    /// <summary>All forced enemy movement uses the same mass response, including explosions.</summary>
+    public virtual void KnockbackFrom(Vector3 origin, float pushStrength)
     {
-        var awayFromOrigin = transform.position - origin;
-        awayFromOrigin.y = 0f;
+        BeginPush(transform.position - origin, pushStrength);
+    }
 
-        if (awayFromOrigin.sqrMagnitude <= 0.0001f)
+    private bool BeginPush(Vector3 direction, float strength, float impactDamage = 0f)
+    {
+        if (IsDead || !isActiveAndEnabled || strength <= 0f || float.IsNaN(strength) || float.IsInfinity(strength)) return false;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.0001f) return false;
+        pushImpactDamage = Mathf.Max(0f, impactDamage);
+        pushDirection = direction.normalized;
+        pushDistanceLeft = PushDistanceFor(strength);
+        StopPathfinding();
+        return true;
+    }
+
+    private void UpdatePush()
+    {
+        if (pushDistanceLeft <= PushFinishDistance) { pushDistanceLeft = 0f; return; }
+        if (!CanNavigate) { pushDistanceLeft = 0f; return; }
+        var speed = SlideMotion.SpeedToStopWithin(pushDistanceLeft, Mathf.Max(0.1f, pushSlideDeceleration));
+        var travel = Mathf.Min(speed * Time.deltaTime, pushDistanceLeft);
+        // Substeps prevent light enemies skipping past patrons or walls at high slide speed.
+        while (travel > 0.0001f)
         {
-            return;
-        }
-
-        var desiredPosition = transform.position + awayFromOrigin.normalized * distance;
-
-        if (agent.isActiveAndEnabled && agent.isOnNavMesh)
-        {
-            if (NavMesh.SamplePosition(desiredPosition, out var navHit, distance, agent.areaMask))
+            var step = Mathf.Min(travel, Mathf.Max(0.05f, pushHitRadius * 0.5f));
+            var before = transform.position;
+            var blocked = agent.Raycast(before + pushDirection * step, out _);
+            // Baked navigation keeps the agent centre away from walls by its radius.
+            // Include a small bake tolerance when a navigation edge stops this step.
+            var collisionRadius = Mathf.Max(pushHitRadius, agent.radius);
+            var collisionTravel = step + (blocked ? 0.2f : 0f);
+            RaycastHit? firstHit = null;
+            foreach (var hit in Physics.SphereCastAll(before, collisionRadius, pushDirection, collisionTravel, ~0, QueryTriggerInteraction.Ignore))
             {
-                // Stop at walls instead of warping through them during a shove.
-                var end = agent.Raycast(navHit.position, out var obstruction) ? obstruction.position : navHit.position;
-                agent.Warp(end);
+                if (hit.transform.IsChildOf(transform)) continue;
+                if (!firstHit.HasValue || hit.distance < firstHit.Value.distance) firstHit = hit;
+            }
+            if (firstHit.HasValue)
+            {
+                ResolvePushImpact(firstHit.Value.collider.GetComponentInParent<EnemyBrain>());
                 return;
             }
+            // A NavMesh boundary alone is not a physical wall impact.
+            if (blocked) { pushDistanceLeft = 0f; return; }
+            var victim = FindPushVictim(pushDirection);
+            if (victim) { ResolvePushImpact(victim); return; }
+            agent.Move(pushDirection * step);
+            var moved = Vector3.Distance(before, transform.position);
+            if (SlideMotion.IsBlocked(moved, step)) { pushDistanceLeft = 0f; return; }
+            pushDistanceLeft = Mathf.Max(0f, pushDistanceLeft - moved);
+            if (pushDistanceLeft <= PushFinishDistance) { pushDistanceLeft = 0f; return; }
+            travel -= step;
         }
-
-        transform.position = desiredPosition;
     }
-    
+
     public virtual void Die()
     {
         if (IsDead) return;
         IsDead = true;
+        pushDistanceLeft = 0f;
         StopPathfinding();
         SwitchState(null);
         Destroy(gameObject);
