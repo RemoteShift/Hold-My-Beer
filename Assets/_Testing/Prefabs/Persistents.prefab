@@ -411,7 +411,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -110}
+  m_AnchoredPosition: {x: 0, y: -220}
   m_SizeDelta: {x: 700, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3884717157344441514
@@ -830,6 +830,7 @@ MonoBehaviour:
   SprintInput: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   BeerInput: {fileID: 1903506563957944628, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   InteractInput: {fileID: -5548793354506133487, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  PushInput: {fileID: 904701050017612366, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1 &6018976102791478332
 GameObject:
   m_ObjectHideFlags: 0
@@ -1058,6 +1059,8 @@ GameObject:
   - component: {fileID: 6233835516167340591}
   - component: {fileID: 5874916122965009069}
   - component: {fileID: 510833206484730665}
+  - component: {fileID: 187264588735256934}
+  - component: {fileID: 4956818410280513487}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -1210,11 +1213,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1d23037408b46f46a9cf6690fa06d6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeerHandler
-  handRange: 3
+--- !u!114 &187264588735256934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79b7198f87665b44a3b1dcea7da620f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAim
+  reach: 3
   aimRadius: 0.3
   aimMask:
     serializedVersion: 2
     m_Bits: 4294967287
+--- !u!114 &4956818410280513487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44bd6da0181c3f9499bbc2c425625604, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PushHandler
+  pushStrength: 30
+  pushCooldown: 1
 --- !u!1 &6602798952689614809
 GameObject:
   m_ObjectHideFlags: 0
@@ -1772,6 +1801,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BeerHud
   inventory: {fileID: 5874916122965009069}
   handler: {fileID: 510833206484730665}
+  pushHandler: {fileID: 4956818410280513487}
   glassFills:
   - {fileID: 2482951231252257656}
   - {fileID: 5100461394148483873}

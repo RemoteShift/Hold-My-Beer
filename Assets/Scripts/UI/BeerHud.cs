@@ -6,6 +6,7 @@ public class BeerHud : MonoBehaviour
 {
     [SerializeField] private BeerInventory inventory;
     [SerializeField] private BeerHandler handler;
+    [SerializeField] private PushHandler pushHandler;
 
     [Tooltip("Fill bars, one per glass. Their anchors are moved to show how full each glass is.")]
     [SerializeField] private RectTransform[] glassFills;
@@ -19,12 +20,14 @@ public class BeerHud : MonoBehaviour
     {
         inventory.OnChanged += RefreshGlasses;
         handler.OnFeedback += ShowFeedback;
+        pushHandler.OnFeedback += ShowFeedback;
     }
 
     private void OnDisable()
     {
         inventory.OnChanged -= RefreshGlasses;
         handler.OnFeedback -= ShowFeedback;
+        pushHandler.OnFeedback -= ShowFeedback;
     }
 
     private void Start()
@@ -35,7 +38,7 @@ public class BeerHud : MonoBehaviour
 
     private void Update()
     {
-        promptText.text = handler.Prompt;
+        promptText.text = CombinePrompts(handler.Prompt, pushHandler.Prompt);
 
         if (Time.time >= feedbackHideTime)
         {
@@ -53,6 +56,14 @@ public class BeerHud : MonoBehaviour
             var fill = i < glasses.Count ? glasses[i] : 0f;
             glassFills[i].anchorMax = new Vector2(1f, fill);
         }
+    }
+
+    private static string CombinePrompts(string first, string second)
+    {
+        if (string.IsNullOrEmpty(first)) return second;
+        if (string.IsNullOrEmpty(second)) return first;
+
+        return $"{first}     {second}";
     }
 
     private void ShowFeedback(string message)

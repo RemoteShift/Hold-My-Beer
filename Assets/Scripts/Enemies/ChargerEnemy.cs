@@ -14,12 +14,15 @@ public class ChargerEnemy : EnemyBrain
     public float chargeSpeed = 14f;
     public float chargeDistance = 10f;
     public float damage = 20f;
-    [Tooltip("Damage the charger takes for running into a wall or other solid obstacle.")]
+    [Tooltip("Damage the charger takes for running into a wall or fixed obstacle. Pushable furniture does no damage.")]
     public float wallSlamDamage = 20f;
 
     [Header("Charge Hit Detection")]
     [SerializeField] private float hitRadius = 0.9f;
     [SerializeField] private float hitForwardOffset = 0.6f;
+    [SerializeField] private float pushableCheckRadius = 0.35f;
+    [SerializeField] private float pushableCheckForwardOffset = 0.65f;
+    [SerializeField] private float pushableCheckHeight = 1.5f;
 
     [Header("Placeholder Colors")]
     public Color chaseColor = new Color(0.75f, 0.35f, 0.2f);
@@ -67,6 +70,24 @@ public class ChargerEnemy : EnemyBrain
         }
 
         return hitSomething;
+    }
+
+    /// <summary>True if the thing the charger just ran into is pushable furniture rather than something fixed.</summary>
+    public bool IsPushableAhead()
+    {
+        var feet = transform.position - Vector3.up * agent.baseOffset;
+        var bottom = feet + transform.forward * pushableCheckForwardOffset + Vector3.up * pushableCheckRadius;
+        var top = bottom + Vector3.up * pushableCheckHeight;
+
+        var count = Physics.OverlapCapsuleNonAlloc(bottom, top, pushableCheckRadius, HitBuffer, ~0,
+            QueryTriggerInteraction.Ignore);
+
+        for (var i = 0; i < count; i++)
+        {
+            if (HitBuffer[i].GetComponentInParent<Pushable>()) return true;
+        }
+
+        return false;
     }
 
     protected override void OnDrawGizmosSelected()

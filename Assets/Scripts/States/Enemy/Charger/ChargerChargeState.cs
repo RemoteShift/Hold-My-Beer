@@ -49,8 +49,11 @@ public class ChargerChargeState : EnemyState
         }
         else if (hitObstacle)
         {
+            var hitPushable = charger.IsPushableAhead();
+
             charger.SwitchState(new ChargerRecoverState(charger));
-            charger.TakeDamage(charger.wallSlamDamage);
+
+            if (!hitPushable) charger.TakeDamage(charger.wallSlamDamage);
         }
         else if (moved < step * BlockedDistanceRatio || distanceLeft <= 0f)
         {

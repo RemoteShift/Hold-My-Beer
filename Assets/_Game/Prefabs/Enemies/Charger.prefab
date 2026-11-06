@@ -500,9 +500,14 @@ MonoBehaviour:
   currentHealth: 0
   detectRange: 25
   attackCooldown: 1.5
-  stunDuration: 0.5
+  stunDuration: 1.5
+  stunnedColor: {r: 0.45, g: 0.6, b: 1, a: 1}
   fullBeerFreezeSeconds: 3
   beeredColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
+  pushWeight: 10
+  pushSlideDeceleration: 12
+  pushHitRadius: 0.35
+  pushHitForwardOffset: 0.5
   heldGlassPrefab: {fileID: 8049199679787095025, guid: 1795783f24a48fd49a258ac89a798172, type: 3}
   glassHoldPoint: {fileID: 5364806148625730800}
   repathInterval: 0.15

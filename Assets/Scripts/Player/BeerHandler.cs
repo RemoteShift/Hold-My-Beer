@@ -7,14 +7,9 @@ using UnityEngine;
 /// Interacting with a beered enemy unbeers them, taking back whatever is left in the glass.
 /// Interacting with a tap or barrel restocks the player.
 /// </summary>
-[RequireComponent(typeof(BeerInventory))]
+[RequireComponent(typeof(BeerInventory), typeof(PlayerAim))]
 public class BeerHandler : MonoBehaviour
 {
-    [SerializeField] private float handRange = 3f;
-    [SerializeField] private float aimRadius = 0.3f;
-    [Tooltip("Layers that can be aimed at. Leave the player's own layer out.")]
-    [SerializeField] private LayerMask aimMask = ~(1 << 3);
-
     /// <summary>What the player can do with whatever they're looking at. Empty if nothing.</summary>
     public string Prompt { get; private set; } = string.Empty;
 
@@ -22,11 +17,13 @@ public class BeerHandler : MonoBehaviour
     public event Action<string> OnFeedback;
 
     private BeerInventory inventory;
+    private PlayerAim aim;
     private InputHandler input;
 
     private void Awake()
     {
         inventory = GetComponent<BeerInventory>();
+        aim = GetComponent<PlayerAim>();
     }
 
     private void OnEnable()
@@ -46,12 +43,12 @@ public class BeerHandler : MonoBehaviour
 
     private void Update()
     {
-        Prompt = BuildPrompt(FindAimedCollider());
+        Prompt = BuildPrompt(aim.FindAimedCollider());
     }
 
     private void HandleBeerPressed()
     {
-        var enemy = FindAimed<EnemyBrain>();
+        var enemy = aim.FindAimed<EnemyBrain>();
         if (!enemy) return;
 
         if (enemy.IsBeered)
@@ -76,14 +73,14 @@ public class BeerHandler : MonoBehaviour
 
     private void HandleInteractPressed()
     {
-        var source = FindAimed<BeerSource>();
+        var source = aim.FindAimed<BeerSource>();
         if (source)
         {
             if (source.TryRefill(inventory)) OnFeedback?.Invoke("Refilled");
             return;
         }
 
-        var enemy = FindAimed<EnemyBrain>();
+        var enemy = aim.FindAimed<EnemyBrain>();
         if (!enemy || !enemy.TryTakeBackBeer(out var fill)) return;
 
         // With no free slot the glass is dropped, but the attack still resumes
@@ -113,24 +110,5 @@ public class BeerHandler : MonoBehaviour
         if (inventory.IsFullyStocked) return "Beers full";
 
         return source.IsUnlimited ? "[E] Refill" : $"[E] Refill ({source.RefillsLeft} left)";
-    }
-
-    private T FindAimed<T>() where T : Component
-    {
-        var aimed = FindAimedCollider();
-        return aimed ? aimed.GetComponentInParent<T>() : null;
-    }
-
-    private Collider FindAimedCollider()
-    {
-        var mainCamera = Camera.main;
-        if (!mainCamera) return null;
-
-        var aim = mainCamera.transform;
-
-        return Physics.SphereCast(aim.position, aimRadius, aim.forward, out var hit, handRange, aimMask,
-            QueryTriggerInteraction.Ignore)
-            ? hit.collider
-            : null;
     }
 }

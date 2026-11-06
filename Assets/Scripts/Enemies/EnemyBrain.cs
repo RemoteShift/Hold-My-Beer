@@ -19,18 +19,26 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     public float currentHealth;
     public float detectRange = 25f;
     public float attackCooldown = 1.5f;
-    public float stunDuration = 0.5f;
+    public float stunDuration = 1.5f;
+    public Color stunnedColor = new Color(0.45f, 0.6f, 1f);
 
     [Header("Beer")]
     [Tooltip("How long a full glass freezes this enemy. Partly full glasses freeze for proportionally less.")]
     [Min(0.01f)] public float fullBeerFreezeSeconds = 3f;
     public Color beeredColor = new Color(0.95f, 0.65f, 0.15f);
+    [Tooltip("Heavier enemies slide a shorter distance when pushed.")]
+    [Min(0.01f)] public float pushWeight = 10f;
+    [Min(0.1f)] public float pushSlideDeceleration = 12f;
+    [SerializeField] private float pushHitRadius = 0.35f;
+    [SerializeField] private float pushHitForwardOffset = 0.5f;
     [SerializeField] private GameObject heldGlassPrefab;
     [SerializeField] private Transform glassHoldPoint;
 
     [Header("Pathfinding Settings")] [SerializeField]
     private float repathInterval = 0.15f;
     private float _nextRepathTime;
+
+    private static readonly Collider[] PushHitBuffer = new Collider[16];
 
     private Renderer _bodyRenderer;
     private Color _bodyColor = Color.white;
@@ -105,6 +113,38 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
         fill = beered.TakeGlassBack();
         return true;
+    }
+
+    /// <summary>Shoves a beered enemy across the floor. They stay frozen and keep drinking.</summary>
+    /// <returns>False if the enemy isn't beered.</returns>
+    public bool TryPush(Vector3 direction, float pushStrength)
+    {
+        if (currentState is not EnemyBeeredState beered) return false;
+
+        beered.Shove(direction, pushStrength / pushWeight);
+        return true;
+    }
+
+    /// <summary>Stuns any other enemy this enemy is being shoved into.</summary>
+    /// <returns>True if another enemy was in the way.</returns>
+    public bool StunEnemiesAhead(Vector3 direction)
+    {
+        var center = transform.position + direction * pushHitForwardOffset;
+        var count = Physics.OverlapSphereNonAlloc(center, pushHitRadius, PushHitBuffer, ~0,
+            QueryTriggerInteraction.Ignore);
+
+        var hitEnemy = false;
+
+        for (var i = 0; i < count; i++)
+        {
+            var other = PushHitBuffer[i].GetComponentInParent<EnemyBrain>();
+            if (!other || other == this) continue;
+
+            other.Stun();
+            hitEnemy = true;
+        }
+
+        return hitEnemy;
     }
 
     public GameObject SpawnHeldGlass()
@@ -188,9 +228,12 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         }
     }
 
+    /// <summary>Interrupts the enemy. A stun doesn't affect someone already frozen by a beer.</summary>
     public virtual void Stun()
     {
-        // SwitchState(new EnemyStunState(this, stunDuration));
+        if (IsBeered) return;
+
+        SwitchState(new EnemyStunState(this, stunDuration));
     }
 
     public virtual void KnockbackFrom(Vector3 origin, float distance)
