@@ -21,7 +21,7 @@ public class ChargerRecoverState : EnemyState
     // Skips the base look-at on purpose: the charger stays facing the way it ran.
     public override void Update()
     {
-        remaining -= Time.deltaTime;
+        remaining -= charger.RecoveryDeltaTime;
 
         if (remaining <= 0f)
         {

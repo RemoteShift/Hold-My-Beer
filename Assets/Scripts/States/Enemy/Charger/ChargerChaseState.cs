@@ -1,6 +1,7 @@
 public class ChargerChaseState : EnemyState
 {
     private readonly ChargerEnemy charger;
+    private float originalStoppingDistance;
 
     public ChargerChaseState(ChargerEnemy charger) : base(charger)
     {
@@ -9,7 +10,13 @@ public class ChargerChaseState : EnemyState
 
     public override void Enter()
     {
+        originalStoppingDistance = charger.agent.stoppingDistance;
         charger.SetBodyColor(charger.chaseColor);
+    }
+
+    public override void Exit()
+    {
+        charger.agent.stoppingDistance = originalStoppingDistance;
     }
 
     public override void Update()
@@ -28,6 +35,9 @@ public class ChargerChaseState : EnemyState
             return;
         }
 
+        // Inspector tuning must not allow navigation to stop outside attack range.
+        charger.agent.stoppingDistance = UnityEngine.Mathf.Min(originalStoppingDistance,
+            UnityEngine.Mathf.Max(0f, charger.attackRange * 0.8f));
         charger.PathfindToTarget();
     }
 }

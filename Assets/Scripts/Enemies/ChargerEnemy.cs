@@ -13,7 +13,6 @@ public class ChargerEnemy : EnemyBrain
     public float windupDuration = 0.8f;
     public float chargeSpeed = 14f;
     public float chargeDistance = 10f;
-    public float damage = 20f;
     [Tooltip("Damage the charger takes for running into a wall or other solid obstacle.")]
     public float wallSlamDamage = 20f;
 
@@ -37,13 +36,16 @@ public class ChargerEnemy : EnemyBrain
     /// <summary>True when the player is close enough and nothing blocks a straight run at them.</summary>
     public bool CanStartCharge()
     {
-        if (!target) return false;
+        if (!target || !CanNavigate) return false;
 
         var toTarget = target.position - transform.position;
         toTarget.y = 0f;
         if (toTarget.sqrMagnitude > attackRange * attackRange) return false;
 
-        return !agent.Raycast(target.position, out _);
+        // A player can stand just outside the baked NavMesh (or beside moved furniture).
+        // NavMesh raycasts reject that endpoint even when the player is plainly visible.
+        // Use physical visibility to start the attack; charge movement still respects NavMesh walls.
+        return CombatQuery.IsClear(transform.position, target.position, transform, target);
     }
 
     /// <summary>Damages everything in front of the charger that has not already been hit.</summary>
@@ -62,21 +64,11 @@ public class ChargerEnemy : EnemyBrain
             if (damageable == null || ReferenceEquals(damageable, this)) continue;
             if (!alreadyHit.Add(damageable)) continue;
 
-            damageable.TakeDamage(damage);
+            damageable.TakeDamage(EffectiveDamage);
             hitSomething = true;
         }
 
         return hitSomething;
     }
 
-    protected override void OnDrawGizmosSelected()
-    {
-        base.OnDrawGizmosSelected();
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position + transform.forward * hitForwardOffset, hitRadius);
-    }
 }

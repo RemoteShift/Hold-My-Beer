@@ -32,7 +32,9 @@ public class ChargerChargeState : EnemyState
     // Skips the base look-at on purpose: a charge never steers.
     public override void Update()
     {
-        var step = charger.chargeSpeed * Time.deltaTime;
+        if (!charger.CanNavigate) return;
+
+        var step = charger.chargeSpeed * charger.AttackDeltaTime;
         var before = charger.transform.position;
 
         // Checked before moving: agent.Move would otherwise slide along an angled wall
