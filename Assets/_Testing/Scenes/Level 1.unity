@@ -3027,6 +3027,14 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 510833206484730665, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: refillSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 7c9b49f55d62aa14f9127f8a655782b9, type: 3}
+    - target: {fileID: 510833206484730665, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: beerGivenSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 29bde6326b4c34ad8a12da475f79b50a, type: 3}
     - target: {fileID: 899427014641851757, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_LocalPosition.x
       value: -11.69
@@ -3163,6 +3171,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4956818410280513487, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: beerPushSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 2c5292ba5cf254919a6b9e2b18e04f49, type: 3}
+    - target: {fileID: 4956818410280513487, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: furniturePushSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 29d8d2ead07bb0a43b27cd914fe92b51, type: 3}
     - target: {fileID: 5988315952003696464, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901

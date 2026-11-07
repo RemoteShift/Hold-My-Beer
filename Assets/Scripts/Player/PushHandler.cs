@@ -11,13 +11,23 @@ public class PushHandler : MonoBehaviour
     [SerializeField, Min(0f)] private float pushCooldown = 1f;
     [Tooltip("Damage dealt to the pushed enemy and any enemy it hits. Wall hits damage the pushed enemy once.")]
     [SerializeField, Min(0f)] private float enemyPushImpactDamage = 20f;
+
+    [Header("Audio")]
+    [SerializeField] private AudioClip beerPushSound;
+    [SerializeField] private AudioClip furniturePushSound;
+
     public string Prompt { get; private set; } = string.Empty;
     public event Action<string> OnFeedback;
     private PlayerAim aim;
+    private AudioSource audioSource;
     private InputHandler input;
     private float nextPushTime;
 
-    private void Awake() { aim = GetComponent<PlayerAim>(); }
+    private void Awake()
+    {
+        aim = GetComponent<PlayerAim>();
+        audioSource = GetComponent<AudioSource>();
+    }
     private void OnEnable()
     {
         input = InputHandler.Instance;
@@ -37,7 +47,8 @@ public class PushHandler : MonoBehaviour
         if (enemy)
         {
             succeeded = enemy.TryPush(aim.FlatForward, pushStrength, enemyPushImpactDamage);
-            if (!succeeded) OnFeedback?.Invoke(enemy.IsBeingPushed ? "Already sliding" : "Only beered enemies");
+            if (succeeded) { if (beerPushSound && audioSource) audioSource.PlayOneShot(beerPushSound); }
+            else OnFeedback?.Invoke(enemy.IsBeingPushed ? "Already sliding" : "Only beered enemies");
         }
         else
         {
@@ -51,6 +62,7 @@ public class PushHandler : MonoBehaviour
                 furniture.Shove((aim.FlatForward + Vector3.up * 0.15f).normalized * pushStrength);
                 succeeded = true;
             }
+            if (succeeded && furniturePushSound && audioSource) audioSource.PlayOneShot(furniturePushSound);
         }
         if (succeeded) nextPushTime = Time.time + pushCooldown;
         return succeeded;
