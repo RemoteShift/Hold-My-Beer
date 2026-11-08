@@ -14,9 +14,49 @@ public class GreenWellMenu : MonoBehaviour {
 
  public CinemachineCamera chalkboardCamera, storyCamera;
  public CinemachineBrain cameraBrain;
-void Start(){chalkboardCamera.Priority=20;storyCamera.Priority=10;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
- 
-public void NewGame(){if(cameraBrain.IsBlending)return;storyCamera.Priority=20;chalkboardCamera.Priority=10;}
+ public CutsceneCameraPath cutscenePath;
+ private bool storyStarted;
+
+ void Start()
+ {
+     ShowMenu();
+ }
+
+ private static void SetCameraActive(Camera camera, bool active)
+ {
+     if (camera == null) return;
+     camera.enabled = active;
+     var listener = camera.GetComponent<AudioListener>();
+     if (listener != null) listener.enabled = active;
+ }
+
+ private void ShowMenu()
+ {
+     if (cutscenePath != null) cutscenePath.Stop();
+     SetCameraActive(menuCamera, true);
+     if (chalkboardCamera != null) chalkboardCamera.Priority = 20;
+     if (storyCamera != null) storyCamera.Priority = 10;
+     storyStarted = false;
+     Cursor.lockState = CursorLockMode.None;
+     Cursor.visible = true;
+ }
+
+ public void NewGame()
+ {
+     if (storyStarted || (cameraBrain != null && cameraBrain.IsBlending)) return;
+     storyStarted = true;
+     if (cutscenePath != null)
+     {
+         cutscenePath.PlayFrom(menuCamera);
+         SetCameraActive(menuCamera, false);
+     }
+     else
+     {
+         // Preserve the original standalone menu scenes.
+         if (storyCamera != null) storyCamera.Priority = 20;
+         if (chalkboardCamera != null) chalkboardCamera.Priority = 10;
+     }
+ }
 
 public void Back(){controls.SetActive(false);quit.SetActive(false);options.SetActive(true);}
  public void Controls(){options.SetActive(false);controls.SetActive(true);}
@@ -73,5 +113,9 @@ public void Back(){controls.SetActive(false);quit.SetActive(false);options.SetAc
 
 
 
-public void StoryBack(){if(cameraBrain.IsBlending)return;chalkboardCamera.Priority=20;storyCamera.Priority=10;}
+public void StoryBack()
+ {
+     if (cutscenePath == null && cameraBrain != null && cameraBrain.IsBlending) return;
+     ShowMenu();
+ }
 }
