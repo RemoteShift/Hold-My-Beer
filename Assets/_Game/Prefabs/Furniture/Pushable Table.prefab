@@ -65,6 +65,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5241225699079086491, guid: a285bf71d79506740bb25c7f696a01e8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2883776483018581878}
+    - targetCorrespondingSourceObject: {fileID: 5241225699079086491, guid: a285bf71d79506740bb25c7f696a01e8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5022268538233133257}
   m_SourcePrefab: {fileID: 100100000, guid: a285bf71d79506740bb25c7f696a01e8, type: 3}
 --- !u!1 &2801833495466113864 stripped
 GameObject:
@@ -110,6 +113,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b56c5229f95708d4681cd4b6ce9407f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pushable
+  slideDeceleration: 12
 --- !u!208 &2883776483018581878
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -126,3 +130,21 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0.3749999, z: -0.00000035762787}
   m_TimeToStationary: 0.25
+--- !u!114 &5022268538233133257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2801833495466113864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a9af675f713c7a178ee08febbac5fa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowableFurniture
+  canBePickedUp: 0
+  impactDamage: 30
+  minimumImpactSpeed: 2
+  gripPoint: {fileID: 0}
+  heldPositionOffset: {x: 0, y: 0, z: 0}
+  heldRotationOffset: {x: 0, y: 0, z: 0}
