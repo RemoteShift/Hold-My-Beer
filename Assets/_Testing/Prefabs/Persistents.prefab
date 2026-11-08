@@ -1214,6 +1214,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1d23037408b46f46a9cf6690fa06d6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeerHandler
+  beerGivenSound: {fileID: 8300000, guid: 29bde6326b4c34ad8a12da475f79b50a, type: 3}
+  refillSound: {fileID: 8300000, guid: 7c9b49f55d62aa14f9127f8a655782b9, type: 3}
 --- !u!114 &187264588735256934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1246,6 +1248,8 @@ MonoBehaviour:
   pushStrength: 30
   pushCooldown: 2
   enemyPushImpactDamage: 5
+  beerPushSound: {fileID: 8300000, guid: 2c5292ba5cf254919a6b9e2b18e04f49, type: 3}
+  furniturePushSound: {fileID: 8300000, guid: 29d8d2ead07bb0a43b27cd914fe92b51, type: 3}
 --- !u!82 &4304964182589537830
 AudioSource:
   m_ObjectHideFlags: 0
