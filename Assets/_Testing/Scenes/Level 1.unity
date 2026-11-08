@@ -8919,6 +8919,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4914758405544569185, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6049793468090021344, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -10745,7 +10749,7 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 0.93, b: 0.83, a: 1}
-  m_Intensity: 41
+  m_Intensity: 15
   m_Range: 64.60973
   m_SpotAngle: 157.63478
   m_InnerSpotAngle: 73.14834
@@ -21050,7 +21054,7 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 0.93, b: 0.83, a: 1}
-  m_Intensity: 41
+  m_Intensity: 15
   m_Range: 64.60973
   m_SpotAngle: 157.63478
   m_InnerSpotAngle: 73.14834
@@ -21146,6 +21150,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4914758405544569185, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6049793468090021344, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -32198,6 +32206,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4914758405544569185, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6049793468090021344, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -33008,7 +33020,7 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 0.93, b: 0.83, a: 1}
-  m_Intensity: 41
+  m_Intensity: 15
   m_Range: 64.60973
   m_SpotAngle: 157.63478
   m_InnerSpotAngle: 73.14834
