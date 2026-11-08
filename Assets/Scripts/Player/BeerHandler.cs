@@ -16,6 +16,10 @@ public class BeerHandler : MonoBehaviour
     /// <summary>Raised with a short message saying how a press turned out.</summary>
     public event Action<string> OnFeedback;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip beerGivenSound;
+    [SerializeField] private AudioClip refillSound;
+
     private BeerInventory inventory;
     private PlayerAim aim;
     private InputHandler input;
@@ -24,7 +28,10 @@ public class BeerHandler : MonoBehaviour
     {
         inventory = GetComponent<BeerInventory>();
         aim = GetComponent<PlayerAim>();
+        audioSource = GetComponent<AudioSource>();
     }
+
+    private AudioSource audioSource;
 
     private void OnEnable()
     {
@@ -67,6 +74,7 @@ public class BeerHandler : MonoBehaviour
         {
             inventory.TryTakeRightmost(out var fill);
             enemy.TryReceiveBeer(fill);
+            if (beerGivenSound && audioSource) audioSource.PlayOneShot(beerGivenSound);
             OnFeedback?.Invoke("Parried!");
         }
     }
@@ -76,7 +84,11 @@ public class BeerHandler : MonoBehaviour
         var source = aim.FindAimed<BeerSource>();
         if (source)
         {
-            if (source.TryRefill(inventory)) OnFeedback?.Invoke("Refilled");
+            if (source.TryRefill(inventory))
+            {
+                if (refillSound && audioSource) audioSource.PlayOneShot(refillSound);
+                OnFeedback?.Invoke("Refilled");
+            }
             return;
         }
 
