@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Serialization;
@@ -44,6 +45,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     [SerializeField] private GameObject heldGlassPrefab;
     [SerializeField] private Transform glassHoldPoint;
 
+    [Header("Leaving")]
+    [Tooltip("Speed multiplier while the last enemy runs for the exit.")]
+    [Min(0f)] public float leaveSpeedMultiplier = 1.5f;
+    public Color leavingColor = new Color(0.55f, 0.85f, 0.55f);
+
     [Header("Pathfinding Settings")] [SerializeField]
     private float repathInterval = 0.15f;
     private float _nextRepathTime;
@@ -51,19 +57,26 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     /// <summary>Shared by non-allocating overlap checks. Only valid until the next check runs.</summary>
     protected static readonly Collider[] OverlapBuffer = new Collider[16];
 
+    private static readonly List<EnemyBrain> all = new List<EnemyBrain>();
+
+    /// <summary>Every enemy that has entered play and not yet been destroyed, including dead ones.</summary>
+    public static IReadOnlyList<EnemyBrain> All => all;
+
     private Renderer _bodyRenderer;
     private Color _bodyColor = Color.white;
     private float appliedMaxHealth;
     private Vector3 pushDirection;
     private const float PushFinishDistance = 0.001f;
     private float pushDistanceLeft;
-    private float pushImpactDamage;
     private float beerImpactStunLeft;
     public bool IsImpactStunned => beerImpactStunLeft > 0f;
     public bool IsBeingPushed => pushDistanceLeft > 0f;
     public float PushDistanceLeft => pushDistanceLeft;
     public float PushDistanceFor(float strength) => Mathf.Max(0f, strength) / Mathf.Max(0.01f, mass);
+    /// <summary>True once the enemy is out of the fight, whether killed or gone through the exit.</summary>
     public bool IsDead { get; private set; }
+    public bool IsLeaving { get; private set; }
+    private Vector3 exitPosition;
     public EnemyBuffs Buffs => PianoPlayerEnemy.GetBuffs(this);
     public float MoveSpeedMultiplier => Buffs.moveSpeed;
     public float WindupDeltaTime => Time.deltaTime * Buffs.windupSpeed;
@@ -85,6 +98,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     protected virtual void Awake()
     {
+        all.Add(this);
         currentHealth = maxHealth;
         appliedMaxHealth = Mathf.Max(0.01f, maxHealth);
 
@@ -117,6 +131,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
             if (!IsImpactStunned && IsBeered) SetBodyColor(beeredColor);
             return;
         }
+        if (IsLeaving && CanStartLeaving) SwitchState(new EnemyLeaveState(this, exitPosition));
         currentState?.Update();
         if (!IsDead) UpdatePush();
     }
@@ -139,6 +154,27 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     }
     
     public abstract void ReturnToDefaultState();
+
+    #endregion
+
+    #region Leaving
+
+    // Lets a stun or a beer play out first. A beered enemy leaves once the glass is empty or taken back.
+    private bool CanStartLeaving => currentState is not (EnemyLeaveState or EnemyStunState or EnemyBeeredState);
+
+    /// <summary>Gives up the fight and heads for the exit, where the enemy despawns.</summary>
+    public void LeaveThrough(Vector3 exit)
+    {
+        if (IsDead || IsLeaving) return;
+        IsLeaving = true;
+        exitPosition = exit;
+    }
+
+    /// <summary>Removes the enemy without killing it, so death effects such as explosions don't happen.</summary>
+    public virtual void Despawn()
+    {
+        Remove();
+    }
 
     #endregion
 
@@ -175,10 +211,10 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     /// <summary>Shoves a beered enemy across the floor. They stay frozen and keep drinking.</summary>
     /// <returns>False if the enemy isn't beered.</returns>
-    public bool TryPush(Vector3 direction, float pushStrength, float impactDamage = 0f)
+    public bool TryPush(Vector3 direction, float pushStrength)
     {
         if (!IsBeered || IsBeingPushed || IsImpactStunned || !CanNavigate) return false;
-        return BeginPush(direction, pushStrength, impactDamage);
+        return BeginPush(direction, pushStrength);
     }
 
     private EnemyBrain FindPushVictim(Vector3 direction)
@@ -194,13 +230,12 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         return null;
     }
 
-    private void ReceivePushImpact(float impactDamage)
+    /// <summary>A push that ends in a collision stuns without dealing damage.</summary>
+    private void ReceivePushImpact()
     {
         if (IsDead) return;
         pushDistanceLeft = 0f;
         StopPathfinding();
-        TakeDamage(impactDamage);
-        if (IsDead) return;
         if (IsBeered)
         {
             // Keep the glass and interrupted attack intact, pausing their update together.
@@ -212,11 +247,9 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     private void ResolvePushImpact(EnemyBrain other)
     {
-        var impactDamage = pushImpactDamage;
         pushDistanceLeft = 0f;
-        pushImpactDamage = 0f; // Consume before damage can trigger a death explosion.
-        ReceivePushImpact(impactDamage);
-        if (other && other != this) other.ReceivePushImpact(impactDamage);
+        ReceivePushImpact();
+        if (other && other != this) other.ReceivePushImpact();
     }
 
     public GameObject SpawnHeldGlass()
@@ -245,14 +278,19 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public virtual void PathfindToTarget()
     {
-        if (!target || !CanNavigate || IsBeingPushed) return;
+        if (target) PathfindTo(target.position);
+    }
+
+    public void PathfindTo(Vector3 destination)
+    {
+        if (!CanNavigate || IsBeingPushed) return;
 
         agent.isStopped = false;
 
         if (Time.time >= _nextRepathTime)
         {
             _nextRepathTime = Time.time + repathInterval;
-            agent.SetDestination(target.position);
+            agent.SetDestination(destination);
         }
     }
 
@@ -270,7 +308,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     {
         if (!target) return;
         
-        var dir = target.position - transform.position;
+        FaceDirection(target.position - transform.position);
+    }
+
+    public void FaceDirection(Vector3 dir)
+    {
         dir.y = 0f;
 
         if (dir != Vector3.zero)
@@ -318,12 +360,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         BeginPush(transform.position - origin, pushStrength);
     }
 
-    private bool BeginPush(Vector3 direction, float strength, float impactDamage = 0f)
+    private bool BeginPush(Vector3 direction, float strength)
     {
         if (IsDead || !isActiveAndEnabled || strength <= 0f || float.IsNaN(strength) || float.IsInfinity(strength)) return false;
         direction.y = 0f;
         if (direction.sqrMagnitude < 0.0001f) return false;
-        pushImpactDamage = Mathf.Max(0f, impactDamage);
         pushDirection = direction.normalized;
         pushDistanceLeft = PushDistanceFor(strength);
         StopPathfinding();
@@ -372,6 +413,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public virtual void Die()
     {
+        Remove();
+    }
+
+    private void Remove()
+    {
         if (IsDead) return;
         IsDead = true;
         pushDistanceLeft = 0f;
@@ -381,6 +427,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     }
     
     #endregion
+
+    private void OnDestroy()
+    {
+        all.Remove(this);
+    }
 
     #region Coroutines
 

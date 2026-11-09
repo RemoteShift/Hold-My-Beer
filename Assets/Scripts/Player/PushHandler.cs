@@ -9,8 +9,6 @@ public class PushHandler : MonoBehaviour
     [Tooltip("Enemy/slide travel = strength divided by mass.")]
     [SerializeField, Min(0f)] private float pushStrength = 30f;
     [SerializeField, Min(0f)] private float pushCooldown = 1f;
-    [Tooltip("Damage dealt to the pushed enemy and any enemy it hits. Wall hits damage the pushed enemy once.")]
-    [SerializeField, Min(0f)] private float enemyPushImpactDamage = 20f;
 
     [Header("Audio")]
     [SerializeField] private AudioClip beerPushSound;
@@ -46,7 +44,7 @@ public class PushHandler : MonoBehaviour
         var succeeded = false;
         if (enemy)
         {
-            succeeded = enemy.TryPush(aim.FlatForward, pushStrength, enemyPushImpactDamage);
+            succeeded = enemy.TryPush(aim.FlatForward, pushStrength);
             if (succeeded) { if (beerPushSound && audioSource) audioSource.PlayOneShot(beerPushSound); }
             else OnFeedback?.Invoke(enemy.IsBeingPushed ? "Already sliding" : "Only beered enemies");
         }

@@ -435,15 +435,15 @@ public class EnemyBehaviourChecks : MonoBehaviour
         wall.transform.localScale = new Vector3(0.2f, 3f, 3f);
         Physics.SyncTransforms();
         var slamHealth = slammed.currentHealth;
-        Assert(slammed.TryPush(Vector3.right, 30f, 17f), "Player-configured damage can accompany an enemy push");
+        Assert(slammed.TryPush(Vector3.right, 30f), "A beered enemy can be pushed");
         deadline = Time.time + 2f;
         while (slammed.IsBeingPushed && Time.time < deadline) yield return null;
-        Assert(slammed.IsImpactStunned && slammed.IsBeered && slammed.currentHealth == slamHealth - 17f,
-            "Wall impact damages and stuns the pushed enemy without removing its beer");
+        Assert(slammed.IsImpactStunned && slammed.IsBeered && slammed.currentHealth == slamHealth,
+            "Wall impact stuns the pushed enemy without damaging it or removing its beer");
         var impactFill = slammed.BeerFill;
         yield return new WaitForSeconds(0.2f);
-        Assert(slammed.BeerFill == impactFill && slammed.currentHealth == slamHealth - 17f,
-            "Wall stun pauses beer drain and does not repeat impact damage");
+        Assert(slammed.BeerFill == impactFill && slammed.currentHealth == slamHealth,
+            "Wall stun pauses beer drain and deals no damage");
         yield return new WaitForSeconds(0.4f);
         Assert(!slammed.IsImpactStunned && slammed.BeerFill < impactFill,
             "Beer drain resumes after impact stun expires");
@@ -456,11 +456,11 @@ public class EnemyBehaviourChecks : MonoBehaviour
         var struckHealth = struck.currentHealth;
         slamHealth = slammed.currentHealth;
         Physics.SyncTransforms();
-        slammed.TryPush(Vector3.right, 30f, 13f);
+        slammed.TryPush(Vector3.right, 30f);
         deadline = Time.time + 2f;
         while (slammed.IsBeingPushed && Time.time < deadline) yield return null;
-        Assert(slammed.currentHealth == slamHealth - 13f && struck.currentHealth == struckHealth - 13f,
-            "Enemy collision damages both patrons exactly once");
+        Assert(slammed.currentHealth == slamHealth && struck.currentHealth == struckHealth,
+            "Enemy collision damages neither patron");
         Assert(slammed.IsImpactStunned && struck.IsImpactStunned && struck.IsBeered,
             "Enemy collision stuns both patrons while preserving their beers");
         Assert(struck.TryTakeBackBeer(out _) && struck.IsImpactStunned,
@@ -480,7 +480,7 @@ public class EnemyBehaviourChecks : MonoBehaviour
         var prop = Prop(origin + Vector3.right * 110f, false);
         var slide = prop.gameObject.AddComponent<Pushable>();
         prop.Body.mass = 5f;
-        Assert(slide.TryPush(Vector3.forward * 5f, 30f) && prop.IsDangerous, "Merged furniture push arms impact damage");
+        Assert(slide.TryPush(Vector3.forward * 5f, 30f) && !prop.IsDangerous, "Furniture push does not arm impact damage");
         yield return new WaitForFixedUpdate(); yield return null;
         var owner = Spawn<ChairThrowerEnemy>("Chair Thrower", prop.transform.position + Vector3.right, target);
         owner.enabled = false;
@@ -502,10 +502,10 @@ public class EnemyBehaviourChecks : MonoBehaviour
         Physics.SyncTransforms();
         pushedSlide.TryPush(Vector3.forward, 30f);
         deadline = Time.time + 1f;
-        while (pushVictim.currentHealth == pushVictim.maxHealth && Time.time < deadline) yield return new WaitForFixedUpdate();
+        while (!(pushVictim.CurrentState is EnemyStunState) && Time.time < deadline) yield return new WaitForFixedUpdate();
         yield return null;
-        Assert(pushVictim.currentHealth < pushVictim.maxHealth && pushVictim.CurrentState is EnemyStunState,
-            "Merged airborne furniture slide both damages and stuns the enemy it hits");
+        Assert(pushVictim.currentHealth == pushVictim.maxHealth && pushVictim.CurrentState is EnemyStunState,
+            "Furniture slide stuns the enemy it hits without damaging it");
         pushedProp.gameObject.SetActive(false); pushVictim.gameObject.SetActive(false);
 
         var keg = Spawn<PowderKegEnemy>("Powder Keg", origin + Vector3.right * 140f, target);

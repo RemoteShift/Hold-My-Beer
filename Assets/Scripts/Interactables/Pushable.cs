@@ -1,6 +1,9 @@
 using UnityEngine;
 
-/// <summary>Mass-based floor slide. ThrowableFurniture owns pickup and impact damage.</summary>
+/// <summary>
+/// Mass-based floor slide. A player's push only stuns the enemy it hits: it never arms the
+/// furniture's impact damage, which is kept for throws and blasts.
+/// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(ThrowableFurniture))]
 public class Pushable : MonoBehaviour
 {
@@ -34,7 +37,8 @@ public class Pushable : MonoBehaviour
         restoreKinematic = body.isKinematic;
         IsSliding = true;
         body.isKinematic = false;
-        furniture.Arm(furniture.impactDamage);
+        // Scene furniture may be set to Discrete. Continuous stops a fast slide passing through enemies.
+        body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         return true;
     }
 
