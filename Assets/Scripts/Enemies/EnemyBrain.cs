@@ -47,7 +47,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     [Header("Leaving")]
     [Tooltip("Speed multiplier while the last enemy runs for the exit.")]
-    [Min(0f)] public float leaveSpeedMultiplier = 1.5f;
+    [Min(0f)] public float leaveSpeedMultiplier = 2.5f;
     public Color leavingColor = new Color(0.55f, 0.85f, 0.55f);
 
     [Header("Pathfinding Settings")] [SerializeField]

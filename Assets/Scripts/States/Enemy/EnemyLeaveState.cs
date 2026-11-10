@@ -7,6 +7,7 @@ using UnityEngine;
 public class EnemyLeaveState : EnemyState
 {
     private const float ArriveDistance = 0.75f;
+    private const float MinLeaveAcceleration = 40f;
 
     private readonly Vector3 exit;
 
@@ -19,8 +20,13 @@ public class EnemyLeaveState : EnemyState
     {
         enemy.SetBodyColor(enemy.leavingColor);
 
+        if (!enemy.CanNavigate) return;
+
         // Attack states can leave a large stopping distance, which would halt the run short of the exit
-        if (enemy.CanNavigate) enemy.agent.stoppingDistance = 0f;
+        enemy.agent.stoppingDistance = 0f;
+
+        // Bolts for the door instead of slowly building up speed. Never undone, since the enemy is leaving.
+        enemy.agent.acceleration = Mathf.Max(enemy.agent.acceleration, MinLeaveAcceleration);
     }
 
     // Skips the base look-at on purpose: the enemy faces where it's running, not the player.

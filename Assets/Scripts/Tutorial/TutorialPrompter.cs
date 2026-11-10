@@ -27,6 +27,13 @@ public class TutorialPrompter : MonoBehaviour
 
     public bool IsFrozen { get; private set; }
 
+    public bool IsShowing => banner && banner.activeSelf;
+
+    /// <summary>Real seconds since the main prompt was last hidden. Zero while it's up.</summary>
+    public float QuietSeconds => IsShowing ? 0f : Time.realtimeSinceStartup - hiddenAt;
+
+    private float hiddenAt;
+
     private void Awake()
     {
         normalFixedDeltaTime = Time.fixedDeltaTime;
@@ -55,6 +62,7 @@ public class TutorialPrompter : MonoBehaviour
 
     public void Hide()
     {
+        if (IsShowing) hiddenAt = Time.realtimeSinceStartup;
         if (banner) banner.SetActive(false);
     }
 

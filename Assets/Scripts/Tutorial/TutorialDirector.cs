@@ -18,6 +18,14 @@ public class TutorialDirector : MonoBehaviour
     [Tooltip("Real seconds a closing line stays up after a lesson.")]
     [SerializeField, Min(0f)] private float outroSeconds = 3f;
 
+    [Header("Pacing")]
+    [Tooltip("Real seconds of quiet between one lesson ending and the next starting.")]
+    [SerializeField, Min(0f)] private float lessonGapSeconds = 4f;
+    [Tooltip("Real seconds an instruction stays up before the next one can replace it, unless time runs out.")]
+    [SerializeField, Min(0f)] private float readSeconds = 2f;
+    [Tooltip("Real seconds of quiet before the closing line.")]
+    [SerializeField, Min(0f)] private float endGapSeconds = 1.5f;
+
     [Header("Unbeering Lesson")]
     [Tooltip("Starts switched off. It comes in through the entrance once the lesson begins.")]
     [SerializeField] private HaymakerEnemy haymaker;
@@ -32,7 +40,13 @@ public class TutorialDirector : MonoBehaviour
     [Tooltip("Real seconds the closing line stays up before the next scene loads.")]
     [SerializeField, Min(0f)] private float endSeconds = 5f;
 
+    // Longest wait for the current lesson line to finish once the tutorial is over
+    private const float MaxEndWaitSeconds = 5f;
+    // Glass time left at which the unbeer prompt stops waiting for the read time
+    private const float LastMomentBeerSeconds = 1f;
+
     private Coroutine lessons;
+    private bool lessonsFinished;
     private BeerInventory inventory;
     private InputHandler input;
 
@@ -64,6 +78,10 @@ public class TutorialDirector : MonoBehaviour
     {
         inventory = FindFirstObjectByType<BeerInventory>();
 
+        // Mistakes are part of learning, so the tutorial never kills the player
+        var playerHealth = FindFirstObjectByType<PlayerHealth>();
+        if (playerHealth) playerHealth.CanDie = false;
+
         if (levelManager)
         {
             levelManager.enabled = false;
@@ -76,28 +94,43 @@ public class TutorialDirector : MonoBehaviour
     private IEnumerator RunLessons()
     {
         yield return BeeringLesson();
+        yield return new WaitForSecondsRealtime(lessonGapSeconds);
         yield return UnbeeringLesson();
 
-        if (!levelManager) yield break;
+        if (levelManager)
+        {
+            levelManager.enabled = true;
 
-        levelManager.enabled = true;
+            if (!levelManager.IsComplete)
+            {
+                yield return new WaitForSecondsRealtime(lessonGapSeconds);
+                yield return prompter.Prompt(
+                    "Keep it up: get them to take each other out.\nThe last one standing will run for the door.",
+                    () => !levelManager || levelManager.IsComplete);
+            }
+        }
 
-        yield return prompter.Prompt(
-            "Keep it up: get them to take each other out.\nThe last one standing will run for the door.",
-            () => !levelManager || levelManager.IsComplete);
+        lessonsFinished = true;
     }
 
     private void EndTutorial()
     {
-        if (lessons != null) StopCoroutine(lessons);
-        prompter.CancelFreeze();
-        prompter.HideHint();
-
         StartCoroutine(LoadNextScene());
     }
 
     private IEnumerator LoadNextScene()
     {
+        // Let the line on screen finish rather than cutting it off
+        var deadline = Time.realtimeSinceStartup + MaxEndWaitSeconds;
+        yield return new WaitUntil(() => lessonsFinished || Time.realtimeSinceStartup > deadline);
+
+        if (lessons != null) StopCoroutine(lessons);
+        prompter.CancelFreeze();
+        prompter.Hide();
+        prompter.HideHint();
+
+        yield return new WaitForSecondsRealtime(endGapSeconds);
+
         prompter.Show("That's the basics! Now go get your hat back.");
         yield return new WaitForSecondsRealtime(endSeconds);
 
@@ -183,9 +216,14 @@ public class TutorialDirector : MonoBehaviour
             if (!haymaker) yield break;
             if (!haymaker.IsBeered) continue;
 
+            // Stays up long enough to read, even with someone already in front of him,
+            // unless his glass is about to run dry
+            var shownAt = Time.realtimeSinceStartup;
             yield return prompter.Prompt(
                 "Once his drink is gone, he'll finish his punch.\nGet another patron in front of him: lure them over, or beer them and push them [RMB]",
-                () => !haymaker || !haymaker.IsBeered || FindPatronInSwing());
+                () => !haymaker || !haymaker.IsBeered ||
+                      ((Time.realtimeSinceStartup - shownAt >= readSeconds ||
+                        haymaker.BeerSecondsLeft <= LastMomentBeerSeconds) && FindPatronInSwing()));
             if (!haymaker) yield break;
 
             victim = FindPatronInSwing();

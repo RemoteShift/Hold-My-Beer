@@ -15,6 +15,8 @@ public class TutorialHints : MonoBehaviour
     [SerializeField, Min(0f)] private float hintSeconds = 8f;
     [Tooltip("Real seconds between one tip going away and the next showing.")]
     [SerializeField, Min(0f)] private float gapSeconds = 1.5f;
+    [Tooltip("Real seconds the main lesson line has to be gone before a tip can show.")]
+    [SerializeField, Min(0f)] private float quietSeconds = 2f;
     [Tooltip("How close furniture in front of the player has to be for the jump tip.")]
     [SerializeField, Min(0f)] private float jumpTipDistance = 1.5f;
     [Tooltip("The refill tip shows once the player is down to this many glasses.")]
@@ -88,7 +90,8 @@ public class TutorialHints : MonoBehaviour
 
         while (pending.Count > 0)
         {
-            var next = prompter.IsFrozen ? -1 : pending.FindIndex(hint => hint.IsRelevant());
+            var isQuiet = !prompter.IsFrozen && prompter.QuietSeconds >= quietSeconds;
+            var next = isQuiet ? pending.FindIndex(hint => hint.IsRelevant()) : -1;
             if (next < 0)
             {
                 yield return null;
@@ -109,8 +112,8 @@ public class TutorialHints : MonoBehaviour
 
         while (shownFor < hintSeconds && !tried())
         {
-            // Out of the way while a lesson has the game frozen
-            if (prompter.IsFrozen)
+            // Out of the way while a lesson is talking or has the game frozen
+            if (prompter.IsFrozen || prompter.IsShowing)
             {
                 prompter.HideHint();
             }
