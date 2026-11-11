@@ -49,6 +49,12 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     public void Stun() { }
 
+    public void RestoreFullHealth()
+    {
+        currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public void Die()
     {
         Debug.Log("Player died: respawning at the start");

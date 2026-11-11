@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -48,6 +49,7 @@ public class TutorialDirector : MonoBehaviour
     private Coroutine lessons;
     private bool lessonsFinished;
     private BeerInventory inventory;
+    private PlayerHealth playerHealth;
     private InputHandler input;
 
     // Set during a freezing prompt. A frozen player can't walk into reach or step around
@@ -79,7 +81,7 @@ public class TutorialDirector : MonoBehaviour
         inventory = FindFirstObjectByType<BeerInventory>();
 
         // Mistakes are part of learning, so the tutorial never kills the player
-        var playerHealth = FindFirstObjectByType<PlayerHealth>();
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (playerHealth) playerHealth.CanDie = false;
 
         if (levelManager)
@@ -104,6 +106,7 @@ public class TutorialDirector : MonoBehaviour
             if (!levelManager.IsComplete)
             {
                 yield return new WaitForSecondsRealtime(lessonGapSeconds);
+                RestorePlayerHealth();
                 yield return prompter.Prompt(
                     "Keep it up: get them to take each other out.\nThe last one standing will run for the door.",
                     () => !levelManager || levelManager.IsComplete);
@@ -149,40 +152,79 @@ public class TutorialDirector : MonoBehaviour
 
         charger.gameObject.SetActive(true);
 
-        // The wind-up is the opening for a parry
-        yield return new WaitUntil(() => !charger || charger.CanBeBeered);
-        if (!charger) yield break;
+        var player = playerHealth;
 
-        beerTarget = charger;
-        yield return prompter.FreezePrompt(
-            "He's about to charge!\nLook at him and press [LMB] to hand him a beer",
-            () => !charger || charger.IsBeered);
-        beerTarget = null;
-        if (!charger) yield break;
+        // Repeats until the player gets out of the way of the charge
+        while (true)
+        {
+            // The wind-up is the opening for a parry
+            yield return new WaitUntil(() => !charger || charger.CanBeBeered);
+            if (!charger) yield break;
 
-        var player = FindFirstObjectByType<PlayerHealth>();
-        var playerHealthBefore = player ? player.CurrentHealth : 0f;
-        var chargerHealthBefore = charger.currentHealth;
+            var windupPosition = charger.transform.position;
 
-        yield return prompter.Prompt(
-            "He's frozen until he finishes his drink, then he'll carry on charging.\nGet out of his way!",
-            () => !charger || charger.CurrentState is ChargerRecoverState);
+            beerTarget = charger;
+            yield return prompter.FreezePrompt(
+                "He's about to charge!\nLook at him and press [LMB] to hand him a beer",
+                () => !charger || charger.IsBeered);
+            beerTarget = null;
+            if (!charger) yield break;
 
-        string outro;
-        if (player && player.CurrentHealth < playerHealthBefore)
-            outro = "Too slow! Step aside next time and let him hit something else.";
-        else if (!charger || charger.currentHealth < chargerHealthBefore)
-            outro = "He ran into the bar instead of you. Walls hurt!";
-        else
-            outro = "Nice dodge!";
+            var playerHealthBefore = player ? player.CurrentHealth : 0f;
+            var chargerHealthBefore = charger.currentHealth;
 
-        yield return ShowFor(outro, outroSeconds);
+            yield return prompter.Prompt(
+                "He's frozen until he finishes his drink, then he'll carry on charging.\nGet out of his way!",
+                () => !charger || charger.CurrentState is ChargerRecoverState);
+            if (!charger) yield break;
+
+            if (player && player.CurrentHealth < playerHealthBefore)
+            {
+                // Holds him still while the player reads, then sends him back for another go
+                charger.StopPathfinding();
+                charger.enabled = false;
+
+                yield return ShowFor("Too slow! He charged straight into you.\nLet's try that again.", outroSeconds);
+                if (!charger) yield break;
+
+                ResetCharger(windupPosition);
+                continue;
+            }
+
+            yield return ShowFor(charger.currentHealth < chargerHealthBefore
+                    ? "He ran into the bar instead of you. Walls hurt!"
+                    : "Nice dodge!",
+                outroSeconds);
+            yield break;
+        }
+    }
+
+    private void ResetCharger(Vector3 windupPosition)
+    {
+        if (NavMesh.SamplePosition(windupPosition, out var hit, 2f, NavMesh.AllAreas))
+        {
+            charger.agent.Warp(hit.position);
+        }
+
+        charger.enabled = true;
+        charger.ReturnToDefaultState();
+
+        // A glass is lost on every attempt, so top the player back up rather than leave them empty-handed
+        if (inventory) inventory.Refill();
+        RestorePlayerHealth();
+    }
+
+    // Each lesson and retry starts the player fresh, rather than limping on at 1 health
+    private void RestorePlayerHealth()
+    {
+        if (playerHealth) playerHealth.RestoreFullHealth();
     }
 
     private IEnumerator UnbeeringLesson()
     {
         if (!haymaker) yield break;
 
+        RestorePlayerHealth();
         yield return ShowFor("Here comes the Haymaker. His punch hits everyone in front of him.", introSeconds);
 
         haymaker.gameObject.SetActive(true);
