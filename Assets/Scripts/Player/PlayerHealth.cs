@@ -1,7 +1,10 @@
 using System;
 using UnityEngine;
 
-/// <summary>Player health. Dying respawns the player at the scene start with full health.</summary>
+/// <summary>
+/// Player health. By default dying respawns the player at the scene start with full health,
+/// but a scene with a game over screen can turn that off and handle <see cref="OnDied"/> instead.
+/// </summary>
 [RequireComponent(typeof(LocomotionController))]
 public class PlayerHealth : MonoBehaviour, IDamageable
 {
@@ -10,9 +13,16 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     public float MaxHealth => maxHealth;
     public float CurrentHealth => currentHealth;
+    public bool IsDead => currentHealth <= 0f;
+
+    /// <summary>When false, dying leaves the player dead for whatever handles <see cref="OnDied"/>.</summary>
+    public bool RespawnOnDeath { get; set; } = true;
 
     /// <summary>Raised with the current health, then the maximum.</summary>
     public event Action<float, float> OnHealthChanged;
+
+    /// <summary>Raised when health reaches 0.</summary>
+    public event Action OnDied;
 
     private LocomotionController locomotion;
     private Vector3 spawnPosition;
@@ -48,6 +58,16 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     public void Die()
     {
+        currentHealth = 0f;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        OnDied?.Invoke();
+
+        if (!RespawnOnDeath)
+        {
+            Debug.Log("Player died");
+            return;
+        }
+
         Debug.Log("Player died: respawning at the start");
 
         locomotion.ResetPositionRotation(spawnPosition, spawnRotation);
