@@ -19,6 +19,8 @@ public class TutorialPrompter : MonoBehaviour
     [SerializeField, Min(0f)] private float slowDownSeconds = 0.5f;
     [Tooltip("Real seconds to get back to full speed once the player acts.")]
     [SerializeField, Min(0f)] private float speedUpSeconds = 0.2f;
+    [Tooltip("Real seconds a freeze holds at a full stop, ignoring presses, so the prompt can be read before acting.")]
+    [SerializeField, Min(0f)] private float readSeconds = 1.5f;
 
     // Keeps physics steps short while slowed, so motion stays smooth instead of stepping
     private const float MinPhysicsStepScale = 0.05f;
@@ -50,7 +52,12 @@ public class TutorialPrompter : MonoBehaviour
     /// <summary>Puts the game straight back to full speed, for when a freezing prompt is cut short.</summary>
     public void CancelFreeze()
     {
-        if (IsFrozen) SetTimeScale(1f);
+        if (IsFrozen)
+        {
+            SetTimeScale(1f);
+            SetActionsBlocked(false);
+        }
+
         IsFrozen = false;
     }
 
@@ -85,11 +92,16 @@ public class TutorialPrompter : MonoBehaviour
         Hide();
     }
 
-    /// <summary>Slows the game to a stop with the prompt up, until <paramref name="done"/> returns true.</summary>
+    /// <summary>
+    /// Slows the game to a stop with the prompt up, until <paramref name="done"/> returns true.
+    /// Presses are ignored until the game has stopped and the prompt has been up for a moment,
+    /// so a player already mashing the button still gets the stop and time to read.
+    /// </summary>
     public IEnumerator FreezePrompt(string text, Func<bool> done)
     {
         Show(text);
         IsFrozen = true;
+        SetActionsBlocked(true);
 
         for (var t = 0f; t < slowDownSeconds && !done(); t += Time.unscaledDeltaTime)
         {
@@ -98,6 +110,13 @@ public class TutorialPrompter : MonoBehaviour
         }
 
         if (!done()) SetTimeScale(0f);
+
+        for (var t = 0f; t < readSeconds && !done(); t += Time.unscaledDeltaTime)
+        {
+            yield return null;
+        }
+
+        SetActionsBlocked(false);
         while (!done()) yield return null;
 
         Hide();
@@ -111,6 +130,12 @@ public class TutorialPrompter : MonoBehaviour
 
         SetTimeScale(1f);
         IsFrozen = false;
+    }
+
+    private static void SetActionsBlocked(bool blocked)
+    {
+        var input = InputHandler.Instance;
+        if (input) input.ActionsBlocked = blocked;
     }
 
     private void SetTimeScale(float scale)

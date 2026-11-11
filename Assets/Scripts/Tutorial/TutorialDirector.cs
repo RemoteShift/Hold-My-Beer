@@ -1,11 +1,11 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Runs the tutorial's lessons in order. Each lesson brings in its enemies and walks
-/// the player through one mechanic using the prompter.
+/// the player through one mechanic using the prompter. Once its patrons are gone it
+/// hands over to the level in the same scene, switching on the level's enemies.
 /// </summary>
 public class TutorialDirector : MonoBehaviour
 {
@@ -34,12 +34,16 @@ public class TutorialDirector : MonoBehaviour
     [SerializeField] private EnemyBrain spareVictim;
 
     [Header("Ending")]
-    [Tooltip("Held back until the last lesson, so losing the Charger early can't end the tutorial.")]
+    [Tooltip("The tutorial's own Level Manager, which ends it once its patrons are gone. Held back until the last lesson, so losing the Charger early can't end the tutorial.")]
     [SerializeField] private LevelManager levelManager;
-    [Tooltip("Scene loaded once the tutorial is over. It must be in the Build Settings.")]
-    [SerializeField] private string nextScene = "Level 1";
-    [Tooltip("Real seconds the closing line stays up before the next scene loads.")]
+    [Tooltip("Real seconds the closing line stays up before the level starts.")]
     [SerializeField, Min(0f)] private float endSeconds = 5f;
+
+    [Header("Handing Over to the Level")]
+    [Tooltip("Switched on once the tutorial is over, e.g. the level's enemies.")]
+    [SerializeField] private GameObject[] enableWhenFinished;
+    [Tooltip("The level's own Level Manager. Keep it switched off in the scene; it's switched on once the tutorial is over.")]
+    [SerializeField] private LevelManager levelAfterTutorial;
 
     // Longest wait for the current lesson line to finish once the tutorial is over
     private const float MaxEndWaitSeconds = 5f;
@@ -50,6 +54,9 @@ public class TutorialDirector : MonoBehaviour
     private bool lessonsFinished;
     private BeerInventory inventory;
     private PlayerHealth playerHealth;
+    private LocomotionController player;
+    private Vector3 playerStartPosition;
+    private Quaternion playerStartRotation;
     private InputHandler input;
 
     // Set during a freezing prompt. A frozen player can't walk into reach or step around
@@ -82,6 +89,10 @@ public class TutorialDirector : MonoBehaviour
 
         // Mistakes are part of learning, so the tutorial never kills the player
         playerHealth = FindFirstObjectByType<PlayerHealth>();
+
+        // Where the level proper starts too: behind the bar
+        player = FindFirstObjectByType<LocomotionController>();
+        if (player) player.transform.GetPositionAndRotation(out playerStartPosition, out playerStartRotation);
         if (playerHealth) playerHealth.CanDie = false;
 
         if (levelManager)
@@ -118,10 +129,10 @@ public class TutorialDirector : MonoBehaviour
 
     private void EndTutorial()
     {
-        StartCoroutine(LoadNextScene());
+        StartCoroutine(HandOverToLevel());
     }
 
-    private IEnumerator LoadNextScene()
+    private IEnumerator HandOverToLevel()
     {
         // Let the line on screen finish rather than cutting it off
         var deadline = Time.realtimeSinceStartup + MaxEndWaitSeconds;
@@ -136,12 +147,32 @@ public class TutorialDirector : MonoBehaviour
 
         prompter.Show("That's the basics! Now go get your hat back.");
         yield return new WaitForSecondsRealtime(endSeconds);
+        prompter.Hide();
 
-        // The player and HUD are kept between scenes, but the next scene brings its own
-        var player = FindFirstObjectByType<LocomotionController>();
-        if (player) Destroy(player.transform.root.gameObject);
+        // The real fight starts fresh and for keeps
+        if (playerHealth)
+        {
+            playerHealth.CanDie = true;
+            playerHealth.RestoreFullHealth();
+        }
 
-        SceneManager.LoadScene(nextScene);
+        if (inventory) inventory.Refill();
+
+        // Back behind the bar, facing the room, before the level's patrons come in
+        if (player) player.ResetPositionRotation(playerStartPosition, playerStartRotation);
+
+        // Takes the "Tutorial Complete" banner down with it
+        if (levelManager) levelManager.gameObject.SetActive(false);
+
+        foreach (var target in enableWhenFinished)
+        {
+            if (target) target.SetActive(true);
+        }
+
+        if (levelAfterTutorial) levelAfterTutorial.enabled = true;
+
+        // Done: this also stops the tips and anything else the tutorial was running
+        gameObject.SetActive(false);
     }
 
     private IEnumerator BeeringLesson()
