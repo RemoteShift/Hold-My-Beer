@@ -9,6 +9,8 @@ public class ChairThrowerEnemy : EnemyBrain
     [Min(0f)] public float pickupRadius = 15f;
     [Tooltip("Grab reach in metres from the enemy centre to the nearest furniture collider surface, not the model pivot.")]
     [Min(0f)] public float pickupReach = 2f;
+    [Tooltip("Distance around the current position to choose roaming destinations while searching for furniture.")]
+    [Min(1f)] public float roamRadius = 10f;
     public float throwRange = 14f;
     [Min(0.1f)] public float chargeSeconds = 1.5f;
     [Min(0.1f)] public float flightSeconds = 0.8f;
@@ -39,6 +41,10 @@ public class ChairThrowerEnemy : EnemyBrain
         private readonly NavMeshPath pickupPath = new NavMeshPath();
         private float nextPickupRepath;
         private Vector3 lastPickupGoal;
+        private bool roaming;
+        private float nextRoamAttempt;
+        private float roamDeadline;
+        private readonly NavMeshPath roamPath = new NavMeshPath();
         public override bool IsAttacking => phase == 1;
         public ThrowState(ChairThrowerEnemy enemy) : base(enemy) { thrower = enemy; }
         public override void PrepareToResume() { aimLocked = true; }
@@ -71,6 +77,45 @@ public class ChairThrowerEnemy : EnemyBrain
             // This also avoids camping at a wall or an unreachable piece of furniture.
             return CanGrab(chair, goal + Vector3.up * thrower.agent.baseOffset);
         }
+        private void Roam()
+        {
+            if (!thrower.CanNavigate || thrower.IsBeingPushed) return;
+            var agent = thrower.agent;
+            agent.stoppingDistance = 0f;
+            agent.isStopped = false;
+
+            // Keep travelling while scanning for furniture; replace finished or stuck routes.
+            if (roaming && Time.time < roamDeadline &&
+                (agent.pathPending || (agent.hasPath && !agent.isPathStale &&
+                    agent.pathStatus == NavMeshPathStatus.PathComplete && agent.remainingDistance > 0.5f)))
+            {
+                var direction = agent.desiredVelocity;
+                direction.y = 0f;
+                if (direction.sqrMagnitude > 0.001f)
+                    thrower.transform.rotation = Quaternion.Slerp(thrower.transform.rotation,
+                        Quaternion.LookRotation(direction), Time.deltaTime * thrower.turnSpeed * thrower.Buffs.turnSpeed);
+                return;
+            }
+
+            if (Time.time < nextRoamAttempt) return;
+            thrower.StopPathfinding();
+            roaming = false;
+            nextRoamAttempt = Time.time + 1f;
+            for (var attempt = 0; attempt < 12; attempt++)
+            {
+                var offset = Random.insideUnitCircle * Mathf.Max(1f, thrower.roamRadius);
+                var candidate = thrower.transform.position + new Vector3(offset.x, 0f, offset.y);
+                if (!NavMesh.SamplePosition(candidate, out var hit, 2f, agent.areaMask)) continue;
+                if ((hit.position - agent.nextPosition).sqrMagnitude < 1f) continue;
+                if (!agent.CalculatePath(hit.position, roamPath) || roamPath.status != NavMeshPathStatus.PathComplete) continue;
+                if (!agent.SetPath(roamPath)) continue;
+                agent.isStopped = false;
+                roaming = true;
+                roamDeadline = Time.time + 15f;
+                break;
+            }
+        }
+
         public override void Update()
         {
             if (phase == 2)
@@ -95,7 +140,13 @@ public class ChairThrowerEnemy : EnemyBrain
                     if (!CanGrab(chair, thrower.transform.position) && !TryGetPickupGoal(chair, out candidateGoal)) continue;
                     distance = d; nearest = chair; goal = candidateGoal;
                 }
-                if (!nearest) { thrower.StopPathfinding(); RestoreStoppingDistance(); return; }
+                if (!nearest) { Roam(); return; }
+                if (roaming)
+                {
+                    roaming = false;
+                    thrower.StopPathfinding();
+                    nextPickupRepath = 0f;
+                }
                 if (CanGrab(nearest, thrower.transform.position))
                 {
                     if (nearest.TryHold(thrower, thrower.chairHoldPoint))
