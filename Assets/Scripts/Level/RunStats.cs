@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Keeps score of the current run for the game over screen: beers handed to enemies,
-/// refills used and time survived. Counting starts with gameplay and stops at <see cref="End"/>.
+/// enemies remaining, refills used and time survived. Counting starts with gameplay and stops at <see cref="End"/>.
 /// </summary>
 public class RunStats : MonoBehaviour
 {
@@ -16,6 +16,9 @@ public class RunStats : MonoBehaviour
     /// <summary>Game time since gameplay started, so pauses and freezes don't count.</summary>
     public float SecondsSurvived => hasBegun ? (hasEnded ? endTime : Time.time) - startTime : 0f;
 
+    /// <summary>Enemies still in the fight: the live count, or the count when the run ended.</summary>
+    public int EnemiesRemaining => hasEnded ? enemiesRemainingAtEnd : CountEnemiesRemaining();
+
     public bool IsCounting => hasBegun && !hasEnded;
 
     private BeerHandler beerHandler;
@@ -23,6 +26,7 @@ public class RunStats : MonoBehaviour
     private bool hasEnded;
     private float startTime;
     private float endTime;
+    private int enemiesRemainingAtEnd;
 
     private void Update()
     {
@@ -57,6 +61,20 @@ public class RunStats : MonoBehaviour
 
         hasEnded = true;
         endTime = Time.time;
+        enemiesRemainingAtEnd = CountEnemiesRemaining();
+    }
+
+    // Switched-off enemies aren't part of the fight, and dying ones are already out of it
+    private static int CountEnemiesRemaining()
+    {
+        var count = 0;
+
+        foreach (var enemy in FindObjectsByType<EnemyBrain>(FindObjectsSortMode.None))
+        {
+            if (!enemy.IsDead) count++;
+        }
+
+        return count;
     }
 
     private void CountBeer()

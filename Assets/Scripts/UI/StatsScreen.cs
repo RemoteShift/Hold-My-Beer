@@ -6,8 +6,8 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
-/// The second game over screen, after "DEAD": how the run went (enemies beered, refills used,
-/// time survived) with buttons to try again or go back to the main menu.
+/// The second game over screen, after "DEAD": how the run went (enemies beered, enemies remaining,
+/// refills used, time survived) with buttons to try again or go back to the main menu.
 /// Runs on real time, since the game itself is frozen.
 /// </summary>
 public class StatsScreen : MonoBehaviour
@@ -23,6 +23,7 @@ public class StatsScreen : MonoBehaviour
 
     [Header("Stats")]
     [SerializeField] private TMP_Text enemiesBeeredValue;
+    [SerializeField] private TMP_Text enemiesRemainingValue;
     [SerializeField] private TMP_Text refillsUsedValue;
     [SerializeField] private TMP_Text timeSurvivedValue;
 
@@ -61,6 +62,7 @@ public class StatsScreen : MonoBehaviour
         if (stats)
         {
             enemiesBeeredValue.text = stats.EnemiesBeered.ToString();
+            if (enemiesRemainingValue) enemiesRemainingValue.text = stats.EnemiesRemaining.ToString();
             refillsUsedValue.text = stats.RefillsUsed.ToString();
             timeSurvivedValue.text = FormatTime(stats.SecondsSurvived);
         }
