@@ -27,8 +27,11 @@ public class GameOverController : MonoBehaviour
     {
         if (playerHealth) playerHealth.OnDied -= HandlePlayerDied;
 
-        // Never leave the next scene frozen
-        if (IsGameOver) Time.timeScale = 1f;
+        // Never leave the next scene frozen or silent
+        if (!IsGameOver) return;
+
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
     }
 
     private void HookUpPlayer()
@@ -56,6 +59,10 @@ public class GameOverController : MonoBehaviour
     {
         // Stops enemies, physics and timers in one go
         Time.timeScale = 0f;
+
+        // Audio ignores the time scale, so looping sounds such as footsteps would carry on forever.
+        // This pauses every sound at once. A game over sound would need ignoreListenerPause set.
+        AudioListener.pause = true;
 
         var locomotion = FindFirstObjectByType<LocomotionController>();
         if (locomotion) locomotion.canMove = false;

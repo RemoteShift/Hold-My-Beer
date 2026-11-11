@@ -73,6 +73,7 @@ public class LevelRestarter : MonoBehaviour
     private static void ReloadLevel()
     {
         Time.timeScale = 1f;
+        AudioListener.pause = false;
 
         // The player and HUD are kept between scenes, but the reloaded level brings its own
         var player = FindFirstObjectByType<LocomotionController>();
