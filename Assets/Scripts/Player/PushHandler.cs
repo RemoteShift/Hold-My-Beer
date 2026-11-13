@@ -15,18 +15,18 @@ public class PushHandler : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioClip beerPushSound;
     [SerializeField] private AudioClip furniturePushSound;
+    [SerializeField] private AudioSource sfxSource;
 
     public string Prompt { get; private set; } = string.Empty;
     public event Action<string> OnFeedback;
     private PlayerAim aim;
-    private AudioSource audioSource;
     private InputHandler input;
     private float nextPushTime;
 
     private void Awake()
     {
         aim = GetComponent<PlayerAim>();
-        audioSource = GetComponent<AudioSource>();
+        if (!sfxSource) sfxSource = GetComponent<AudioSource>();
     }
     private void OnEnable()
     {
@@ -47,7 +47,7 @@ public class PushHandler : MonoBehaviour
         if (enemy)
         {
             succeeded = enemy.TryPush(aim.FlatForward, pushStrength, enemyPushImpactDamage);
-            if (succeeded) { if (beerPushSound && audioSource) audioSource.PlayOneShot(beerPushSound); }
+            if (succeeded) { if (beerPushSound && sfxSource) sfxSource.PlayOneShot(beerPushSound); }
             else OnFeedback?.Invoke(enemy.IsBeingPushed ? "Already sliding" : "Only beered enemies");
         }
         else
@@ -62,7 +62,7 @@ public class PushHandler : MonoBehaviour
                 furniture.Shove((aim.FlatForward + Vector3.up * 0.15f).normalized * pushStrength);
                 succeeded = true;
             }
-            if (succeeded && furniturePushSound && audioSource) audioSource.PlayOneShot(furniturePushSound);
+            if (succeeded && furniturePushSound && sfxSource) sfxSource.PlayOneShot(furniturePushSound);
         }
         if (succeeded) nextPushTime = Time.time + pushCooldown;
         return succeeded;
