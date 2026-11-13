@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "mcp__unity-mcp__Unity_RunCommand",
-      "mcp__unity-mcp__Unity_GetConsoleLogs"
+      "mcp__unity-mcp__Unity_GetConsoleLogs",
+      "Bash(find C:\\\\Users\\\\noore\\\\dev\\\\hmb\\\\Assets:*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

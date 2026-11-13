@@ -40,12 +40,7 @@ public class GroundedState : PlayerLocomState
         {
             moveDirection.Normalize();
             Rb.linearVelocity = moveDirection * player.MovementSpeed + verticalVelocity;
-            if (player.walkSound && player.audioSource && !player.audioSource.isPlaying)
-            {
-                player.audioSource.clip = player.walkSound;
-                player.audioSource.loop = true;
-                player.audioSource.Play();
-            }
+            player.StartWalkAudio();
         }
         else
         {
