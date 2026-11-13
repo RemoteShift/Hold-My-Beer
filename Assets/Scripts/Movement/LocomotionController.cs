@@ -18,6 +18,8 @@ public class LocomotionController : Singleton<LocomotionController>
     [SerializeField] public AudioClip jumpSound;
     [SerializeField] public AudioClip walkSound;
 
+    private bool walkLooping;
+
     #region Movement Settings
 
     [Header("Movement Settings")]
@@ -85,10 +87,23 @@ public class LocomotionController : Singleton<LocomotionController>
             audioSource.PlayOneShot(jumpSound);
     }
 
+    public void StartWalkAudio()
+    {
+        if (walkLooping || !walkSound || !audioSource) return;
+        audioSource.clip = walkSound;
+        audioSource.loop = true;
+        audioSource.Play();
+        walkLooping = true;
+    }
+
     public void StopAudio(AudioClip clip = null)
     {
-        if (audioSource?.isPlaying != true || !clip || audioSource.clip == clip)
+        if (audioSource == null) return;
+        if (clip == null || (audioSource.clip == clip && walkLooping))
+        {
             audioSource.Stop();
+            walkLooping = false;
+        }
     }
     
     public void SwitchState(PlayerLocomState newState)
