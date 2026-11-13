@@ -14,6 +14,12 @@ public class CameraLook : Singleton<CameraLook>
     private Vector2 lookInput;
     private bool isUsingGamepad;
 
+    private void Start()
+    {
+        // Start from the way the player faces in the scene rather than snapping to 0
+        if (yawPivot) yaw = yawPivot.localEulerAngles.y;
+    }
+
     private void OnEnable()
     {
         LockCursor();

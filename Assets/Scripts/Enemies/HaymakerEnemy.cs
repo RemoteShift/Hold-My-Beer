@@ -13,6 +13,26 @@ public class HaymakerEnemy : EnemyBrain
 
     public override void ReturnToDefaultState() => SwitchState(new HaymakerState(this));
 
+    /// <summary>True if a swing from where he's facing now would reach the other enemy.</summary>
+    public bool IsInSwing(EnemyBrain other)
+    {
+        if (!other || other == this || other.IsDead) return false;
+
+        var body = other.GetComponent<Collider>();
+        if (!body) return false;
+
+        var center = body.bounds.center;
+        var reach = body.ClosestPoint(transform.position) - transform.position;
+        reach.y = 0f;
+        if (reach.magnitude > swingRadius) return false;
+
+        var offset = center - transform.position;
+        offset.y = 0f;
+        if (Mathf.Abs(Vector3.SignedAngle(transform.forward, offset, Vector3.up)) > swingArc * 0.5f) return false;
+
+        return CombatQuery.IsClear(transform.position, center, transform, other.transform);
+    }
+
     private sealed class HaymakerState : EnemyState
     {
         private readonly HaymakerEnemy brawler;

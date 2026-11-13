@@ -10,7 +10,9 @@ public class Singleton<T> : MonoBehaviour where T : Component
         {
             if (_instance == null)
             {
-                _instance = FindObjectOfType<T>();
+                // Menu and storyboard keep configured gameplay objects inactive.
+                // Reuse them instead of creating an unconfigured duplicate.
+                _instance = FindFirstObjectByType<T>(FindObjectsInactive.Include);
                 if (_instance == null)
                 {
                     GameObject obj = new GameObject();

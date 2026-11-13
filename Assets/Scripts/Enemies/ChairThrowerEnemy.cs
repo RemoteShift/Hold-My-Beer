@@ -26,9 +26,20 @@ public class ChairThrowerEnemy : EnemyBrain
     public override void ReturnToDefaultState() => SwitchState(new ThrowState(this));
     public override void Die()
     {
+        DropHeldChair();
+        base.Die();
+    }
+
+    public override void Despawn()
+    {
+        DropHeldChair();
+        base.Despawn();
+    }
+
+    private void DropHeldChair()
+    {
         if (HeldChair) HeldChair.Release(Vector3.zero, EffectiveDamage);
         HeldChair = null;
-        base.Die();
     }
     private sealed class ThrowState : EnemyState
     {

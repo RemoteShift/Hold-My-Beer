@@ -24,6 +24,9 @@ public class InputHandler : Singleton<InputHandler>
     public bool JumpPressed { get; private set; }
     public bool IsSprinting { get; private set; }
 
+    /// <summary>While true, beer, interact and push presses are ignored, e.g. so a tutorial prompt can be read first.</summary>
+    public bool ActionsBlocked { get; set; }
+
     private void OnEnable()
     {
         LookInput.action.Enable();
@@ -62,6 +65,8 @@ public class InputHandler : Singleton<InputHandler>
         JumpPressed  = JumpInput.action.WasPressedThisFrame();
         if (SprintInput && SprintInput.action.WasPressedThisFrame())
             IsSprinting = !IsSprinting;
+
+        if (ActionsBlocked) return;
 
         // WasPressedThisFrame reports the press even if the action has a Hold interaction
         if (BeerInput && BeerInput.action.WasPressedThisFrame())
