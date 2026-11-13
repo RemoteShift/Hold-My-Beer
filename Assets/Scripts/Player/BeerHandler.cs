@@ -16,6 +16,12 @@ public class BeerHandler : MonoBehaviour
     /// <summary>Raised with a short message saying how a press turned out.</summary>
     public event Action<string> OnFeedback;
 
+    /// <summary>Raised when a beer is handed to an attacking enemy.</summary>
+    public event Action OnBeerHanded;
+
+    /// <summary>Raised when the player restocks at a tap or barrel.</summary>
+    public event Action OnRefilled;
+
     [Header("Audio")]
     [SerializeField] private AudioClip beerGivenSound;
     [SerializeField] private AudioClip refillSound;
@@ -76,6 +82,7 @@ public class BeerHandler : MonoBehaviour
             enemy.TryReceiveBeer(fill);
             if (beerGivenSound && audioSource) audioSource.PlayOneShot(beerGivenSound);
             OnFeedback?.Invoke("Parried!");
+            OnBeerHanded?.Invoke();
         }
     }
 
@@ -88,6 +95,7 @@ public class BeerHandler : MonoBehaviour
             {
                 if (refillSound && audioSource) audioSource.PlayOneShot(refillSound);
                 OnFeedback?.Invoke("Refilled");
+                OnRefilled?.Invoke();
             }
             return;
         }

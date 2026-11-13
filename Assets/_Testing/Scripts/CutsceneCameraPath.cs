@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -37,6 +38,9 @@ public class CutsceneCameraPath : MonoBehaviour
 
     [Header("Playback")]
     [SerializeField] private bool playOnStart = false;
+
+    [Tooltip("Raised once the last frame has been held, e.g. to start gameplay.")]
+    public UnityEvent onFinished = new UnityEvent();
 
     private Camera cam;
     private Coroutine running;
@@ -116,6 +120,7 @@ public class CutsceneCameraPath : MonoBehaviour
         {
             Debug.LogWarning($"[CutsceneCameraPath] No active objects whose name starts with '{framePrefix}' were found.", this);
             running = null;
+            onFinished.Invoke();
             yield break;
         }
 
@@ -163,14 +168,12 @@ public class CutsceneCameraPath : MonoBehaviour
                 SnapTo(frame);
             }
 
-            // Hold on every frame except the last one, where the camera simply stops.
-            if (i < frames.Count - 1)
-            {
-                yield return new WaitForSeconds(holdTime);
-            }
+            // Hold on every frame, including the last, so it can be read before the story ends
+            yield return new WaitForSeconds(holdTime);
         }
 
         running = null;
+        onFinished.Invoke();
     }
 
     private void SnapTo(Transform target)
