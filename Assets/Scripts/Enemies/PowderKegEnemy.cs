@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PowderKegEnemy : EnemyBrain
 {
+    [Tooltip("Approach without lighting the fuse until this close to the player. Keep within the player's beer reach.")]
+    [Min(0.1f)] public float fuseStartRange = 2.5f;
     [Min(0.1f)] public float fuseSeconds = 4f;
     [Min(0.01f)] public float explosionRadius = 5f;
     [Tooltip("Velocity added to loose furniture at the blast centre, in metres/second. Independent of furniture mass.")]
@@ -86,6 +88,11 @@ public class PowderKegEnemy : EnemyBrain
             if (!keg.IsLit)
             {
                 if (!keg.CanSeeTarget()) return;
+                // Detection starts the approach, not the countdown. The player must have
+                // a chance to hand over a beer before the fuse starts burning.
+                keg.LookAtTarget();
+                keg.PathfindToTarget();
+                if (Vector3.Distance(keg.transform.position, keg.target.position) > keg.fuseStartRange) return;
                 keg.IsLit = true; keg.FuseRemaining = keg.fuseSeconds;
             }
             keg.LookAtTarget(); keg.PathfindToTarget();

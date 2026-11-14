@@ -96,11 +96,19 @@ public class EnemyBehaviourChecks : MonoBehaviour
             Assert(dropped && !dropped.IsHeld && !dropped.Body.isKinematic, "Dying thrower drops its held weapon");
             dropped.gameObject.SetActive(false);
 
-            target.transform.position = origin + Vector3.forward * 2f;
+            target.transform.position = origin + Vector3.forward * 8f;
             var keg = Spawn<PowderKegEnemy>("Powder Keg", origin, target.transform);
             keg.fuseSeconds = 2f;
             yield return null;
-            Assert(keg.IsLit && keg.CanBeBeered, "Keg lights its fuse on detection");
+            yield return new WaitForSeconds(0.15f);
+            Assert(keg.CanSeeTarget() && !keg.IsLit && !keg.CanBeBeered && keg.FuseRemaining == 0f,
+                "Detecting a distant player does not light the keg or open its parry window");
+            target.transform.position = origin + Vector3.forward * (keg.fuseStartRange + 0.1f);
+            yield return null;
+            Assert(!keg.IsLit, "Keg stays unlit just outside its fuse start range");
+            target.transform.position = origin + Vector3.forward * 2f;
+            yield return null;
+            Assert(keg.IsLit && keg.CanBeBeered, "Keg lights its fuse and becomes parryable within hand range");
             keg.TryReceiveBeer(0.1f);
             var fuse = keg.FuseRemaining;
             yield return new WaitForSeconds(0.15f);

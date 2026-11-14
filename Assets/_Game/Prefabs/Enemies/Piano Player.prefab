@@ -878,8 +878,10 @@ MonoBehaviour:
   pushHitForwardOffset: 0.5
   heldGlassPrefab: {fileID: 8049199679787095025, guid: 1795783f24a48fd49a258ac89a798172, type: 3}
   glassHoldPoint: {fileID: 457199560752151795}
+  leaveSpeedMultiplier: 1.5
+  leavingColor: {r: 0.55, g: 0.85, b: 0.55, a: 1}
   repathInterval: 0.15
-  musicRadius: 10
+  musicRadius: 20
   moveSpeedBuff:
     enabled: 1
     multiplier: 1.35
