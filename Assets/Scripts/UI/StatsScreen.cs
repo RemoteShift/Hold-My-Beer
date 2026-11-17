@@ -19,7 +19,7 @@ public class StatsScreen : MonoBehaviour
     [Tooltip("The screen's canvas. Switched off until the DEAD screen finishes.")]
     [SerializeField] private GameObject screenRoot;
     [SerializeField] private CanvasGroup group;
-    [SerializeField, Min(0f)] private float fadeSeconds = 0.5f;
+    [SerializeField, Min(0f)] private float fadeSeconds = 0.15f;
 
     [Header("Stats")]
     [SerializeField] private TMP_Text enemiesBeeredValue;

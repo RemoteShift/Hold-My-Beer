@@ -70,11 +70,11 @@ public class PushHandler : MonoBehaviour
     {
         if (!aimed) return string.Empty;
         var enemy = aimed.GetComponentInParent<EnemyBrain>();
-        if (enemy) return enemy.IsBeered && !enemy.IsBeingPushed && !enemy.IsImpactStunned ? "[RMB] Push" : string.Empty;
-        if (aimed.GetComponentInParent<FallingChandelier>()) return "[RMB] Drop chandelier";
+        if (enemy) return enemy.IsBeered && !enemy.IsBeingPushed && !enemy.IsImpactStunned ? "[E] Push" : string.Empty;
+        if (aimed.GetComponentInParent<FallingChandelier>()) return "[E] Drop chandelier";
         var pushable = aimed.GetComponentInParent<Pushable>();
-        if (pushable) return pushable.CanPush ? "[RMB] Push" : string.Empty;
+        if (pushable) return pushable.CanPush ? "[E] Push" : string.Empty;
         var furniture = aimed.GetComponentInParent<ThrowableFurniture>();
-        return furniture && !furniture.IsHeld && !furniture.Body.isKinematic ? "[RMB] Push" : string.Empty;
+        return furniture && !furniture.IsHeld && !furniture.Body.isKinematic ? "[E] Push" : string.Empty;
     }
 }

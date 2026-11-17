@@ -11737,9 +11737,9 @@ MonoBehaviour:
   screenRoot: {fileID: 290865329}
   blackout: {fileID: 165709497}
   title: {fileID: 1706018432}
-  fadeToBlackSeconds: 1
-  titleSeconds: 0.6
-  holdSeconds: 3
+  fadeToBlackSeconds: 0.2
+  titleSeconds: 0.15
+  holdSeconds: 0.5
   titleStartScale: 1.3
   onFinished:
     m_PersistentCalls:
@@ -11760,7 +11760,7 @@ MonoBehaviour:
   stats: {fileID: 2087125906}
   screenRoot: {fileID: 1050438212}
   group: {fileID: 1050438214}
-  fadeSeconds: 0.5
+  fadeSeconds: 0.15
   enemiesBeeredValue: {fileID: 468530528}
   enemiesRemainingValue: {fileID: 1531400741}
   refillsUsedValue: {fileID: 1834834778}

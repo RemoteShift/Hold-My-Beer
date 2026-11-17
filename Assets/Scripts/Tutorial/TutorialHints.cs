@@ -62,7 +62,7 @@ public class TutorialHints : MonoBehaviour
         {
             new Hint
             {
-                Text = "[RMB] Push furniture or beered patrons. Whatever they slam into gets stunned.",
+                Text = "[E] Push furniture or beered patrons. Whatever they slam into gets stunned.",
                 IsRelevant = () => pushHandler && !string.IsNullOrEmpty(pushHandler.Prompt),
                 StartTracking = () =>
                 {

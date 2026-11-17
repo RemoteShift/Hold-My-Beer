@@ -50,8 +50,18 @@ public class TutorialDirector : MonoBehaviour
     // Glass time left at which the unbeer prompt stops waiting for the read time
     private const float LastMomentBeerSeconds = 1f;
 
+    // Survives retries and menu visits, but never a new application/Editor play session.
+    private static bool completedThisSession;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetSession()
+    {
+        completedThisSession = false;
+    }
+
     private Coroutine lessons;
     private bool lessonsFinished;
+    private bool diedDuringTutorial;
     private BeerInventory inventory;
     private PlayerHealth playerHealth;
     private LocomotionController player;
@@ -64,7 +74,7 @@ public class TutorialDirector : MonoBehaviour
     private EnemyBrain beerTarget;
     private EnemyBrain takeBackTarget;
     private bool beerPressed;
-    private bool interactPressed;
+    private bool unbeerPressed;
 
     private void OnEnable()
     {
@@ -72,15 +82,16 @@ public class TutorialDirector : MonoBehaviour
         if (!input) return;
 
         input.OnBeerPressed += HandleBeerPressed;
-        input.OnInteractPressed += HandleInteractPressed;
+        input.OnUnbeerPressed += HandleUnbeerPressed;
     }
 
     private void OnDisable()
     {
+        if (playerHealth) playerHealth.OnDied -= HandleTutorialDeath;
         if (!input) return;
 
         input.OnBeerPressed -= HandleBeerPressed;
-        input.OnInteractPressed -= HandleInteractPressed;
+        input.OnUnbeerPressed -= HandleUnbeerPressed;
     }
 
     private void Start()
@@ -93,6 +104,18 @@ public class TutorialDirector : MonoBehaviour
         // Where the level proper starts too: behind the bar
         player = FindFirstObjectByType<LocomotionController>();
         if (player) player.transform.GetPositionAndRotation(out playerStartPosition, out playerStartRotation);
+
+        if (completedThisSession)
+        {
+            // These patrons belong only to the lessons, not the real fight.
+            if (charger) charger.gameObject.SetActive(false);
+            if (haymaker) haymaker.gameObject.SetActive(false);
+            if (spareVictim) spareVictim.gameObject.SetActive(false);
+            StartLevel();
+            return;
+        }
+
+        if (playerHealth) playerHealth.OnDied += HandleTutorialDeath;
         if (playerHealth) playerHealth.CanDie = false;
 
         if (levelManager)
@@ -132,6 +155,12 @@ public class TutorialDirector : MonoBehaviour
         StartCoroutine(HandOverToLevel());
     }
 
+    private void HandleTutorialDeath()
+    {
+        diedDuringTutorial = true;
+        StopAllCoroutines();
+    }
+
     private IEnumerator HandOverToLevel()
     {
         // Let the line on screen finish rather than cutting it off
@@ -148,6 +177,21 @@ public class TutorialDirector : MonoBehaviour
         prompter.Show("That's the basics! Now go get your hat back.");
         yield return new WaitForSecondsRealtime(endSeconds);
         prompter.Hide();
+
+        if (diedDuringTutorial || (playerHealth && playerHealth.IsDead)) yield break;
+
+        completedThisSession = true;
+        StartLevel();
+    }
+
+    private void StartLevel()
+    {
+        if (prompter)
+        {
+            prompter.CancelFreeze();
+            prompter.Hide();
+            prompter.HideHint();
+        }
 
         // The real fight starts fresh and for keeps
         if (playerHealth)
@@ -293,7 +337,7 @@ public class TutorialDirector : MonoBehaviour
             // unless his glass is about to run dry
             var shownAt = Time.realtimeSinceStartup;
             yield return prompter.Prompt(
-                "Once his drink is gone, he'll finish his punch.\nGet another patron in front of him: lure them over, or beer them and push them [RMB]",
+                "Once his drink is gone, he'll finish his punch.\nGet another patron in front of him: lure them over, or beer them and push them [E]",
                 () => !haymaker || !haymaker.IsBeered ||
                       ((Time.realtimeSinceStartup - shownAt >= readSeconds ||
                         haymaker.BeerSecondsLeft <= LastMomentBeerSeconds) && FindPatronInSwing()));
@@ -311,7 +355,7 @@ public class TutorialDirector : MonoBehaviour
 
         takeBackTarget = haymaker;
         yield return prompter.FreezePrompt(
-            "Someone's in front of him, and he finishes his punch once his beer's gone.\nPress [E] to take your beer back!",
+            "Someone's in front of him, and he finishes his punch once his beer's gone.\nPress [RMB] to take your beer back!",
             () => !haymaker || !haymaker.IsBeered);
         takeBackTarget = null;
 
@@ -327,7 +371,7 @@ public class TutorialDirector : MonoBehaviour
     }
 
     private void HandleBeerPressed() => beerPressed = true;
-    private void HandleInteractPressed() => interactPressed = true;
+    private void HandleUnbeerPressed() => unbeerPressed = true;
 
     // Runs after the player's own handlers have had the press, so a press that already
     // worked on the target isn't repeated
@@ -339,13 +383,13 @@ public class TutorialDirector : MonoBehaviour
             beerTarget.TryReceiveBeer(fill);
         }
 
-        if (interactPressed && takeBackTarget && takeBackTarget.TryTakeBackBeer(out var kept) && inventory)
+        if (unbeerPressed && takeBackTarget && takeBackTarget.TryTakeBackBeer(out var kept) && inventory)
         {
             inventory.TryAddGlass(kept);
         }
 
         beerPressed = false;
-        interactPressed = false;
+        unbeerPressed = false;
     }
 
     private EnemyBrain FindPatronInSwing()

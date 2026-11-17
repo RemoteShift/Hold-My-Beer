@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// Hands a beer to the enemy the player is looking at. This is a parry: it only works
 /// while that enemy is attacking, and a press at any other time keeps the glass.
-/// Interacting with a beered enemy unbeers them, taking back whatever is left in the glass.
+/// Unbeering a beered enemy releases them, taking back whatever is left in the glass.
 /// Interacting with a tap or barrel restocks the player.
 /// </summary>
 [RequireComponent(typeof(BeerInventory), typeof(PlayerAim))]
@@ -44,6 +44,7 @@ public class BeerHandler : MonoBehaviour
         input = InputHandler.Instance;
         input.OnBeerPressed += HandleBeerPressed;
         input.OnInteractPressed += HandleInteractPressed;
+        input.OnUnbeerPressed += HandleUnbeerPressed;
     }
 
     private void OnDisable()
@@ -52,6 +53,7 @@ public class BeerHandler : MonoBehaviour
 
         input.OnBeerPressed -= HandleBeerPressed;
         input.OnInteractPressed -= HandleInteractPressed;
+        input.OnUnbeerPressed -= HandleUnbeerPressed;
     }
 
     private void Update()
@@ -97,9 +99,11 @@ public class BeerHandler : MonoBehaviour
                 OnFeedback?.Invoke("Refilled");
                 OnRefilled?.Invoke();
             }
-            return;
         }
+    }
 
+    private void HandleUnbeerPressed()
+    {
         var enemy = aim.FindAimed<EnemyBrain>();
         if (!enemy || !enemy.TryTakeBackBeer(out var fill)) return;
 
@@ -118,7 +122,7 @@ public class BeerHandler : MonoBehaviour
         var enemy = aimed.GetComponentInParent<EnemyBrain>();
         if (!enemy) return string.Empty;
 
-        if (enemy.IsBeered) return "[E] Take back beer";
+        if (enemy.IsBeered) return "[RMB] Take back beer";
         if (!enemy.CanBeBeered) return string.Empty;
 
         return inventory.HasBeer ? "[LMB] Hand beer" : "No beer left";

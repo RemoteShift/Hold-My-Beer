@@ -16,9 +16,9 @@ public class DeadScreen : MonoBehaviour
     [SerializeField] private CanvasGroup title;
 
     [Header("Timing (real seconds)")]
-    [SerializeField, Min(0f)] private float fadeToBlackSeconds = 1f;
-    [SerializeField, Min(0f)] private float titleSeconds = 0.6f;
-    [SerializeField, Min(0f)] private float holdSeconds = 3f;
+    [SerializeField, Min(0f)] private float fadeToBlackSeconds = 0.2f;
+    [SerializeField, Min(0f)] private float titleSeconds = 0.15f;
+    [SerializeField, Min(0f)] private float holdSeconds = 0.5f;
 
     [Tooltip("The title starts this much bigger and shrinks into place as it fades in.")]
     [SerializeField, Min(1f)] private float titleStartScale = 1.3f;

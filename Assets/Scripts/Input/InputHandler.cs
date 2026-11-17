@@ -17,6 +17,7 @@ public class InputHandler : Singleton<InputHandler>
     public event Action<Vector2, bool> OnLookInputChanged;
     public event Action OnBeerPressed;
     public event Action OnInteractPressed;
+    public event Action OnUnbeerPressed;
     public event Action OnPushPressed;
     public event Action<bool> OnLeftClickInput;
     
@@ -24,8 +25,10 @@ public class InputHandler : Singleton<InputHandler>
     public bool JumpPressed { get; private set; }
     public bool IsSprinting { get; private set; }
 
-    /// <summary>While true, beer, interact and push presses are ignored, e.g. so a tutorial prompt can be read first.</summary>
+    /// <summary>While true, beer, unbeer, interact and push presses are ignored, e.g. so a tutorial prompt can be read first.</summary>
     public bool ActionsBlocked { get; set; }
+
+    private InputAction unbeerInput;
 
     private void OnEnable()
     {
@@ -36,6 +39,8 @@ public class InputHandler : Singleton<InputHandler>
         if (BeerInput) BeerInput.action.Enable();
         if (InteractInput) InteractInput.action.Enable();
         if (PushInput) PushInput.action.Enable();
+        unbeerInput = InteractInput ? InteractInput.action.actionMap.FindAction("Unbeer") : null;
+        unbeerInput?.Enable();
 
         LookInput.action.performed += HandleLookInput;
         LookInput.action.canceled += HandleLookInput;
@@ -53,6 +58,7 @@ public class InputHandler : Singleton<InputHandler>
         if (BeerInput) BeerInput.action.Disable();
         if (InteractInput) InteractInput.action.Disable();
         if (PushInput) PushInput.action.Disable();
+        unbeerInput?.Disable();
         ResetSprint();
         moveInput = Vector2.zero;
         JumpPressed = false;
@@ -75,7 +81,10 @@ public class InputHandler : Singleton<InputHandler>
         if (InteractInput && InteractInput.action.WasPressedThisFrame())
             OnInteractPressed?.Invoke();
 
-        var pushPressed = PushInput ? PushInput.action.WasPressedThisFrame() : Mouse.current?.rightButton.wasPressedThisFrame == true;
+        var unbeerPressed = unbeerInput != null ? unbeerInput.WasPressedThisFrame() : Mouse.current?.rightButton.wasPressedThisFrame == true;
+        if (unbeerPressed) OnUnbeerPressed?.Invoke();
+
+        var pushPressed = PushInput ? PushInput.action.WasPressedThisFrame() : Keyboard.current?.eKey.wasPressedThisFrame == true;
         if (pushPressed || Keyboard.current?.fKey.wasPressedThisFrame == true || Gamepad.current?.buttonWest.wasPressedThisFrame == true)
             OnPushPressed?.Invoke();
     }
