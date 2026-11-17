@@ -62,7 +62,7 @@ public class PushHandler : MonoBehaviour
             }
             if (succeeded && furniturePushSound && audioSource) audioSource.PlayOneShot(furniturePushSound);
         }
-        if (succeeded) nextPushTime = Time.time + pushCooldown;
+        if (succeeded) nextPushTime = Time.time + pushCooldown / PianoPlayerEnemy.GetPlayerBuffs(transform).recoverySpeed;
         return succeeded;
     }
 

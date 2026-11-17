@@ -1062,6 +1062,11 @@ GameObject:
   - component: {fileID: 187264588735256934}
   - component: {fileID: 4956818410280513487}
   - component: {fileID: 4304964182589537830}
+  - component: {fileID: 274474878429219096}
+  - component: {fileID: 8702035849624372698}
+  - component: {fileID: 985495483665736783}
+  - component: {fileID: 2394696653973718915}
+  - component: {fileID: 2906267083798625370}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -1247,7 +1252,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PushHandler
   pushStrength: 30
   pushCooldown: 2
-  enemyPushImpactDamage: 5
   beerPushSound: {fileID: 8300000, guid: 2c5292ba5cf254919a6b9e2b18e04f49, type: 3}
   furniturePushSound: {fileID: 8300000, guid: 29d8d2ead07bb0a43b27cd914fe92b51, type: 3}
 --- !u!82 &4304964182589537830
@@ -1347,6 +1351,70 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &274474878429219096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a23d837c45cd48e193c79a60e779a6a6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::IngredientInventory
+  lifeEssence: 0
+  water: 0
+  sugar: 0
+  gunpowder: 0
+--- !u!114 &8702035849624372698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8067020141bf44a3893efd82456ed4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCocktailEffects
+--- !u!114 &985495483665736783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a66df93674ad6561b63019d28e61bc8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CocktailTrajectoryPreview
+--- !u!114 &2394696653973718915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2cce8dcc2e8d18d87cd0a220c2a41f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CocktailHud
+--- !u!114 &2906267083798625370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b8741982ab3d8a25859836eded608ee, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CocktailBrewer
 --- !u!1 &6602798952689614809
 GameObject:
   m_ObjectHideFlags: 0

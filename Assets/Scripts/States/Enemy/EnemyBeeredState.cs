@@ -65,6 +65,7 @@ public class EnemyBeeredState : EnemyState
     {
         interruptedAttack.PrepareToResume();
         enemy.SwitchState(interruptedAttack);
+        enemy.RedirectAttackAim();
     }
 
     private void ShowFillLevel()

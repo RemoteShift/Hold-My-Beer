@@ -27,7 +27,7 @@ public class LocomotionController : Singleton<LocomotionController>
 
     public float jumpSpeed = 0.8f;
     [Min(1f)] public float sprintMultiplier = 1.5f;
-    public float MovementSpeed => moveSpeed * (input.IsSprinting ? sprintMultiplier : 1f);
+    public float MovementSpeed => moveSpeed * PianoPlayerEnemy.GetPlayerBuffs(transform).moveSpeed * (input.IsSprinting ? sprintMultiplier : 1f);
     public float AirAcc = 0.1f;
 
     #endregion

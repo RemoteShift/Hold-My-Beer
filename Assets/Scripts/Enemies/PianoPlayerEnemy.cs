@@ -33,11 +33,18 @@ public class PianoPlayerEnemy : EnemyBrain
 
     public static EnemyBuffs GetBuffs(EnemyBrain recipient)
     {
+        return GetMusicBuffs(recipient.transform, false, recipient);
+    }
+
+    public static EnemyBuffs GetPlayerBuffs(Transform recipient) => GetMusicBuffs(recipient, true, null);
+
+    private static EnemyBuffs GetMusicBuffs(Transform recipient, bool forPlayer, EnemyBrain enemy)
+    {
         var buffs = EnemyBuffs.None;
         foreach (var pianist in Players)
         {
-            if (!pianist || pianist == recipient || !pianist.IsPlayingMusic) continue;
-            if ((pianist.transform.position - recipient.transform.position).sqrMagnitude > pianist.musicRadius * pianist.musicRadius) continue;
+            if (!pianist || pianist == enemy || !pianist.IsPlayingMusic || pianist.IsAggressive != forPlayer) continue;
+            if ((pianist.transform.position - recipient.position).sqrMagnitude > pianist.musicRadius * pianist.musicRadius) continue;
             // Strongest enabled source wins per channel; unrelated effects can come from different pianists.
             buffs.moveSpeed = Mathf.Max(buffs.moveSpeed, pianist.moveSpeedBuff.Value);
             buffs.turnSpeed = Mathf.Max(buffs.turnSpeed, pianist.turnSpeedBuff.Value);

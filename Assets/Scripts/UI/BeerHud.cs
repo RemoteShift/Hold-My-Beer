@@ -15,6 +15,7 @@ public class BeerHud : MonoBehaviour
     [SerializeField] private float feedbackSeconds = 0.9f;
 
     private float feedbackHideTime;
+    private CocktailBrewer brewer;
 
     private void OnEnable()
     {
@@ -39,7 +40,9 @@ public class BeerHud : MonoBehaviour
 
     private void Update()
     {
-        promptText.text = CombinePrompts(handler.Prompt, pushHandler ? pushHandler.Prompt : string.Empty);
+        if (!brewer && handler) brewer = handler.GetComponent<CocktailBrewer>();
+        promptText.text = brewer && brewer.OwnsCombatInput ? string.Empty :
+            CombinePrompts(handler.Prompt, pushHandler ? pushHandler.Prompt : string.Empty);
 
         if (Time.time >= feedbackHideTime)
         {

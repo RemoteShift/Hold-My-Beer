@@ -11,9 +11,12 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float currentHealth;
 
-    public float MaxHealth => maxHealth;
+    public float MaxHealth => maxHealth * musicHealthMultiplier;
+    private float musicHealthMultiplier = 1f;
     public float CurrentHealth => currentHealth;
     public bool IsDead => currentHealth <= 0f;
+    public float InvulnerableSecondsLeft => Mathf.Max(0f, invulnerableUntil - Time.time);
+    public bool IsInvulnerable => InvulnerableSecondsLeft > 0f;
 
     /// <summary>When false, dying leaves the player dead for whatever handles <see cref="OnDied"/>.</summary>
     public bool RespawnOnDeath { get; set; } = true;
@@ -30,11 +33,12 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     private LocomotionController locomotion;
     private Vector3 spawnPosition;
     private Quaternion spawnRotation;
+    private float invulnerableUntil;
 
     private void Awake()
     {
         locomotion = GetComponent<LocomotionController>();
-        currentHealth = maxHealth;
+        currentHealth = MaxHealth;
     }
 
     private void Start()
@@ -43,12 +47,26 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         spawnRotation = transform.rotation;
     }
 
+    private void Update() => RefreshMusicHealth();
+
+    private void RefreshMusicHealth()
+    {
+        var multiplier = PianoPlayerEnemy.GetPlayerBuffs(transform).maxHealth;
+        if (Mathf.Approximately(multiplier, musicHealthMultiplier)) return;
+        var fraction = MaxHealth > 0f ? currentHealth / MaxHealth : 0f;
+        musicHealthMultiplier = multiplier;
+        currentHealth = fraction * MaxHealth;
+        OnHealthChanged?.Invoke(currentHealth, MaxHealth);
+    }
+
     public void TakeDamage(float damage)
     {
-        if (currentHealth <= 0f) return;
+        if (currentHealth <= 0f || IsInvulnerable || damage <= 0f || float.IsNaN(damage)) return;
 
+        RefreshMusicHealth();
+        damage /= PianoPlayerEnemy.GetPlayerBuffs(transform).defense;
         currentHealth = Mathf.Max(CanDie ? 0f : 1f, currentHealth - damage);
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, MaxHealth);
         Debug.Log($"Player took {damage} damage: {currentHealth}/{maxHealth}");
 
         if (currentHealth <= 0f)
@@ -59,16 +77,27 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     public void Stun() { }
 
+    public void GrantInvulnerability(float seconds)
+    {
+        if (seconds > 0f) invulnerableUntil = Time.time + seconds;
+    }
+
+    public void ClearInvulnerability()
+    {
+        invulnerableUntil = 0f;
+    }
+
     public void RestoreFullHealth()
     {
-        currentHealth = maxHealth;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        currentHealth = MaxHealth;
+        OnHealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 
     public void Die()
     {
+        ClearInvulnerability();
         currentHealth = 0f;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, MaxHealth);
         OnDied?.Invoke();
 
         if (!RespawnOnDeath)
@@ -81,7 +110,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         locomotion.ResetPositionRotation(spawnPosition, spawnRotation);
 
-        currentHealth = maxHealth;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        currentHealth = MaxHealth;
+        OnHealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 }

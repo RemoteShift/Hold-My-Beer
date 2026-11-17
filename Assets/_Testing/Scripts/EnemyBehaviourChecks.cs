@@ -126,8 +126,9 @@ public class EnemyBehaviourChecks : MonoBehaviour
             var nearProp = Prop(origin + Vector3.left, false);
             var farProp = Prop(origin + Vector3.left * 4f, false);
             Physics.SyncTransforms();
+            Assert(keg.TryReceiveBeer(1f), "Keg can be beered before a lethal enemy hit");
             keg.TakeDamage(999f); keg.Die();
-            Assert(keg.IsDead, "Lethal damage detonates the keg");
+            Assert(keg.IsDead, "Lethal damage detonates the keg even while beered");
             Assert(blastVictim.currentHealth == 120f, "Explosion causes friendly fire exactly once");
             Assert(protectedVictim.currentHealth == protectedVictim.maxHealth, "Solid scenery blocks blast damage");
             wall.SetActive(false); protectedVictim.gameObject.SetActive(false);

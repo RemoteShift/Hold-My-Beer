@@ -32,6 +32,8 @@ public class BeerHandler : MonoBehaviour
 
     private void Awake()
     {
+        // Legacy scene copies gain the same kit as the persistent player prefab.
+        if (!GetComponent<CocktailBrewer>()) gameObject.AddComponent<CocktailBrewer>();
         inventory = GetComponent<BeerInventory>();
         aim = GetComponent<PlayerAim>();
         audioSource = GetComponent<AudioSource>();

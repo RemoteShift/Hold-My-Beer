@@ -86,6 +86,15 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     public float EffectiveMaxHealth => Mathf.Max(0.01f, maxHealth * Buffs.maxHealth);
     public bool CanNavigate => agent && agent.isActiveAndEnabled && agent.isOnNavMesh;
 
+    private float honeyUntil;
+    private float aggressionUntil;
+    private Transform targetBeforeAggression;
+    private bool aggressionApplied;
+    public float HoneySecondsLeft => Mathf.Max(0f, honeyUntil - Time.time);
+    public float AggressionSecondsLeft => Mathf.Max(0f, aggressionUntil - Time.time);
+    public bool IsHoneyRooted => HoneySecondsLeft > 0f;
+    public bool IsAggressive => AggressionSecondsLeft > 0f;
+
     /// <summary>Preserve HP percentage when capacity changes, so toggling an aura cannot heal wounds.</summary>
     public void RefreshHealthCapacity()
     {
@@ -123,8 +132,9 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     protected virtual void Update()
     {
         if (IsDead) return;
+        UpdateAggression();
         RefreshHealthCapacity();
-        agent.speed = Mathf.Max(0f, moveSpeed) * Buffs.moveSpeed;
+        agent.speed = IsHoneyRooted ? 0f : Mathf.Max(0f, moveSpeed) * Buffs.moveSpeed;
         if (IsImpactStunned)
         {
             beerImpactStunLeft = Mathf.Max(0f, beerImpactStunLeft - Time.deltaTime);
@@ -133,7 +143,11 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         }
         if (IsLeaving && CanStartLeaving) SwitchState(new EnemyLeaveState(this, exitPosition));
         currentState?.Update();
-        if (!IsDead) UpdatePush();
+        if (!IsDead)
+        {
+            if (IsHoneyRooted) StopPathfinding();
+            else UpdatePush();
+        }
     }
 
     protected void FixedUpdate()
@@ -154,6 +168,81 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     }
     
     public abstract void ReturnToDefaultState();
+
+    #endregion
+
+    #region Cocktails
+
+    /// <summary>Glue only stops travel. Attacks, music, beer and lit fuses keep progressing.</summary>
+    public void ApplyHoney(float duration)
+    {
+        if (IsDead || duration <= 0f || float.IsNaN(duration) || float.IsInfinity(duration)) return;
+        honeyUntil = Mathf.Max(honeyUntil, Time.time + duration);
+        pushDistanceLeft = 0f;
+        StopPathfinding();
+    }
+
+    /// <summary>Redirects the existing attack at another patron, preserving its progress and beer state.</summary>
+    public void ApplyAggression(float duration)
+    {
+        if (IsDead || IsLeaving || duration <= 0f || float.IsNaN(duration) || float.IsInfinity(duration)) return;
+        if (!aggressionApplied) targetBeforeAggression = target;
+        aggressionApplied = true;
+        aggressionUntil = Mathf.Max(aggressionUntil, Time.time + duration);
+        SelectAggressionTarget();
+    }
+
+    private void UpdateAggression()
+    {
+        if (!aggressionApplied) return;
+        if (!IsAggressive || IsLeaving)
+        {
+            target = targetBeforeAggression;
+            if (!target)
+            {
+                var player = FindFirstObjectByType<LocomotionController>();
+                if (player) target = player.transform;
+            }
+            targetBeforeAggression = null;
+            aggressionApplied = false;
+            aggressionUntil = 0f;
+            _nextRepathTime = 0f;
+            return;
+        }
+        var other = target ? target.GetComponent<EnemyBrain>() : null;
+        if (!other || other.IsDead || other.IsLeaving || !other.isActiveAndEnabled) SelectAggressionTarget();
+    }
+
+    private void SelectAggressionTarget()
+    {
+        EnemyBrain nearest = null;
+        var distance = float.PositiveInfinity;
+        foreach (var candidate in all)
+        {
+            if (!candidate || candidate == this || candidate.IsDead || candidate.IsLeaving || !candidate.isActiveAndEnabled) continue;
+            var squared = (candidate.transform.position - transform.position).sqrMagnitude;
+            if (squared >= distance) continue;
+            distance = squared;
+            nearest = candidate;
+        }
+        // With no other patrons, an affected enemy waits instead of deliberately targeting the player.
+        var replacement = nearest ? nearest.transform : null;
+        if (target == replacement) return;
+        target = replacement;
+        _nextRepathTime = 0f;
+        StopPathfinding();
+        if (!IsBeered) RedirectAttackAim();
+    }
+
+    /// <summary>Called by beer release as well, so the glass remains a true freeze during aggression.</summary>
+    public void RedirectAttackAim()
+    {
+        if (!IsAggressive || !target) return;
+        var direction = target.position - transform.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direction);
+        currentState?.Retarget();
+    }
 
     #endregion
 
@@ -283,7 +372,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public void PathfindTo(Vector3 destination)
     {
-        if (!CanNavigate || IsBeingPushed) return;
+        if (!CanNavigate || IsBeingPushed || IsHoneyRooted) return;
 
         agent.isStopped = false;
 
@@ -362,7 +451,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     private bool BeginPush(Vector3 direction, float strength)
     {
-        if (IsDead || !isActiveAndEnabled || strength <= 0f || float.IsNaN(strength) || float.IsInfinity(strength)) return false;
+        if (IsDead || IsHoneyRooted || !isActiveAndEnabled || strength <= 0f || float.IsNaN(strength) || float.IsInfinity(strength)) return false;
         direction.y = 0f;
         if (direction.sqrMagnitude < 0.0001f) return false;
         pushDirection = direction.normalized;
@@ -413,6 +502,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     public virtual void Die()
     {
+        if (IsDead) return;
+        EnemyIngredientDrops.Spawn(this);
         Remove();
     }
 
@@ -420,6 +511,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     {
         if (IsDead) return;
         IsDead = true;
+        honeyUntil = 0f;
+        aggressionUntil = 0f;
         pushDistanceLeft = 0f;
         StopPathfinding();
         SwitchState(null);

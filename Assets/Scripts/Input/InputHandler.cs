@@ -29,6 +29,7 @@ public class InputHandler : Singleton<InputHandler>
     public bool ActionsBlocked { get; set; }
 
     private InputAction unbeerInput;
+    private CocktailBrewer brewer;
 
     private void OnEnable()
     {
@@ -72,7 +73,9 @@ public class InputHandler : Singleton<InputHandler>
         if (SprintInput && SprintInput.action.WasPressedThisFrame())
             IsSprinting = !IsSprinting;
 
-        if (ActionsBlocked) return;
+        if (!brewer) brewer = FindFirstObjectByType<CocktailBrewer>();
+        var brewing = brewer && brewer.PollInput(ActionsBlocked);
+        if (ActionsBlocked || brewing) return;
 
         // WasPressedThisFrame reports the press even if the action has a Hold interaction
         if (BeerInput && BeerInput.action.WasPressedThisFrame())
@@ -85,7 +88,7 @@ public class InputHandler : Singleton<InputHandler>
         if (unbeerPressed) OnUnbeerPressed?.Invoke();
 
         var pushPressed = PushInput ? PushInput.action.WasPressedThisFrame() : Keyboard.current?.eKey.wasPressedThisFrame == true;
-        if (pushPressed || Keyboard.current?.fKey.wasPressedThisFrame == true || Gamepad.current?.buttonWest.wasPressedThisFrame == true)
+        if (pushPressed || Gamepad.current?.buttonWest.wasPressedThisFrame == true)
             OnPushPressed?.Invoke();
     }
 

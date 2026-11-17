@@ -43,6 +43,7 @@ public class HaymakerEnemy : EnemyBrain
         public override bool IsAttacking => phase == 1 || phase == 2;
         public HaymakerState(HaymakerEnemy enemy) : base(enemy) { brawler = enemy; }
         public override void PrepareToResume() { aimLocked = true; }
+        public override void Retarget() { aimLocked = false; }
         public override void Enter()
         {
             brawler.SetBodyColor(phase == 0 ? new Color(0.6f, 0.25f, 0.12f) : Color.yellow);

@@ -10,11 +10,13 @@ public class ChargerChargeState : EnemyState
     private const float BlockedDistanceRatio = 0.25f;
 
     private readonly ChargerEnemy charger;
-    private readonly Vector3 direction;
+    private Vector3 direction;
     private readonly HashSet<IDamageable> alreadyHit = new HashSet<IDamageable>();
     private float distanceLeft;
 
     public override bool IsAttacking => true;
+
+    public override void Retarget() { direction = charger.transform.forward; }
 
     public ChargerChargeState(ChargerEnemy charger) : base(charger)
     {
@@ -33,6 +35,12 @@ public class ChargerChargeState : EnemyState
     public override void Update()
     {
         if (!charger.CanNavigate || charger.IsBeingPushed) return;
+        if (charger.IsHoneyRooted)
+        {
+            // The charge remains live at the glued position and can still hit someone touching it.
+            if (charger.HitTargetsInFront(alreadyHit)) charger.SwitchState(new ChargerRecoverState(charger));
+            return;
+        }
 
         var step = charger.chargeSpeed * charger.AttackDeltaTime;
         var before = charger.transform.position;

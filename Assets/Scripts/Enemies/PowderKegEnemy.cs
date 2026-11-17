@@ -18,6 +18,44 @@ public class PowderKegEnemy : EnemyBrain
     public float FuseRemaining { get; private set; }
     public bool IsLit { get; private set; }
     private bool exploded;
+    private TMPro.TextMeshPro fuseStatus;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        var label = new GameObject("Keg fuse status");
+        label.transform.SetParent(transform, false);
+        label.transform.localPosition = Vector3.up * 2.1f;
+        fuseStatus = label.AddComponent<TMPro.TextMeshPro>();
+        fuseStatus.fontSize = 3f;
+        fuseStatus.alignment = TMPro.TextAlignmentOptions.Center;
+        fuseStatus.rectTransform.sizeDelta = new Vector2(4.5f, 1.2f);
+    }
+
+    private void LateUpdate()
+    {
+        if (!fuseStatus) return;
+        var camera = Camera.main;
+        if (camera) fuseStatus.transform.rotation = camera.transform.rotation;
+        if (IsDead || IsLeaving) { fuseStatus.text = ""; return; }
+        if (IsBeered)
+        {
+            fuseStatus.color = new Color(.4f, .8f, 1f);
+            fuseStatus.text = $"FUSE PAUSED  {FuseRemaining:0.0}s";
+        }
+        else if (!IsLit)
+        {
+            fuseStatus.color = Color.gray;
+            fuseStatus.text = "FUSE UNLIT";
+        }
+        else
+        {
+            var urgent = FuseRemaining <= 1.5f;
+            fuseStatus.color = urgent ? Color.Lerp(Color.red, Color.yellow, Mathf.PingPong(Time.time * 6f, 1f)) : Color.yellow;
+            fuseStatus.text = (CanBeBeered ? "[LMB] BEER ME" : "FUSE BURNING") +
+                $"\n{(urgent ? "EXPLODING" : "EXPLODES IN")}  {FuseRemaining:0.0}s";
+        }
+    }
 
     public override void ReturnToDefaultState() => SwitchState(new FuseState(this));
 
@@ -26,6 +64,7 @@ public class PowderKegEnemy : EnemyBrain
     public void Explode()
     {
         if (exploded || IsDead) return;
+        // Beer pauses the fuse, but lethal damage and chain reactions still detonate the keg.
         exploded = true;
         var blastDamage = EffectiveDamage;
         // Mark dead before damaging neighbours: chain reactions must not re-enter this explosion.
@@ -64,7 +103,10 @@ public class PowderKegEnemy : EnemyBrain
 
     protected override void Update()
     {
+        var wasBeered = IsBeered;
         base.Update();
+        // Do not charge an entire frame against the fuse when beer expires mid-update.
+        if (wasBeered) return;
         if (!IsLit || IsBeered || IsDead) return;
         // Stuns interrupt movement, but only beer pauses an already lit fuse.
         FuseRemaining = Mathf.Max(0f, FuseRemaining - Time.deltaTime);
@@ -85,6 +127,7 @@ public class PowderKegEnemy : EnemyBrain
         }
         public override void Update()
         {
+            if (!keg.target) { keg.StopPathfinding(); return; }
             if (!keg.IsLit)
             {
                 if (!keg.CanSeeTarget()) return;

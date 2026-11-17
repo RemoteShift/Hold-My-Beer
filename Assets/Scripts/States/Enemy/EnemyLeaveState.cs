@@ -41,7 +41,8 @@ public class EnemyLeaveState : EnemyState
             return;
         }
 
-        enemy.agent.speed *= enemy.leaveSpeedMultiplier;
+        enemy.agent.speed = enemy.IsHoneyRooted ? 0f :
+            Mathf.Max(2f, enemy.moveSpeed) * enemy.MoveSpeedMultiplier * enemy.leaveSpeedMultiplier;
         enemy.PathfindTo(exit);
         enemy.FaceDirection(enemy.agent.velocity);
     }

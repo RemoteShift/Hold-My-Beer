@@ -59,6 +59,12 @@ public class ChairThrowerEnemy : EnemyBrain
         public override bool IsAttacking => phase == 1;
         public ThrowState(ChairThrowerEnemy enemy) : base(enemy) { thrower = enemy; }
         public override void PrepareToResume() { aimLocked = true; }
+        public override void Retarget()
+        {
+            aimLocked = false;
+            if (thrower.target && thrower.chairHoldPoint)
+                thrower.ThrowAimOffset = thrower.target.position - thrower.chairHoldPoint.position;
+        }
         public override void Enter()
         {
             if (!entered) { normalStoppingDistance = thrower.agent.stoppingDistance; entered = true; }
@@ -90,7 +96,7 @@ public class ChairThrowerEnemy : EnemyBrain
         }
         private void Roam()
         {
-            if (!thrower.CanNavigate || thrower.IsBeingPushed) return;
+            if (!thrower.CanNavigate || thrower.IsBeingPushed || thrower.IsHoneyRooted) return;
             var agent = thrower.agent;
             agent.stoppingDistance = 0f;
             agent.isStopped = false;
@@ -167,7 +173,7 @@ public class ChairThrowerEnemy : EnemyBrain
                         RestoreStoppingDistance();
                     }
                 }
-                else if (thrower.CanNavigate && !thrower.IsBeingPushed)
+                else if (thrower.CanNavigate && !thrower.IsBeingPushed && !thrower.IsHoneyRooted)
                 {
                     // Pickup uses 3D surface reach; the normal combat stopping distance may
                     // stop outside that reach, especially for low stools or off-centre pivots.

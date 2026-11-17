@@ -8,6 +8,7 @@ public class ChargerWindupState : EnemyState
     private bool aimLocked;
 
     public override bool IsAttacking => true;
+    public override void Retarget() { aimLocked = false; }
 
     // After a beer the charger keeps its frozen aim, so the player can step aside and let it hit something else.
     public override void PrepareToResume()

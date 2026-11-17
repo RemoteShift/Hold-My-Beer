@@ -15,6 +15,9 @@ public class EnemyState : IState
     /// <summary>Called just before an attack carries on after a beer, whether it ran out or was taken back.</summary>
     public virtual void PrepareToResume() { }
 
+    /// <summary>A cocktail can change the victim of an attack without restarting its timer.</summary>
+    public virtual void Retarget() { }
+
     public virtual void Enter() { }
 
     public virtual void Exit() { }
