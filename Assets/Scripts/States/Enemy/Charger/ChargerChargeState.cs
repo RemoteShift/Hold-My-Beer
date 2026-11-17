@@ -27,6 +27,7 @@ public class ChargerChargeState : EnemyState
     {
         charger.StopPathfinding();
         charger.SetBodyColor(charger.chargeColor);
+        charger.Animator?.SetBool("IsCharging", true);
     }
 
     // Skips the base look-at on purpose: a charge never steers.
@@ -47,19 +48,19 @@ public class ChargerChargeState : EnemyState
 
         if (charger.HitTargetsInFront(alreadyHit))
         {
-            charger.SwitchState(new ChargerRecoverState(charger));
+            charger.SwitchState(new ChargerRecoverState(charger, hitPlayer: true));
         }
         else if (hitObstacle)
         {
             var hitPushable = charger.IsPushableAhead();
 
-            charger.SwitchState(new ChargerRecoverState(charger));
+            charger.SwitchState(new ChargerRecoverState(charger, hitPlayer: false));
 
             if (!hitPushable) charger.TakeDamage(charger.wallSlamDamage);
         }
         else if (moved < step * BlockedDistanceRatio || distanceLeft <= 0f)
         {
-            charger.SwitchState(new ChargerRecoverState(charger));
+            charger.SwitchState(new ChargerRecoverState(charger, hitPlayer: false));
         }
     }
 }

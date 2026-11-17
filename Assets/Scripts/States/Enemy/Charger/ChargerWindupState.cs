@@ -25,6 +25,12 @@ public class ChargerWindupState : EnemyState
     {
         charger.StopPathfinding();
         charger.SetBodyColor(charger.windupColor);
+        charger.Animator?.SetBool("IsWindingUp", true);
+    }
+
+    public override void Exit()
+    {
+        charger.Animator?.SetBool("IsWindingUp", false);
     }
 
     public override void Update()

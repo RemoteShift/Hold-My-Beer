@@ -26,6 +26,7 @@ public class EnemyBeeredState : EnemyState
     {
         enemy.StopPathfinding();
         enemy.SetBodyColor(enemy.beeredColor);
+        (enemy as ChargerEnemy)?.Animator?.SetBool("IsBeered", true);
 
         heldGlass = enemy.SpawnHeldGlass();
         if (heldGlass) fullGlassScale = heldGlass.transform.localScale;
@@ -36,6 +37,7 @@ public class EnemyBeeredState : EnemyState
     public override void Exit()
     {
         if (heldGlass) Object.Destroy(heldGlass);
+        (enemy as ChargerEnemy)?.Animator?.SetBool("IsBeered", false);
     }
 
     // Skips the base look-at on purpose: a beered enemy holds its pose.

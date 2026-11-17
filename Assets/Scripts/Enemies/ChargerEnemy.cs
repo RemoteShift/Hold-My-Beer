@@ -7,6 +7,13 @@ using UnityEngine;
 /// </summary>
 public class ChargerEnemy : EnemyBrain
 {
+    [HideInInspector] public Animator Animator;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        Animator = GetComponent<Animator>();
+    }
     [Header("Charge Attack")]
     [Tooltip("Keep this within the player's hand range, or the wind-up can't be parried.")]
     public float attackRange = 3.5f;

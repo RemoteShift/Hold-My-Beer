@@ -91,7 +91,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         if (!agent) agent = GetComponent<NavMeshAgent>();
         agent.speed = moveSpeed;
 
-        _bodyRenderer = GetComponent<Renderer>();
+        _bodyRenderer = GetComponent<Renderer>() ?? GetComponentInChildren<Renderer>();
         if (_bodyRenderer) _bodyColor = _bodyRenderer.material.color;
     }
 

@@ -11,7 +11,9 @@
       "Bash(ls /c/Python*/python.exe)",
       "Bash(ls /c/Users/noore/AppData/Local/Programs/Python/*/python.exe)",
       "Bash(command -v python.exe)",
-      "Bash(/c/Users/noore/Miniconda3/python.exe:*)"
+      "Bash(/c/Users/noore/Miniconda3/python.exe:*)",
+      "mcp__unity-mcp__Unity_Camera_Capture",
+      "mcp__unity-mcp__Unity_SceneView_CaptureMultiAngleSceneView"
     ]
   }
 }
