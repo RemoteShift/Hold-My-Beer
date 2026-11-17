@@ -196,8 +196,8 @@ public class TutorialDirector : MonoBehaviour
 
             beerTarget = charger;
             yield return prompter.FreezePrompt(
-                "He's about to charge!\nLook at him and press [LMB] to hand him a beer",
-                () => !charger || charger.IsBeered);
+                "He's about to charge!\nLook at him and press {0} to hand him a beer",
+                () => !charger || charger.IsBeered, InputHandler.PromptAction.Beer);
             beerTarget = null;
             if (!charger) yield break;
 
@@ -273,8 +273,8 @@ public class TutorialDirector : MonoBehaviour
         {
             if (inventory && !inventory.HasBeer)
             {
-                yield return prompter.Prompt("You're out of beer! Refill at the tap behind the bar [E]",
-                    () => !inventory || inventory.HasBeer);
+                yield return prompter.Prompt("You're out of beer! Refill at the tap behind the bar {0}",
+                    () => !inventory || inventory.HasBeer, InputHandler.PromptAction.Interact);
             }
 
             yield return new WaitUntil(() => !haymaker || haymaker.CanBeBeered);
@@ -283,8 +283,9 @@ public class TutorialDirector : MonoBehaviour
             // His wind-up is short, so this freezes too. Missing it lets the swing play out.
             beerTarget = haymaker;
             yield return prompter.FreezePrompt(
-                "He's winding up!\nPress [LMB] to beer him",
-                () => !haymaker || haymaker.IsBeered || !haymaker.CanBeBeered || (inventory && !inventory.HasBeer));
+                "He's winding up!\nPress {0} to beer him",
+                () => !haymaker || haymaker.IsBeered || !haymaker.CanBeBeered || (inventory && !inventory.HasBeer),
+                InputHandler.PromptAction.Beer);
             beerTarget = null;
             if (!haymaker) yield break;
             if (!haymaker.IsBeered) continue;
@@ -293,10 +294,10 @@ public class TutorialDirector : MonoBehaviour
             // unless his glass is about to run dry
             var shownAt = Time.realtimeSinceStartup;
             yield return prompter.Prompt(
-                "Once his drink is gone, he'll finish his punch.\nGet another patron in front of him: lure them over, or beer them and push them [RMB]",
+                "Once his drink is gone, he'll finish his punch.\nGet another patron in front of him: lure them over, or beer them and push them {0}",
                 () => !haymaker || !haymaker.IsBeered ||
                       ((Time.realtimeSinceStartup - shownAt >= readSeconds ||
-                        haymaker.BeerSecondsLeft <= LastMomentBeerSeconds) && FindPatronInSwing()));
+                        haymaker.BeerSecondsLeft <= LastMomentBeerSeconds) && FindPatronInSwing()), InputHandler.PromptAction.Push);
             if (!haymaker) yield break;
 
             victim = FindPatronInSwing();
@@ -311,8 +312,8 @@ public class TutorialDirector : MonoBehaviour
 
         takeBackTarget = haymaker;
         yield return prompter.FreezePrompt(
-            "Someone's in front of him, and he finishes his punch once his beer's gone.\nPress [E] to take your beer back!",
-            () => !haymaker || !haymaker.IsBeered);
+            "Someone's in front of him, and he finishes his punch once his beer's gone.\nPress {0} to take your beer back!",
+            () => !haymaker || !haymaker.IsBeered, InputHandler.PromptAction.Interact);
         takeBackTarget = null;
 
         // Wait for the punch to finish

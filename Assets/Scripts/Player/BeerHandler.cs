@@ -12,6 +12,7 @@ public class BeerHandler : MonoBehaviour
 {
     /// <summary>What the player can do with whatever they're looking at. Empty if nothing.</summary>
     public string Prompt { get; private set; } = string.Empty;
+    public InputHandler.PromptAction PromptAction { get; private set; }
 
     /// <summary>Raised with a short message saying how a press turned out.</summary>
     public event Action<string> OnFeedback;
@@ -56,6 +57,7 @@ public class BeerHandler : MonoBehaviour
 
     private void Update()
     {
+        PromptAction = InputHandler.PromptAction.None;
         Prompt = BuildPrompt(aim.FindAimedCollider());
     }
 
@@ -118,10 +120,17 @@ public class BeerHandler : MonoBehaviour
         var enemy = aimed.GetComponentInParent<EnemyBrain>();
         if (!enemy) return string.Empty;
 
-        if (enemy.IsBeered) return "[E] Take back beer";
-        if (!enemy.CanBeBeered) return string.Empty;
+        if (enemy.IsBeered)
+        {
+            PromptAction = InputHandler.PromptAction.Interact;
+            return "Take back beer";
+        }
 
-        return inventory.HasBeer ? "[LMB] Hand beer" : "No beer left";
+        if (!enemy.CanBeBeered) return string.Empty;
+        if (!inventory.HasBeer) return "No beer left";
+
+        PromptAction = InputHandler.PromptAction.Beer;
+        return "Hand beer";
     }
 
     private string BuildSourcePrompt(BeerSource source)
@@ -129,6 +138,7 @@ public class BeerHandler : MonoBehaviour
         if (source.IsEmpty) return "Barrel empty";
         if (inventory.IsFullyStocked) return "Beers full";
 
-        return source.IsUnlimited ? "[E] Refill" : $"[E] Refill ({source.RefillsLeft} left)";
+        PromptAction = InputHandler.PromptAction.Interact;
+        return source.IsUnlimited ? "Refill" : $"Refill ({source.RefillsLeft} left)";
     }
 }

@@ -43,7 +43,11 @@ public class BeerHud : MonoBehaviour
 
     private void Update()
     {
-        promptText.text = CombinePrompts(handler.Prompt, pushHandler ? pushHandler.Prompt : string.Empty);
+        var beerPrompt = FormatActionPrompt(handler.Prompt, handler.PromptAction);
+        var pushPrompt = pushHandler
+            ? FormatActionPrompt(pushHandler.Prompt, InputHandler.PromptAction.Push)
+            : string.Empty;
+        promptText.text = CombinePrompts(beerPrompt, pushPrompt);
 
         if (Time.time >= feedbackHideTime)
         {
@@ -74,6 +78,13 @@ private void RefreshGlasses()
                     surface.localScale = new Vector3(1f, Mathf.Clamp01(glassFills[i].rect.height / Mathf.Max(0.001f, surface.sizeDelta.y)), 1f);
             }
         }
+    }
+
+    private string FormatActionPrompt(string prompt, InputHandler.PromptAction action)
+    {
+        if (string.IsNullOrEmpty(prompt) || action == InputHandler.PromptAction.None) return prompt;
+
+        return $"{InputPromptText.Control(promptText.spriteAsset, action)} {prompt}";
     }
 
     private static string CombinePrompts(string first, string second)

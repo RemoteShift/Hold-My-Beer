@@ -33,6 +33,7 @@ public class TutorialHints : MonoBehaviour
     private sealed class Hint
     {
         public string Text;
+        public InputHandler.PromptAction Action;
         public Func<bool> IsRelevant;
         public Func<Func<bool>> StartTracking;
     }
@@ -62,7 +63,8 @@ public class TutorialHints : MonoBehaviour
         {
             new Hint
             {
-                Text = "[RMB] Push furniture or beered patrons. Whatever they slam into gets stunned.",
+                Text = "{0} Push furniture or beered patrons. Whatever they slam into gets stunned.",
+                Action = InputHandler.PromptAction.Push,
                 IsRelevant = () => pushHandler && !string.IsNullOrEmpty(pushHandler.Prompt),
                 StartTracking = () =>
                 {
@@ -72,13 +74,15 @@ public class TutorialHints : MonoBehaviour
             },
             new Hint
             {
-                Text = "[Space] Jump over furniture to get around the bar.",
+                Text = "{0} Jump over furniture to get around the bar.",
+                Action = InputHandler.PromptAction.Jump,
                 IsRelevant = IsFurnitureAhead,
                 StartTracking = () => () => input && input.JumpPressed
             },
             new Hint
             {
-                Text = "Running low! Refill at a tap or barrel with [E]. Taps never run dry, barrels do.",
+                Text = "Running low! Refill at a tap or barrel with {0}. Taps never run dry, barrels do.",
+                Action = InputHandler.PromptAction.Interact,
                 IsRelevant = () => inventory && inventory.Count <= lowBeerCount,
                 StartTracking = () =>
                 {
@@ -101,12 +105,12 @@ public class TutorialHints : MonoBehaviour
             var hint = pending[next];
             pending.RemoveAt(next);
 
-            yield return Show(hint.Text, hint.StartTracking());
+            yield return Show(hint.Text, hint.StartTracking(), hint.Action);
             yield return new WaitForSecondsRealtime(gapSeconds);
         }
     }
 
-    private IEnumerator Show(string text, Func<bool> tried)
+    private IEnumerator Show(string text, Func<bool> tried, InputHandler.PromptAction action)
     {
         var shownFor = 0f;
 
@@ -119,7 +123,7 @@ public class TutorialHints : MonoBehaviour
             }
             else
             {
-                prompter.ShowHint(text);
+                prompter.ShowHint(text, action);
                 shownFor += Time.unscaledDeltaTime;
             }
 

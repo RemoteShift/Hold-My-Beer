@@ -26,6 +26,10 @@ public class TutorialPrompter : MonoBehaviour
     private const float MinPhysicsStepScale = 0.05f;
 
     private float normalFixedDeltaTime;
+    private string bannerTemplate;
+    private string hintTemplate;
+    private InputHandler.PromptAction bannerAction;
+    private InputHandler.PromptAction hintAction;
 
     public bool IsFrozen { get; private set; }
 
@@ -61,10 +65,29 @@ public class TutorialPrompter : MonoBehaviour
         IsFrozen = false;
     }
 
-    public void Show(string text)
+    public void Show(string text, InputHandler.PromptAction action = InputHandler.PromptAction.None)
     {
-        if (bannerText) bannerText.text = text;
+        bannerTemplate = text;
+        bannerAction = action;
+        RefreshText(bannerText, bannerTemplate, bannerAction);
         if (banner) banner.SetActive(true);
+    }
+
+    private void LateUpdate()
+    {
+        if (IsShowing && bannerAction != InputHandler.PromptAction.None)
+            RefreshText(bannerText, bannerTemplate, bannerAction);
+        if (hint && hint.activeSelf && hintAction != InputHandler.PromptAction.None)
+            RefreshText(hintText, hintTemplate, hintAction);
+    }
+
+    private static void RefreshText(TMP_Text target, string template, InputHandler.PromptAction action)
+    {
+        if (!target) return;
+        var text = action == InputHandler.PromptAction.None
+            ? template
+            : string.Format(template, InputPromptText.Control(target.spriteAsset, action));
+        if (target.text != text) target.text = text;
     }
 
     public void Hide()
@@ -73,9 +96,11 @@ public class TutorialPrompter : MonoBehaviour
         if (banner) banner.SetActive(false);
     }
 
-    public void ShowHint(string text)
+    public void ShowHint(string text, InputHandler.PromptAction action = InputHandler.PromptAction.None)
     {
-        if (hintText) hintText.text = text;
+        hintTemplate = text;
+        hintAction = action;
+        RefreshText(hintText, hintTemplate, hintAction);
         if (hint) hint.SetActive(true);
     }
 
@@ -85,9 +110,9 @@ public class TutorialPrompter : MonoBehaviour
     }
 
     /// <summary>Shows the prompt while the game keeps running, until <paramref name="done"/> returns true.</summary>
-    public IEnumerator Prompt(string text, Func<bool> done)
+    public IEnumerator Prompt(string text, Func<bool> done, InputHandler.PromptAction action = InputHandler.PromptAction.None)
     {
-        Show(text);
+        Show(text, action);
         while (!done()) yield return null;
         Hide();
     }
@@ -97,9 +122,9 @@ public class TutorialPrompter : MonoBehaviour
     /// Presses are ignored until the game has stopped and the prompt has been up for a moment,
     /// so a player already mashing the button still gets the stop and time to read.
     /// </summary>
-    public IEnumerator FreezePrompt(string text, Func<bool> done)
+    public IEnumerator FreezePrompt(string text, Func<bool> done, InputHandler.PromptAction action = InputHandler.PromptAction.None)
     {
-        Show(text);
+        Show(text, action);
         IsFrozen = true;
         SetActionsBlocked(true);
 
