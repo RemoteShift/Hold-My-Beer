@@ -94,8 +94,7 @@ public class CocktailHud : MonoBehaviour
         var failed = recipe.Hotkey == failedHotkey && Time.unscaledTime < errorUntil;
         errorMark.gameObject.SetActive(failed);
         prompt.color = failed ? Error : Muted;
-        prompt.text = failed ? errorMessage : brewer.ConfirmedRecipe != null ?
-            "Release LMB to throw / RMB cancel" : recipe.IsThrowable ? "Hold LMB to brew & aim" : "LMB to brew & drink";
+        prompt.text = failed ? errorMessage : recipe.IsThrowable ? "LMB to brew & throw" : "LMB to brew & drink";
     }
 
     private void ShowFeedback(string message, bool error)
@@ -165,7 +164,7 @@ public class CocktailHud : MonoBehaviour
         var window = Rect("Selected cocktail", stack, 0, 170, 232, 108);
         Fill(window, Ink);
         var contentRect = Rect("Cocktail content", window, 0, 0, 232, 108);
-        content = contentRect.gameObject;
+        content = window.gameObject;
         cocktailIcon = Icon("Cocktail logo", contentRect, 10, 12, 34, 34);
         cocktailName = Label("", contentRect, 54, 9, 150, 40, 17, Paper);
         cocktailName.fontStyle = FontStyles.Bold;

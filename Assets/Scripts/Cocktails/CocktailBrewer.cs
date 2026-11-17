@@ -53,8 +53,8 @@ public class CocktailBrewer : MonoBehaviour
     private void LateUpdate()
     {
         var camera = Camera.main;
-        if (ConfirmedRecipe != null && camera)
-            preview.Show(ConfirmedRecipe, camera.transform, transform);
+        if (HeldRecipe != null && camera)
+            preview.Show(HeldRecipe, camera.transform, transform);
         else preview.Hide();
     }
 
@@ -94,23 +94,15 @@ public class CocktailBrewer : MonoBehaviour
     {
         UpdateSelection(heldKeys, pressedKeys);
         var consumed = OwnsCombatInput;
-        if (cancelPressed && (primaryCaptured || ConfirmedRecipe != null))
-        {
-            CancelConfirmed();
-            // Keep owning LMB until release: cancelling must never hand a beer or throw later.
-            primaryCaptured = true;
-            consumed = true;
-        }
-        else if (confirmPressed && !primaryCaptured && HeldRecipe != null)
+        if (confirmPressed && !primaryCaptured && HeldRecipe != null)
         {
             primaryCaptured = true;
             consumed = true;
-            ConfirmSelection(HeldRecipe);
+            if (ConfirmSelection(HeldRecipe)) ReleaseConfirmed();
         }
         if (released)
         {
             consumed |= primaryCaptured;
-            if (ConfirmedRecipe != null) ReleaseConfirmed();
             primaryCaptured = false;
         }
         return consumed;
@@ -138,6 +130,7 @@ public class CocktailBrewer : MonoBehaviour
     public bool ConfirmSelection(CocktailRecipe recipe)
     {
         if (ConfirmedRecipe != null || recipe == null) return false;
+        if (recipe.IsThrowable && !Camera.main) return false;
         if (!ingredients.TryConsume(recipe, beers, out var error))
         {
             OnFeedback?.Invoke(error, true);

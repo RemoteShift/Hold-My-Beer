@@ -14,7 +14,7 @@ The persistent player prefab includes the ingredient inventory, brewer, drink ef
 
 Hold one number key to preview its cocktail. If several are held, the most recently pressed key wins. Releasing it falls back to the most recently pressed key still held. With none held, the selection window is empty.
 
-Press LMB to brew. Drinks activate on that click; throwables reserve their ingredients and stay locked while LMB is held, so number keys can be released or changed without replacing the confirmed throw. Release LMB to throw, or press RMB while aiming to cancel and refund the reservation. An unaffordable attempt displays a red **X** and spends nothing. A brewing click cannot also hand over/take back beer or push something.
+Hold a number key to select a cocktail and preview its trajectory and landing radius. Press LMB to immediately brew and throw, or drink. Holding LMB does not repeat the action; release and click again for another cocktail. RMB does not cancel brewing. An unaffordable click displays a red **X** and spends nothing. Releasing all cocktail keys hides the selection panel and aiming preview. Ingredient inventory remains visible. A brewing click cannot also hand over/take back beer or push something.
 
 **E** handles push and refill again. LMB/RMB retain normal beer/unbeer behavior when no cocktail is selected. Q/E/Z/C ingredient selection and the Tab recipe panel have been removed. The cocktail HUD consists of four inventory rows with icons, names and quantities plus one small dynamic window with the cocktail icon/name and ingredient icons/costs. No ingredient-key badges or selection highlights remain. Pickups are collected by walking within 1.8m with a clear path.
 
