@@ -62,7 +62,7 @@ public class TutorialHints : MonoBehaviour
         {
             new Hint
             {
-                Text = "[E] Push furniture or beered patrons. Whatever they slam into gets stunned.",
+                Text = "[E] Push furniture or a beered enemy into another enemy to stun them.",
                 IsRelevant = () => pushHandler && !string.IsNullOrEmpty(pushHandler.Prompt),
                 StartTracking = () =>
                 {
@@ -78,7 +78,7 @@ public class TutorialHints : MonoBehaviour
             },
             new Hint
             {
-                Text = "Running low! Refill at a tap or barrel with [E]. Taps never run dry, barrels do.",
+                Text = "Low on beer? Aim at a tap or barrel and press [E] to refill.",
                 IsRelevant = () => inventory && inventory.Count <= lowBeerCount,
                 StartTracking = () =>
                 {

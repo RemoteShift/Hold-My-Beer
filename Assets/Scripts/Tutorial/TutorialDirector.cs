@@ -14,16 +14,10 @@ public class TutorialDirector : MonoBehaviour
     [Header("Beering Lesson")]
     [Tooltip("Starts switched off. It comes in through the entrance once the lesson begins.")]
     [SerializeField] private ChargerEnemy charger;
-    [Tooltip("Real seconds the opening line stays up before the Charger comes in.")]
-    [SerializeField, Min(0f)] private float introSeconds = 3f;
-    [Tooltip("Real seconds a closing line stays up after a lesson.")]
-    [SerializeField, Min(0f)] private float outroSeconds = 3f;
 
     [Header("Pacing")]
     [Tooltip("Real seconds of quiet between one lesson ending and the next starting.")]
     [SerializeField, Min(0f)] private float lessonGapSeconds = 4f;
-    [Tooltip("Real seconds an instruction stays up before the next one can replace it, unless time runs out.")]
-    [SerializeField, Min(0f)] private float readSeconds = 2f;
     [Tooltip("Real seconds of quiet before the closing line.")]
     [SerializeField, Min(0f)] private float endGapSeconds = 1.5f;
 
@@ -36,8 +30,6 @@ public class TutorialDirector : MonoBehaviour
     [Header("Ending")]
     [Tooltip("The tutorial's own Level Manager, which ends it once its patrons are gone. Held back until the last lesson, so losing the Charger early can't end the tutorial.")]
     [SerializeField] private LevelManager levelManager;
-    [Tooltip("Real seconds the closing line stays up before the level starts.")]
-    [SerializeField, Min(0f)] private float endSeconds = 5f;
 
     [Header("Handing Over to the Level")]
     [Tooltip("Switched on once the tutorial is over, e.g. the level's enemies.")]
@@ -45,10 +37,8 @@ public class TutorialDirector : MonoBehaviour
     [Tooltip("The level's own Level Manager. Keep it switched off in the scene; it's switched on once the tutorial is over.")]
     [SerializeField] private LevelManager levelAfterTutorial;
 
-    // Longest wait for the current lesson line to finish once the tutorial is over
+    // Grace period for active practice. Reading cards always wait for the player.
     private const float MaxEndWaitSeconds = 5f;
-    // Glass time left at which the unbeer prompt stops waiting for the read time
-    private const float LastMomentBeerSeconds = 1f;
 
     // Survives retries and menu visits, but never a new application/Editor play session.
     private static bool completedThisSession;
@@ -67,31 +57,12 @@ public class TutorialDirector : MonoBehaviour
     private LocomotionController player;
     private Vector3 playerStartPosition;
     private Quaternion playerStartRotation;
-    private InputHandler input;
-
-    // Set during a freezing prompt. A frozen player can't walk into reach or step around
-    // anyone in the way, so the press works on this enemy from wherever they are.
-    private EnemyBrain beerTarget;
-    private EnemyBrain takeBackTarget;
-    private bool beerPressed;
-    private bool unbeerPressed;
-
-    private void OnEnable()
-    {
-        input = InputHandler.Instance;
-        if (!input) return;
-
-        input.OnBeerPressed += HandleBeerPressed;
-        input.OnUnbeerPressed += HandleUnbeerPressed;
-    }
 
     private void OnDisable()
     {
+        StopAllCoroutines();
+        if (prompter) prompter.CancelFreeze();
         if (playerHealth) playerHealth.OnDied -= HandleTutorialDeath;
-        if (!input) return;
-
-        input.OnBeerPressed -= HandleBeerPressed;
-        input.OnUnbeerPressed -= HandleUnbeerPressed;
     }
 
     private void Start()
@@ -141,6 +112,7 @@ public class TutorialDirector : MonoBehaviour
             {
                 yield return new WaitForSecondsRealtime(lessonGapSeconds);
                 RestorePlayerHealth();
+                prompter.SetLesson("PRACTICE  •  CLEAR THE ROOM");
                 yield return prompter.Prompt(
                     "Keep it up: get them to take each other out.\nThe last one standing will run for the door.",
                     () => !levelManager || levelManager.IsComplete);
@@ -159,13 +131,15 @@ public class TutorialDirector : MonoBehaviour
     {
         diedDuringTutorial = true;
         StopAllCoroutines();
+        if (prompter) prompter.CancelFreeze();
     }
 
     private IEnumerator HandOverToLevel()
     {
         // Let the line on screen finish rather than cutting it off
         var deadline = Time.realtimeSinceStartup + MaxEndWaitSeconds;
-        yield return new WaitUntil(() => lessonsFinished || Time.realtimeSinceStartup > deadline);
+        yield return new WaitUntil(() => lessonsFinished ||
+            (!prompter.IsReading && Time.realtimeSinceStartup > deadline));
 
         if (lessons != null) StopCoroutine(lessons);
         prompter.CancelFreeze();
@@ -174,9 +148,8 @@ public class TutorialDirector : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(endGapSeconds);
 
-        prompter.Show("That's the basics! Now go get your hat back.");
-        yield return new WaitForSecondsRealtime(endSeconds);
-        prompter.Hide();
+        prompter.SetLesson("TUTORIAL COMPLETE");
+        yield return prompter.Explain("You're ready. Use beer to turn their attacks against each other.\nThe next fight starts when you continue.");
 
         if (diedDuringTutorial || (playerHealth && playerHealth.IsDead)) yield break;
 
@@ -221,9 +194,10 @@ public class TutorialDirector : MonoBehaviour
 
     private IEnumerator BeeringLesson()
     {
-        if (!charger) yield break;
+        if (!charger || charger.IsDead) yield break;
 
-        yield return ShowFor("Somebody's not happy with the service...", introSeconds);
+        prompter.SetLesson("1 / 2  •  STOP THE CHARGE");
+        yield return prompter.Explain("Hand an attacking enemy a beer to freeze his attack.\nGet close, aim at him, then press [LMB].");
 
         charger.gameObject.SetActive(true);
 
@@ -233,25 +207,25 @@ public class TutorialDirector : MonoBehaviour
         while (true)
         {
             // The wind-up is the opening for a parry
-            yield return new WaitUntil(() => !charger || charger.CanBeBeered);
-            if (!charger) yield break;
+            yield return new WaitUntil(() => !charger || charger.IsDead || charger.CanBeBeered);
+            if (!charger || charger.IsDead) yield break;
 
             var windupPosition = charger.transform.position;
 
-            beerTarget = charger;
             yield return prompter.FreezePrompt(
-                "He's about to charge!\nLook at him and press [LMB] to hand him a beer",
-                () => !charger || charger.IsBeered);
-            beerTarget = null;
-            if (!charger) yield break;
+                "Stop the Charger.\nAim at him and press [LMB] to hand him a beer.",
+                () => !charger || charger.IsDead || charger.IsBeered, () => charger && charger.CanBeBeered && CanAimAt(charger));
+            if (!charger || charger.IsDead) yield break;
+
+            yield return prompter.Explain("Beer pauses his attack — it does not cancel it.\nMove to the side before he finishes his drink.");
 
             var playerHealthBefore = player ? player.CurrentHealth : 0f;
             var chargerHealthBefore = charger.currentHealth;
 
             yield return prompter.Prompt(
-                "He's frozen until he finishes his drink, then he'll carry on charging.\nGet out of his way!",
-                () => !charger || charger.CurrentState is ChargerRecoverState);
-            if (!charger) yield break;
+                "Step out of his path.\nHe will charge straight ahead when his drink runs out.",
+                () => !charger || charger.IsDead || charger.CurrentState is ChargerRecoverState);
+            if (!charger || charger.IsDead) yield break;
 
             if (player && player.CurrentHealth < playerHealthBefore)
             {
@@ -259,17 +233,16 @@ public class TutorialDirector : MonoBehaviour
                 charger.StopPathfinding();
                 charger.enabled = false;
 
-                yield return ShowFor("Too slow! He charged straight into you.\nLet's try that again.", outroSeconds);
-                if (!charger) yield break;
+                yield return prompter.Explain("The charge caught you. Try stepping sideways after giving him beer.\nYour health and beer will be restored for another try.");
+                if (!charger || charger.IsDead) yield break;
 
                 ResetCharger(windupPosition);
                 continue;
             }
 
-            yield return ShowFor(charger.currentHealth < chargerHealthBefore
-                    ? "He ran into the bar instead of you. Walls hurt!"
-                    : "Nice dodge!",
-                outroSeconds);
+            yield return prompter.Explain(charger.currentHealth < chargerHealthBefore
+                    ? "Good dodge! He hit the bar.\nYou can use his charge against walls and other enemies."
+                    : "Good dodge! You stopped his attack and moved out of danger.");
             yield break;
         }
     }
@@ -297,10 +270,11 @@ public class TutorialDirector : MonoBehaviour
 
     private IEnumerator UnbeeringLesson()
     {
-        if (!haymaker) yield break;
+        if (!haymaker || haymaker.IsDead) yield break;
 
         RestorePlayerHealth();
-        yield return ShowFor("Here comes the Haymaker. His punch hits everyone in front of him.", introSeconds);
+        prompter.SetLesson("2 / 2  •  TURN THE PUNCH AGAINST THEM");
+        yield return prompter.Explain("The Haymaker punches everyone in front of him.\nFirst, get close and give him a beer during his wind-up [LMB].");
 
         haymaker.gameObject.SetActive(true);
 
@@ -321,75 +295,52 @@ public class TutorialDirector : MonoBehaviour
                     () => !inventory || inventory.HasBeer);
             }
 
-            yield return new WaitUntil(() => !haymaker || haymaker.CanBeBeered);
-            if (!haymaker) yield break;
+            yield return new WaitUntil(() => !haymaker || haymaker.IsDead || haymaker.CanBeBeered);
+            if (!haymaker || haymaker.IsDead) yield break;
 
             // His wind-up is short, so this freezes too. Missing it lets the swing play out.
-            beerTarget = haymaker;
             yield return prompter.FreezePrompt(
-                "He's winding up!\nPress [LMB] to beer him",
-                () => !haymaker || haymaker.IsBeered || !haymaker.CanBeBeered || (inventory && !inventory.HasBeer));
-            beerTarget = null;
-            if (!haymaker) yield break;
+                "Stop the Haymaker's punch.\nAim at him and press [LMB] to hand him a beer.",
+                () => !haymaker || haymaker.IsDead || haymaker.IsBeered || !haymaker.CanBeBeered || (inventory && !inventory.HasBeer), () => haymaker && haymaker.CanBeBeered && CanAimAt(haymaker));
+            if (!haymaker || haymaker.IsDead) yield break;
             if (!haymaker.IsBeered) continue;
 
-            // Stays up long enough to read, even with someone already in front of him,
-            // unless his glass is about to run dry
-            var shownAt = Time.realtimeSinceStartup;
+            yield return prompter.Explain("Put another enemy in front of his raised fist.\nLure one over, or push a beered enemy with [E].");
             yield return prompter.Prompt(
-                "Once his drink is gone, he'll finish his punch.\nGet another patron in front of him: lure them over, or beer them and push them [E]",
-                () => !haymaker || !haymaker.IsBeered ||
-                      ((Time.realtimeSinceStartup - shownAt >= readSeconds ||
-                        haymaker.BeerSecondsLeft <= LastMomentBeerSeconds) && FindPatronInSwing()));
-            if (!haymaker) yield break;
+                "Line up another enemy in front of the Haymaker.\nHe will finish his punch when the beer is gone.",
+                () => !haymaker || haymaker.IsDead || !haymaker.IsBeered || FindPatronInSwing());
+            if (!haymaker || haymaker.IsDead) yield break;
 
             victim = FindPatronInSwing();
             if (!victim)
             {
-                yield return ShowFor("He finished his drink. Try again!", outroSeconds);
+                yield return prompter.Explain("His drink ran out before anyone was in position.\nGive him another beer and try lining up an enemy sooner.");
             }
         }
+
+        yield return prompter.Explain("An enemy is in his path. Take the beer back to release the punch.\nGet close, aim at the Haymaker and press [RMB].");
 
         // Read before resuming: the punch can land while the game is still speeding back up
         var victimHealthBefore = victim.currentHealth;
 
-        takeBackTarget = haymaker;
         yield return prompter.FreezePrompt(
-            "Someone's in front of him, and he finishes his punch once his beer's gone.\nPress [RMB] to take your beer back!",
-            () => !haymaker || !haymaker.IsBeered);
-        takeBackTarget = null;
+            "Release the punch.\nAim at the Haymaker and press [RMB] to take your beer back.",
+            () => !haymaker || haymaker.IsDead || !haymaker.IsBeered, () => CanAimAt(haymaker));
 
         // Wait for the punch to finish
         yield return new WaitUntil(() => !haymaker || haymaker.IsDead || !haymaker.CanBeBeered);
 
         var landed = !victim || victim.IsDead || victim.currentHealth < victimHealthBefore;
 
-        yield return ShowFor(landed
-                ? "Ouch! Let them do the fighting for you."
-                : "He missed! Take the beer back while they're still in front of him.",
-            outroSeconds);
+        yield return prompter.Explain(landed
+                ? "It worked! His punch hit the other enemy.\nUse beer to control when enemies attack."
+                : "The other enemy moved out of the swing.\nNext time, take the beer back while they are still in front of him.");
     }
 
-    private void HandleBeerPressed() => beerPressed = true;
-    private void HandleUnbeerPressed() => unbeerPressed = true;
-
-    // Runs after the player's own handlers have had the press, so a press that already
-    // worked on the target isn't repeated
-    private void Update()
+    private bool CanAimAt(EnemyBrain enemy)
     {
-        if (beerPressed && beerTarget && beerTarget.CanBeBeered && !beerTarget.IsBeered &&
-            inventory && inventory.TryTakeRightmost(out var fill))
-        {
-            beerTarget.TryReceiveBeer(fill);
-        }
-
-        if (unbeerPressed && takeBackTarget && takeBackTarget.TryTakeBackBeer(out var kept) && inventory)
-        {
-            inventory.TryAddGlass(kept);
-        }
-
-        beerPressed = false;
-        unbeerPressed = false;
+        var aim = player ? player.GetComponent<PlayerAim>() : null;
+        return aim && enemy && aim.FindAimed<EnemyBrain>() == enemy;
     }
 
     private EnemyBrain FindPatronInSwing()
@@ -404,10 +355,4 @@ public class TutorialDirector : MonoBehaviour
         return null;
     }
 
-    private IEnumerator ShowFor(string text, float seconds)
-    {
-        prompter.Show(text);
-        yield return new WaitForSecondsRealtime(seconds);
-        prompter.Hide();
-    }
 }

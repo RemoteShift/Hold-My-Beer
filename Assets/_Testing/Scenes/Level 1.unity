@@ -47520,9 +47520,8 @@ MonoBehaviour:
   bannerText: {fileID: 1555603781}
   hint: {fileID: 1552816453}
   hintText: {fileID: 1942999028}
-  slowDownSeconds: 0.5
+  positioningTimeScale: 0.35
   speedUpSeconds: 0.2
-  readSeconds: 1.5
 --- !u!4 &475594481
 Transform:
   m_ObjectHideFlags: 0
@@ -47555,15 +47554,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TutorialDirector
   prompter: {fileID: 475594480}
   charger: {fileID: 1252266127}
-  introSeconds: 3
-  outroSeconds: 3
   lessonGapSeconds: 4
-  readSeconds: 2
   endGapSeconds: 1.5
   haymaker: {fileID: 1561244103}
   spareVictim: {fileID: 219126251}
   levelManager: {fileID: 114339853}
-  endSeconds: 5
   enableWhenFinished:
   - {fileID: 1582682206}
   levelAfterTutorial: {fileID: 273470774}
@@ -54594,22 +54589,6 @@ PrefabInstance:
     - target: {fileID: 191175117615724702, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 274474878429219096, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: sugar
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 274474878429219096, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: water
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 274474878429219096, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: gunpowder
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 274474878429219096, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: lifeEssence
-      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 899427014641851757, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_LocalPosition.x
