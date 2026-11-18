@@ -61,12 +61,14 @@ public sealed class CocktailEnemyChecks : MonoBehaviour
             charger.SwitchState(new ChargerChargeState(charger));
             var chargeState = charger.CurrentState;
             var before = charger.transform.position;
+            charger.stunDuration = 0.1f;
             charger.ApplyHoney(0.4f);
+            Check(charger.CurrentState is EnemyStunState, "Honey immediately interrupts the attack with normal stun");
             yield return new WaitForSeconds(0.2f);
-            Check(charger.IsHoneyRooted && ReferenceEquals(chargeState, charger.CurrentState), "Honey preserves the charge state without a full stun");
+            Check(charger.IsHoneyRooted && !ReferenceEquals(chargeState, charger.CurrentState) && !(charger.CurrentState is EnemyStunState), "Honey returns to default behavior after the normal stun");
             Check(Vector3.Distance(before, charger.transform.position) < 0.02f, "Honey blocks manual charge movement");
             yield return new WaitForSeconds(0.3f);
-            Check(!charger.IsHoneyRooted && Vector3.Distance(before, charger.transform.position) > 0.1f, "Charge resumes when honey expires");
+            Check(!charger.IsHoneyRooted && !ReferenceEquals(chargeState, charger.CurrentState), "Old charge does not resume when honey expires");
             charger.agent.Warp(center.position);
             charger.windupDuration = 10f;
             charger.SwitchState(new ChargerWindupState(charger));
@@ -104,6 +106,14 @@ public sealed class CocktailEnemyChecks : MonoBehaviour
             Check(Mathf.Approximately(PianoPlayerEnemy.GetPlayerBuffs(playerTarget.transform).moveSpeed, 1f), "Player buff ends with tonic");
             Check(Mathf.Approximately(victim.Buffs.moveSpeed, 1.7f), "Enemy music resumes after tonic");
             pianist.gameObject.SetActive(false);
+            victim.ApplyAggression(1f);
+            Check(victim.CanSeeTarget(), "Aggression pursues assigned patron beyond normal detection range");
+            victim.LeaveThrough(center.position + Vector3.right * 10f);
+            Check(!victim.IsAggressive, "Leaving immediately clears active aggression");
+            victim.ApplyAggression(10f);
+            Check(!victim.IsAggressive, "Fleeing enemy rejects new aggression");
+            victim.ApplyHoney(1f);
+            Check(victim.CurrentState is EnemyStunState, "Fleeing enemy still accepts honey stun");
             charger.gameObject.SetActive(false); victim.gameObject.SetActive(false);
 
             var keg = Spawn<PowderKegEnemy>("Powder Keg", center.position + Vector3.back * 5f, playerTarget.transform);

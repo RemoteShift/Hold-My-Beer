@@ -71,7 +71,7 @@ public static class CocktailBallistics
             if (IsOwner(hit.collider, owner) || hit.collider.GetComponentInParent<EnemyBrain>()) continue;
             if (hit.collider.GetComponentInParent<PlayerHealth>() || Vector3.Dot(hit.normal, Vector3.up) < 0.5f) continue;
             // Loose props are not the tavern floor, and should not carry a hovering puddle.
-            if (hit.rigidbody && !hit.rigidbody.isKinematic) continue;
+            if (IsProp(hit.collider)) continue;
             if (hit.distance >= nearest) continue;
             nearest = hit.distance;
             ground = hit.point;
@@ -81,9 +81,15 @@ public static class CocktailBallistics
         return found;
     }
 
+    private static bool IsProp(Collider collider)
+    {
+        return collider.attachedRigidbody || collider.GetComponentInParent<Pushable>() ||
+            collider.GetComponentInParent<ThrowableFurniture>() || collider.GetComponentInParent<FallingChandelier>();
+    }
+
     public static bool Reaches(EnemyBrain enemy, Vector3 center, float radius)
     {
-        if (!enemy || enemy.IsDead || !enemy.isActiveAndEnabled || enemy.IsLeaving) return false;
+        if (!enemy || enemy.IsDead || !enemy.isActiveAndEnabled) return false;
         var offset = enemy.transform.position - center;
         // Keep floor splashes on the same storey, while allowing elevated enemy pivots.
         if (Mathf.Abs(offset.y) > 2.5f) return false;
@@ -96,7 +102,7 @@ public static class CocktailBallistics
                      ~0, QueryTriggerInteraction.Ignore))
         {
             if (hit.collider.GetComponentInParent<EnemyBrain>() || hit.collider.GetComponentInParent<PlayerHealth>()) continue;
-            if (hit.rigidbody) continue;
+            if (IsProp(hit.collider)) continue;
             return false;
         }
         return true;

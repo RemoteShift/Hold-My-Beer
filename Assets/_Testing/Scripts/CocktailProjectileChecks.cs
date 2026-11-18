@@ -83,8 +83,8 @@ public class CocktailProjectileChecks : MonoBehaviour
             var caught = Probe("Honey victim", patch.transform.position + Vector3.up + Vector3.right,
                 owner.transform);
             yield return null;
-            Assert(caught.IsHoneyRooted && !(caught.CurrentState is EnemyStunState),
-                "A Honey floor entrant is rooted without entering a stun state");
+            Assert(caught.IsHoneyRooted && caught.CurrentState is EnemyStunState,
+                "A Honey floor entrant receives a brief stun and movement root");
             yield return new WaitForSeconds(2f);
             var late = Probe("Late Honey victim", patch.transform.position + Vector3.up + Vector3.left,
                 owner.transform);

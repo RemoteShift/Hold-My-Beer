@@ -173,13 +173,15 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     #region Cocktails
 
-    /// <summary>Glue only stops travel. Attacks, music, beer and lit fuses keep progressing.</summary>
+    /// <summary>Interrupt once with the normal stun, then allow normal AI while glue blocks travel.</summary>
     public void ApplyHoney(float duration)
     {
         if (IsDead || duration <= 0f || float.IsNaN(duration) || float.IsInfinity(duration)) return;
+        var newlyRooted = !IsHoneyRooted;
         honeyUntil = Mathf.Max(honeyUntil, Time.time + duration);
         pushDistanceLeft = 0f;
         StopPathfinding();
+        if (newlyRooted) Stun();
     }
 
     /// <summary>Redirects the existing attack at another patron, preserving its progress and beer state.</summary>
@@ -256,6 +258,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     {
         if (IsDead || IsLeaving) return;
         IsLeaving = true;
+        aggressionUntil = 0f;
+        UpdateAggression();
         exitPosition = exit;
     }
 
@@ -362,7 +366,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     public virtual bool CanSeeTarget()
     {
         if (!target) return false;
-        return Vector3.Distance(transform.position, target.position) <= detectRange;
+        // Tonic explicitly assigns a patron, even outside normal player detection range.
+        return IsAggressive || Vector3.Distance(transform.position, target.position) <= detectRange;
     }
 
     public virtual void PathfindToTarget()

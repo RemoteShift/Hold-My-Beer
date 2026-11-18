@@ -22,7 +22,7 @@ Hold a number key to select a cocktail and preview its trajectory and landing ra
 
 | Cocktail | Keys | Cost | Effect |
 | --- | --- | --- | --- |
-| Honey Brew | 1 | 1 Life Essence + 2 Sugar | Throwable 3m floor patch lasting 5s. Each entrant is rooted for 5s; attacks, beer timers and lit fuses continue. |
+| Honey Brew | 1 | 1 Life Essence + 2 Sugar | Throwable 3m floor patch lasting 5s. Each entrant receives its normal stun, then returns to default AI while rooted for 5s. After the stun it can track and attack but cannot move. Existing beer freezes and lit fuse rules remain. |
 | Fizzy Soda Splash | 2 | 2 Water + 1 Sugar | 3m area knockback away from impact, with full strength throughout the radius and no damage. Existing mass response and honey immunity still apply. |
 | Aggression Tonic | 3 | 1 Water + 2 Gunpowder | 4m splash redirects affected patrons toward other living patrons for 2s. Previous targets return afterward. |
 | All-You-Can-Drink | 4 | 3 Life Essence + 1 carried Beer | Unlimited full servings for 10s. The beer ingredient is automatic. An active buff cannot fund or refresh itself. |

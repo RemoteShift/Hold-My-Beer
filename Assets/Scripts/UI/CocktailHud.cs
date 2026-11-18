@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Four inventory rows and a single cocktail window, empty until a number key is held.</summary>
+/// <summary>A top-left ingredient icon row and a cocktail window shown while a number key is held.</summary>
 [DisallowMultipleComponent]
 public class CocktailHud : MonoBehaviour
 {
@@ -144,16 +144,15 @@ public class CocktailHud : MonoBehaviour
         var stack = Rect("Inventory and cocktail", root, 24, 0, 232, 280);
         stack.anchorMin = stack.anchorMax = new Vector2(0, .5f);
         stack.pivot = new Vector2(0, .5f);
-        var inventoryPanel = Rect("Ingredient inventory", stack, 0, 0, 232, 160);
+        var inventoryPanel = Rect("Ingredient inventory", root, 24, 24, 336, 48);
         Fill(inventoryPanel, Ink);
         for (var i = 0; i < quantities.Length; i++)
         {
             var type = (IngredientType)i;
-            var y = 9 + i * 36;
-            Icon(IngredientInfo.Name(type) + " icon", inventoryPanel, 12, y, 24, 24)
+            var x = 12 + i * 82;
+            Icon(IngredientInfo.Name(type) + " icon", inventoryPanel, x, 12, 24, 24)
                 .SetGlyph((CocktailGlyph)i, IngredientInfo.Color(type));
-            Label(IngredientInfo.Name(type), inventoryPanel, 47, y - 1, 135, 26, 16, Paper);
-            var quantity = Label("0", inventoryPanel, 184, y - 1, 34, 26, 18, Paper);
+            var quantity = Label("0", inventoryPanel, x + 30, 11, 36, 26, 18, Paper);
             quantity.alignment = TextAlignmentOptions.Right;
             quantity.enableAutoSizing = true;
             quantity.fontSizeMin = 11;
