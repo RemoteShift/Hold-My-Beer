@@ -30,6 +30,7 @@ public class GameOverController : MonoBehaviour
         // Never leave the next scene frozen or silent
         if (!IsGameOver) return;
 
+        PlayerParryFeedback.CancelActiveFreeze();
         Time.timeScale = 1f;
         AudioListener.pause = false;
     }
@@ -58,6 +59,7 @@ public class GameOverController : MonoBehaviour
     private void FreezeGame()
     {
         // Stops enemies, physics and timers in one go
+        PlayerParryFeedback.CancelActiveFreeze();
         Time.timeScale = 0f;
 
         // Audio ignores the time scale, so looping sounds such as footsteps would carry on forever.

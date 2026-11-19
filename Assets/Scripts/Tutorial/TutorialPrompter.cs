@@ -165,6 +165,7 @@ public class TutorialPrompter : MonoBehaviour
 
     private void SetTimeScale(float scale)
     {
+        PlayerParryFeedback.CancelActiveFreeze();
         Time.timeScale = Mathf.Clamp01(scale);
         Time.fixedDeltaTime = normalFixedDeltaTime * Mathf.Max(Time.timeScale, MinPhysicsStepScale);
     }

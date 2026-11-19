@@ -10,6 +10,8 @@ public class HaymakerEnemy : EnemyBrain
     [Min(0.01f)] public float windupSeconds = 1.2f;
     [Min(0.01f)] public float swingSeconds = 0.5f;
     public Transform swingPivot;
+    public bool IsSwinging => CurrentState is HaymakerState swing && swing.IsSwinging;
+    public float SwingProgress => CurrentState is HaymakerState swing ? swing.SwingProgress : 0f;
 
     public override void ReturnToDefaultState() => SwitchState(new HaymakerState(this));
 
@@ -41,6 +43,8 @@ public class HaymakerEnemy : EnemyBrain
         private float elapsed;
         private bool aimLocked;
         public override bool IsAttacking => phase == 1 || phase == 2;
+        public bool IsSwinging => phase == 2;
+        public float SwingProgress => Mathf.Clamp01(elapsed / brawler.swingSeconds);
         public HaymakerState(HaymakerEnemy enemy) : base(enemy) { brawler = enemy; }
         public override void PrepareToResume() { aimLocked = true; }
         public override void Enter()
@@ -83,7 +87,9 @@ public class HaymakerEnemy : EnemyBrain
                     var bearing = Vector3.SignedAngle(brawler.transform.forward, offset, Vector3.up);
                     if (bearing < -brawler.swingArc * 0.5f || bearing > angle) continue;
                     if (!CombatQuery.IsClear(brawler.transform.position, c.bounds.center, brawler.transform, c.transform)) continue;
-                    hitTargets.Add(d); d.TakeDamage(brawler.EffectiveDamage);
+                    hitTargets.Add(d);
+                    CombatVfx.BluntHit(c, brawler.transform.position);
+                    d.TakeDamage(brawler.EffectiveDamage);
                     if (brawler.IsDead) return;
                 }
                 if (progress < 1f) return;

@@ -23,6 +23,9 @@ public class InputHandler : Singleton<InputHandler>
     public enum PromptAction { None, Beer, Interact, Push, Jump }
 
     private InputDevice lastInputDevice;
+    private const float ParryFollowUpWindow = 0.1f;
+    private float parryJumpUntil = -1f;
+    private float parryPushUntil = -1f;
     
     public Vector2 moveInput { get; private set; }
     public bool JumpPressed { get; private set; }
@@ -60,6 +63,7 @@ public class InputHandler : Singleton<InputHandler>
         if (InteractInput) InteractInput.action.Disable();
         if (PushInput) PushInput.action.Disable();
         ResetSprint();
+        ClearParryFollowUpInputs();
         moveInput = Vector2.zero;
         JumpPressed = false;
     }
@@ -67,8 +71,17 @@ public class InputHandler : Singleton<InputHandler>
     private void Update()
     {
         moveInput = MoveInput.action.ReadValue<Vector2>();
+        if (PlayerParryFeedback.IsPlayerFrozen)
+        {
+            JumpPressed = false;
+            CaptureParryFollowUpInputs();
+            return;
+        }
+        if (Time.timeScale <= 0f || ActionsBlocked || AudioListener.pause) ClearParryFollowUpInputs();
+        bool bufferedJump = ConsumeParryFollowUp(ref parryJumpUntil);
+        bool bufferedPush = ConsumeParryFollowUp(ref parryPushUntil);
         
-        JumpPressed  = JumpInput.action.WasPressedThisFrame();
+        JumpPressed = JumpInput.action.WasPressedThisFrame() || bufferedJump;
         if (JumpPressed) lastInputDevice = JumpInput.action.activeControl?.device ?? lastInputDevice;
         if (SprintInput && SprintInput.action.WasPressedThisFrame())
             IsSprinting = !IsSprinting;
@@ -80,6 +93,7 @@ public class InputHandler : Singleton<InputHandler>
         {
             lastInputDevice = BeerInput.action.activeControl?.device ?? lastInputDevice;
             OnBeerPressed?.Invoke();
+            if (PlayerParryFeedback.IsPlayerFrozen) { CaptureParryFollowUpInputs(); return; }
         }
 
         if (InteractInput && InteractInput.action.WasPressedThisFrame())
@@ -89,13 +103,46 @@ public class InputHandler : Singleton<InputHandler>
         }
 
         var pushAction = PushInput ? PushInput.action : null;
-        var pushPressed = pushAction?.WasPressedThisFrame() == true;
+        var pushPressed = pushAction?.WasPressedThisFrame() == true || bufferedPush;
         var fallbackPush = GetPressedPushShortcut(pushAction == null);
         if (pushPressed || fallbackPush != null)
         {
-            lastInputDevice = (pushPressed ? pushAction.activeControl?.device : fallbackPush.device) ?? lastInputDevice;
+            lastInputDevice = (pushPressed ? pushAction?.activeControl?.device : fallbackPush.device) ?? lastInputDevice;
             OnPushPressed?.Invoke();
         }
+    }
+
+    // Only parry hit-stop queues these follow-ups; it never buffers beer or interact.
+    private void CaptureParryFollowUpInputs()
+    {
+        if (ActionsBlocked || AudioListener.pause) { ClearParryFollowUpInputs(); return; }
+        float until = Time.realtimeSinceStartup + ParryFollowUpWindow;
+        if (JumpInput.action.WasPressedThisFrame())
+        {
+            parryJumpUntil = until;
+            lastInputDevice = JumpInput.action.activeControl?.device ?? lastInputDevice;
+        }
+        var action = PushInput ? PushInput.action : null;
+        bool pressed = action?.WasPressedThisFrame() == true;
+        var fallback = GetPressedPushShortcut(action == null);
+        if (pressed || fallback != null)
+        {
+            parryPushUntil = until;
+            lastInputDevice = (pressed ? action?.activeControl?.device : fallback.device) ?? lastInputDevice;
+        }
+    }
+
+    private bool ConsumeParryFollowUp(ref float until)
+    {
+        bool valid = until >= Time.realtimeSinceStartup;
+        until = -1f;
+        return valid;
+    }
+
+    public void ClearParryFollowUpInputs()
+    {
+        parryJumpUntil = -1f;
+        parryPushUntil = -1f;
     }
 
     public void ResetSprint()

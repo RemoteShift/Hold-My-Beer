@@ -1,19 +1,15 @@
 using UnityEngine;
 
 /// <summary>
-/// The enemy stands frozen mid-attack, drinking from the glass in their hand.
-/// When the glass runs dry it is lost and the interrupted attack carries on from where it stopped.
-/// The player can take the glass back early to keep what's left, which also resumes the attack.
+/// Beer interrupts the current attack until the stamp timer runs out.
+/// The remaining beer can still be reclaimed early, which resumes the attack.
+/// No physical glass or drinking animation is required.
 /// </summary>
 public class EnemyBeeredState : EnemyState
 {
-    private const float EmptyGlassHeight = 0.35f;
-
     private readonly EnemyState interruptedAttack;
-    private GameObject heldGlass;
-    private Vector3 fullGlassScale;
 
-    /// <summary>Beer left in the glass, from 0 (empty) to 1 (full).</summary>
+    /// <summary>Remaining beer effect, from 0 (expired) to 1 (full).</summary>
     public float Fill { get; private set; }
 
     public EnemyBeeredState(EnemyBrain enemy, float fill, EnemyState interruptedAttack) : base(enemy)
@@ -26,34 +22,20 @@ public class EnemyBeeredState : EnemyState
     {
         enemy.StopPathfinding();
         enemy.SetBodyColor(enemy.beeredColor);
-
-        heldGlass = enemy.SpawnHeldGlass();
-        if (heldGlass) fullGlassScale = heldGlass.transform.localScale;
-
-        ShowFillLevel();
     }
 
-    public override void Exit()
-    {
-        if (heldGlass) Object.Destroy(heldGlass);
-    }
-
-    // Skips the base look-at on purpose: a beered enemy holds its pose.
+    // Skips the base look-at on purpose: a beered enemy holds its interrupted pose.
     public override void Update()
     {
         Fill -= Time.deltaTime / enemy.fullBeerFreezeSeconds;
-
         if (Fill <= 0f)
         {
             Fill = 0f;
             ResumeAttack();
-            return;
         }
-
-        ShowFillLevel();
     }
 
-    /// <summary>Unbeers the enemy: their attack resumes and the caller gets the remaining beer.</summary>
+    /// <summary>Ends the effect, resumes the attack, and returns the remaining beer.</summary>
     public float TakeGlassBack()
     {
         var remaining = Fill;
@@ -65,13 +47,5 @@ public class EnemyBeeredState : EnemyState
     {
         interruptedAttack.PrepareToResume();
         enemy.SwitchState(interruptedAttack);
-    }
-
-    private void ShowFillLevel()
-    {
-        if (!heldGlass) return;
-
-        var height = Mathf.Lerp(EmptyGlassHeight, 1f, Fill);
-        heldGlass.transform.localScale = new Vector3(fullGlassScale.x, fullGlassScale.y * height, fullGlassScale.z);
     }
 }

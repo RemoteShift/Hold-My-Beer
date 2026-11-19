@@ -17,9 +17,11 @@ public abstract class PlayerLocomState : IState
 
     public virtual void Update()
     {
-        CachedCameraMoveDirection = GetCameraRelativeMoveDirection();
+        RefreshMovementDirection();
 
     }
+
+    public void RefreshMovementDirection() { CachedCameraMoveDirection = GetCameraRelativeMoveDirection(); }
 
     public virtual void FixedUpdate() {}
 

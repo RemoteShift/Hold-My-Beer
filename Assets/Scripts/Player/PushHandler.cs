@@ -1,4 +1,4 @@
-using System;
+
 using UnityEngine;
 
 /// <summary>One input/cooldown path for furniture, chandeliers, and beered patrons.</summary>
@@ -15,7 +15,7 @@ public class PushHandler : MonoBehaviour
     [SerializeField] private AudioClip furniturePushSound;
 
     public string Prompt { get; private set; } = string.Empty;
-    public event Action<string> OnFeedback;
+
     private PlayerAim aim;
     private AudioSource audioSource;
     private InputHandler input;
@@ -37,6 +37,7 @@ public class PushHandler : MonoBehaviour
 
     public bool TryPushAimed()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen) return false;
         if (Time.time < nextPushTime) return false;
         var hit = aim.FindAimedCollider();
         if (!hit) return false;
@@ -46,7 +47,7 @@ public class PushHandler : MonoBehaviour
         {
             succeeded = enemy.TryPush(aim.FlatForward, pushStrength);
             if (succeeded) { if (beerPushSound && audioSource) audioSource.PlayOneShot(beerPushSound); }
-            else OnFeedback?.Invoke(enemy.IsBeingPushed ? "Already sliding" : "Only beered enemies");
+
         }
         else
         {

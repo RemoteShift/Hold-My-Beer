@@ -1950,6 +1950,7 @@ GameObject:
   - component: {fileID: 187264588735256934}
   - component: {fileID: 4956818410280513487}
   - component: {fileID: 4304964182589537830}
+  - component: {fileID: 5736601232029274331}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -2102,7 +2103,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1d23037408b46f46a9cf6690fa06d6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeerHandler
-  beerGivenSound: {fileID: 8300000, guid: 29bde6326b4c34ad8a12da475f79b50a, type: 3}
   refillSound: {fileID: 8300000, guid: 7c9b49f55d62aa14f9127f8a655782b9, type: 3}
 --- !u!114 &187264588735256934
 MonoBehaviour:
@@ -2234,6 +2234,25 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &5736601232029274331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6564302963227462502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ffee093a18ccec4998d3c7b7d579a71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerParryFeedback
+  handler: {fileID: 510833206484730665}
+  playerCamera: {fileID: 5099122794950172314}
+  hitStopSeconds: 0.14
+  cameraPunchDegrees: 2.6
+  cameraKickDegrees: 0.45
+  cameraPunchSeconds: 0.24
+  cameraEaseInSeconds: 0.025
 --- !u!1 &6602798952689614809
 GameObject:
   m_ObjectHideFlags: 0
@@ -2722,7 +2741,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6551928331021175854
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3036,7 +3055,6 @@ MonoBehaviour:
   - {fileID: 795924261883468083}
   promptText: {fileID: 3154660374772906256}
   feedbackText: {fileID: 5988315952003696464}
-  feedbackSeconds: 0.9
 --- !u!114 &2957835118250730712
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3058,6 +3076,8 @@ MonoBehaviour:
   popStrength: 0.13
   feedbackDuration: 0.48
   refillStagger: 0.07
+  refillFlashStrength: 0.8
+  refillFlashSeconds: 0.18
 --- !u!1 &8483102733080966507
 GameObject:
   m_ObjectHideFlags: 0

@@ -41,14 +41,14 @@ public class LocomotionController : Singleton<LocomotionController>
 
     private void Update()
     {
-        if (!canMove) return;
+        if (!canMove || PlayerParryFeedback.IsPlayerFrozen) return;
         
         currentState?.Update();
     }
 
     private void FixedUpdate()
     {
-        if(canMove)
+        if (canMove && !PlayerParryFeedback.IsPlayerFrozen)
             currentState?.FixedUpdate();
     }
 
@@ -78,8 +78,11 @@ public class LocomotionController : Singleton<LocomotionController>
         ResetPositionRotation(startPosition, Quaternion.Euler(startEulerAngles));
     }
 
+    public void RefreshAfterHitStop() { currentState?.RefreshMovementDirection(); }
+
     public void Jump()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen) return;
         GroundCheck.SetGroundedState(false);
         StopAudio(walkSound);
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpSpeed, rb.linearVelocity.z);

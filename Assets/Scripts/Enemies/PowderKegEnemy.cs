@@ -27,6 +27,7 @@ public class PowderKegEnemy : EnemyBrain
     {
         if (exploded || IsDead) return;
         exploded = true;
+        CombatVfx.Explosion(this, explosionRadius);
         var blastDamage = EffectiveDamage;
         // Mark dead before damaging neighbours: chain reactions must not re-enter this explosion.
         base.Die();
@@ -51,19 +52,12 @@ public class PowderKegEnemy : EnemyBrain
             if (furniture) furniture.ApplyBlast(velocityChange);
             else { body.WakeUp(); body.AddForce(velocityChange, ForceMode.VelocityChange); }
         }
-        // Brief expanding flash remains after the patron is destroyed.
-        var flash = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        flash.name = "Powder Keg blast";
-        flash.transform.position = transform.position;
-        flash.transform.localScale = Vector3.one * explosionRadius * 2f;
-        flash.GetComponent<Collider>().enabled = false;
-        var renderer = flash.GetComponent<Renderer>();
-        renderer.material.color = new Color(1f, 0.4f, 0.05f);
-        Destroy(flash, 0.12f);
+        // The pack explosion spawned above outlives this enemy.
     }
 
     protected override void Update()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen) return;
         base.Update();
         if (!IsLit || IsBeered || IsDead) return;
         // Stuns interrupt movement, but only beer pauses an already lit fuse.

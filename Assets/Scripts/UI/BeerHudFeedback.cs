@@ -10,6 +10,13 @@ public sealed class BeerHudFeedback : MonoBehaviour
     [SerializeField, Range(0f, 0.3f)] private float popStrength = 0.13f;
     [SerializeField, Min(0.1f)] private float feedbackDuration = 0.48f;
     [SerializeField, Range(0f, 0.25f)] private float refillStagger = 0.07f;
+    [SerializeField, Range(0f, 2f)] private float refillFlashStrength = 0.8f;
+    [SerializeField, Min(0.01f)] private float refillFlashSeconds = 0.18f;
+    private BeerHandler handler;
+    private float[] flashAges;
+    private bool[] becameFull;
+    private Material[] flashMaterials;
+    private Material[][] originalMaterials;
     private Vector3[] scales;
     private Quaternion[] rotations;
     private Image[][] images;
@@ -23,6 +30,10 @@ public sealed class BeerHudFeedback : MonoBehaviour
     {
         if (!inventory || slots == null) return;
         int count = slots.Length;
+        flashAges = new float[count];
+        becameFull = new bool[count];
+        flashMaterials = new Material[count];
+        originalMaterials = new Material[count][];
         scales = new Vector3[count];
         rotations = new Quaternion[count];
         images = new Image[count][];
@@ -37,12 +48,29 @@ public sealed class BeerHudFeedback : MonoBehaviour
             rotations[i] = slots[i].localRotation;
             images[i] = slots[i].GetComponentsInChildren<Image>(true);
             colors[i] = new Color[images[i].Length];
-            for (int j = 0; j < images[i].Length; j++) colors[i][j] = images[i][j].color;
+            originalMaterials[i] = new Material[images[i].Length];
+            flashAges[i] = refillFlashSeconds;
+            if (images[i].Length > 0)
+            {
+                flashMaterials[i] = new Material(images[i][0].defaultMaterial)
+                {
+                    name = "Beer refill flash (runtime)",
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+            }
+            for (int j = 0; j < images[i].Length; j++)
+            {
+                colors[i][j] = images[i][j].color;
+                originalMaterials[i][j] = images[i][j].material;
+                images[i][j].material = flashMaterials[i];
+            }
             levels[i] = i < inventory.Glasses.Count ? inventory.Glasses[i] : 0f;
             ages[i] = feedbackDuration;
         }
         initialized = true;
         inventory.OnChanged += OnInventoryChanged;
+        handler = inventory.GetComponent<BeerHandler>();
+        if (handler) handler.OnRefilled += OnRefilled;
     }
 
     private void Start()
@@ -56,6 +84,7 @@ public sealed class BeerHudFeedback : MonoBehaviour
     private void OnDisable()
     {
         if (inventory) inventory.OnChanged -= OnInventoryChanged;
+        if (handler) handler.OnRefilled -= OnRefilled;
         if (!initialized) return;
         for (int i = 0; i < slots.Length; i++)
         {
@@ -66,7 +95,16 @@ public sealed class BeerHudFeedback : MonoBehaviour
             }
             if (images[i] == null) continue;
             for (int j = 0; j < images[i].Length; j++)
-                if (images[i][j]) images[i][j].color = colors[i][j];
+                if (images[i][j])
+                {
+                    images[i][j].color = colors[i][j];
+                    images[i][j].material = originalMaterials[i][j];
+                }
+            if (flashMaterials[i])
+            {
+                if (Application.isPlaying) Destroy(flashMaterials[i]);
+                else DestroyImmediate(flashMaterials[i]);
+            }
         }
         initialized = false;
     }
@@ -77,6 +115,8 @@ public sealed class BeerHudFeedback : MonoBehaviour
         for (int i = 0; i < levels.Length; i++)
         {
             float next = i < inventory.Glasses.Count ? Mathf.Clamp01(inventory.Glasses[i]) : 0f;
+            // Capture the transition before OnChanged updates our cached levels.
+            becameFull[i] = levels[i] < 1f && next >= 1f;
             if (!Mathf.Approximately(next, levels[i]))
             {
                 directions[i] = next > levels[i] ? 1 : -1;
@@ -85,6 +125,21 @@ public sealed class BeerHudFeedback : MonoBehaviour
             levels[i] = next;
         }
     }
+
+    private void OnRefilled()
+    {
+        if (!initialized) return;
+        // BeerHandler raises this only after a source refills inventory and OnChanged runs.
+        int flashed = 0;
+        for (int i = 0; i < flashAges.Length; i++)
+        {
+            flashAges[i] = slots[i] && becameFull[i]
+                ? -refillStagger * flashed++
+                : refillFlashSeconds;
+            becameFull[i] = false;
+        }
+    }
+
 
     private void Update() { Animate(Time.deltaTime); }
 
@@ -120,13 +175,13 @@ public sealed class BeerHudFeedback : MonoBehaviour
             }
             slots[i].localScale = Vector3.Scale(scales[i], new Vector3(sx, sy, 1f));
             slots[i].localRotation = rotations[i] * Quaternion.Euler(0f, 0f, wobble);
-            float flash = directions[i] > 0 ? envelope * 0.55f : 0f;
-            for (int j = 0; j < images[i].Length; j++)
-            {
-                if (!images[i][j]) continue;
-                Color warm = new Color(1f, 0.87f, 0.62f, colors[i][j].a);
-                images[i][j].color = Color.Lerp(colors[i][j], warm, flash);
-            }
+            // Neutral HDR brightness preserves the artwork and alpha; no amber color overlay.
+            flashAges[i] = Mathf.Min(refillFlashSeconds, flashAges[i] + dt);
+            float flash = flashAges[i] >= 0f && flashAges[i] < refillFlashSeconds
+                ? 1f - flashAges[i] / refillFlashSeconds : 0f;
+            float brightness = 1f + refillFlashStrength * flash * flash;
+            if (flashMaterials[i])
+                flashMaterials[i].SetColor("_Color", new Color(brightness, brightness, brightness, 1f));
         }
     }
 }

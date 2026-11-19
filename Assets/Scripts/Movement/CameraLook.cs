@@ -66,12 +66,17 @@ public class CameraLook : Singleton<CameraLook>
     // Update your handler signature to accept a device flag (or check InputSystem directly)
     private void HandleLookInput(Vector2 input, bool isGamepad)
     {
-        lookInput = input;
+        lookInput = PlayerParryFeedback.IsPlayerFrozen && !isGamepad ? Vector2.zero : input;
         isUsingGamepad = isGamepad;
     }
 
     private void Update()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen)
+        {
+            if (!isUsingGamepad) lookInput = Vector2.zero;
+            return;
+        }
         if (!canLook) return;
         
         // Pick sensitivity based on active device

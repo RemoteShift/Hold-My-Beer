@@ -17,6 +17,7 @@ public class BeerSource : MonoBehaviour
         if (IsEmpty || !inventory.Refill()) return false;
 
         if (!unlimited) refillsLeft--;
+
         return true;
     }
 }
