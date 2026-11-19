@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 912543561a9e65746b5157f9b3e38db4, type: 3}
+  m_Name: CombatVfxLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::CombatVfxLibrary
+  deathPoof: {fileID: 5310773109012676954, guid: 54dd1e76bbc651d41a083d52caad5cdb, type: 3}
+  heavyImpact: {fileID: 4706727049522593841, guid: c7150ae1068b248408a6a27991dcd14d, type: 3}
+  bluntImpact: {fileID: 350241491058562383, guid: 3256a6d5622e1e54cb910bed9d4bfb76, type: 3}
+  explosion: {fileID: 6370844279984185183, guid: 637c302496d46694f8ad141dcbf5adbb, type: 3}
+  fuseFlame: {fileID: 8587072564679837737, guid: 610f3e26801880b47b955ba1d2f9d409, type: 3}
+  chargeDust: {fileID: 6988576843014067049, guid: 9d45be7928d1be44cad8e3a878ef6a17, type: 3}
+  punchSwoosh: {fileID: 8378262142056472154, guid: 7430b4d3c124cdb408abef7fc02c56dd, type: 3}
+  landingDust: {fileID: 8505949520199131743, guid: ccb7eaa5cd3e7fb4a9ae9fa11f31899b, type: 3}

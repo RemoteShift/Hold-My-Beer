@@ -52,6 +52,8 @@ public class ChargerChargeState : EnemyState
 
         var moved = Vector3.Distance(before, charger.transform.position);
         distanceLeft -= moved;
+        var actionVfx = charger.GetComponent<EnemyActionVfx>();
+        if (actionVfx) actionVfx.OnChargeMoved(moved);
 
         if (charger.HitTargetsInFront(alreadyHit))
         {
@@ -60,6 +62,7 @@ public class ChargerChargeState : EnemyState
         else if (hitObstacle)
         {
             var hitPushable = charger.IsPushableAhead();
+            CombatVfx.ChargeObstacle(charger.transform, direction);
 
             charger.SwitchState(new ChargerRecoverState(charger));
 
@@ -67,6 +70,7 @@ public class ChargerChargeState : EnemyState
         }
         else if (moved < step * BlockedDistanceRatio || distanceLeft <= 0f)
         {
+            if (moved < step * BlockedDistanceRatio) CombatVfx.ChargeObstacle(charger.transform, direction);
             charger.SwitchState(new ChargerRecoverState(charger));
         }
     }

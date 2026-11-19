@@ -69,6 +69,7 @@ public class ChargerEnemy : EnemyBrain
             if (damageable == null || ReferenceEquals(damageable, this)) continue;
             if (!alreadyHit.Add(damageable)) continue;
 
+            CombatVfx.BluntHit(HitBuffer[i], transform.position);
             damageable.TakeDamage(EffectiveDamage);
             hitSomething = true;
         }

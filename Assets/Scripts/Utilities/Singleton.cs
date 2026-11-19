@@ -4,6 +4,14 @@ public class Singleton<T> : MonoBehaviour where T : Component
 {
     private static T _instance;
 
+    /// <summary>Finds an existing instance without creating objects during scene teardown.</summary>
+    public static bool TryGetInstance(out T instance)
+    {
+        if (!_instance) _instance = FindFirstObjectByType<T>(FindObjectsInactive.Include);
+        instance = _instance;
+        return instance != null;
+    }
+
     public static T Instance
     {
         get

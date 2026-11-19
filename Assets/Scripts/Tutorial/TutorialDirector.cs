@@ -197,7 +197,7 @@ public class TutorialDirector : MonoBehaviour
         if (!charger || charger.IsDead) yield break;
 
         prompter.SetLesson("1 / 2  •  STOP THE CHARGE");
-        yield return prompter.Explain("Hand an attacking enemy a beer to freeze his attack.\nGet close, aim at him, then press [LMB].");
+        yield return prompter.Explain("Hand an attacking enemy a beer to freeze his attack.\nGet close, aim at him, then press {0}.", InputHandler.PromptAction.Beer);
 
         charger.gameObject.SetActive(true);
 
@@ -213,8 +213,8 @@ public class TutorialDirector : MonoBehaviour
             var windupPosition = charger.transform.position;
 
             yield return prompter.FreezePrompt(
-                "Stop the Charger.\nAim at him and press [LMB] to hand him a beer.",
-                () => !charger || charger.IsDead || charger.IsBeered, () => charger && charger.CanBeBeered && CanAimAt(charger));
+                "Stop the Charger.\nAim at him and press {0} to hand him a beer.",
+                () => !charger || charger.IsDead || charger.IsBeered, () => charger && charger.CanBeBeered && CanAimAt(charger), InputHandler.PromptAction.Beer);
             if (!charger || charger.IsDead) yield break;
 
             yield return prompter.Explain("Beer pauses his attack — it does not cancel it.\nMove to the side before he finishes his drink.");
@@ -274,7 +274,7 @@ public class TutorialDirector : MonoBehaviour
 
         RestorePlayerHealth();
         prompter.SetLesson("2 / 2  •  TURN THE PUNCH AGAINST THEM");
-        yield return prompter.Explain("The Haymaker punches everyone in front of him.\nFirst, get close and give him a beer during his wind-up [LMB].");
+        yield return prompter.Explain("The Haymaker punches everyone in front of him.\nFirst, get close and give him a beer during his wind-up {0}.", InputHandler.PromptAction.Beer);
 
         haymaker.gameObject.SetActive(true);
 
@@ -291,8 +291,8 @@ public class TutorialDirector : MonoBehaviour
         {
             if (inventory && !inventory.HasBeer)
             {
-                yield return prompter.Prompt("You're out of beer! Refill at the tap behind the bar [E]",
-                    () => !inventory || inventory.HasBeer);
+                yield return prompter.Prompt("You're out of beer! Refill at the tap behind the bar {0}",
+                    () => !inventory || inventory.HasBeer, InputHandler.PromptAction.Interact);
             }
 
             yield return new WaitUntil(() => !haymaker || haymaker.IsDead || haymaker.CanBeBeered);
@@ -300,12 +300,12 @@ public class TutorialDirector : MonoBehaviour
 
             // His wind-up is short, so this freezes too. Missing it lets the swing play out.
             yield return prompter.FreezePrompt(
-                "Stop the Haymaker's punch.\nAim at him and press [LMB] to hand him a beer.",
-                () => !haymaker || haymaker.IsDead || haymaker.IsBeered || !haymaker.CanBeBeered || (inventory && !inventory.HasBeer), () => haymaker && haymaker.CanBeBeered && CanAimAt(haymaker));
+                "Stop the Haymaker's punch.\nAim at him and press {0} to hand him a beer.",
+                () => !haymaker || haymaker.IsDead || haymaker.IsBeered || !haymaker.CanBeBeered || (inventory && !inventory.HasBeer), () => haymaker && haymaker.CanBeBeered && CanAimAt(haymaker), InputHandler.PromptAction.Beer);
             if (!haymaker || haymaker.IsDead) yield break;
             if (!haymaker.IsBeered) continue;
 
-            yield return prompter.Explain("Put another enemy in front of his raised fist.\nLure one over, or push a beered enemy with [E].");
+            yield return prompter.Explain("Put another enemy in front of his raised fist.\nLure one over, or push a beered enemy with {0}.", InputHandler.PromptAction.Push);
             yield return prompter.Prompt(
                 "Line up another enemy in front of the Haymaker.\nHe will finish his punch when the beer is gone.",
                 () => !haymaker || haymaker.IsDead || !haymaker.IsBeered || FindPatronInSwing());
@@ -318,14 +318,14 @@ public class TutorialDirector : MonoBehaviour
             }
         }
 
-        yield return prompter.Explain("An enemy is in his path. Take the beer back to release the punch.\nGet close, aim at the Haymaker and press [RMB].");
+        yield return prompter.Explain("An enemy is in his path. Take the beer back to release the punch.\nGet close, aim at the Haymaker and press {0}.", InputHandler.PromptAction.Unbeer);
 
         // Read before resuming: the punch can land while the game is still speeding back up
         var victimHealthBefore = victim.currentHealth;
 
         yield return prompter.FreezePrompt(
-            "Release the punch.\nAim at the Haymaker and press [RMB] to take your beer back.",
-            () => !haymaker || haymaker.IsDead || !haymaker.IsBeered, () => CanAimAt(haymaker));
+            "Release the punch.\nAim at the Haymaker and press {0} to take your beer back.",
+            () => !haymaker || haymaker.IsDead || !haymaker.IsBeered, () => CanAimAt(haymaker), InputHandler.PromptAction.Unbeer);
 
         // Wait for the punch to finish
         yield return new WaitUntil(() => !haymaker || haymaker.IsDead || !haymaker.CanBeBeered);

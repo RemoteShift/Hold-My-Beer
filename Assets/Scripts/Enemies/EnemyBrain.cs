@@ -42,8 +42,8 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     [Min(0.1f)] public float pushSlideDeceleration = 12f;
     [SerializeField] private float pushHitRadius = 0.35f;
     [SerializeField] private float pushHitForwardOffset = 0.5f;
-    [SerializeField] private GameObject heldGlassPrefab;
-    [SerializeField] private Transform glassHoldPoint;
+
+
 
     [Header("Leaving")]
     [Tooltip("Speed multiplier while the last enemy runs for the exit.")]
@@ -131,7 +131,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     protected virtual void Update()
     {
-        if (IsDead) return;
+        if (IsDead || PlayerParryFeedback.IsPlayerFrozen) return;
         UpdateAggression();
         RefreshHealthCapacity();
         agent.speed = IsHoneyRooted ? 0f : Mathf.Max(0f, moveSpeed) * Buffs.moveSpeed;
@@ -152,7 +152,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
 
     protected void FixedUpdate()
     {
-        if (!IsDead && !IsImpactStunned) currentState?.FixedUpdate();
+        if (!IsDead && !IsImpactStunned && !PlayerParryFeedback.IsPlayerFrozen) currentState?.FixedUpdate();
     }
 
     #region State Machine Logic
@@ -288,6 +288,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         fill = Mathf.Clamp01(fill);
 
         SwitchState(new EnemyBeeredState(this, fill, currentState));
+
         return true;
     }
 
@@ -338,26 +339,16 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         else Stun();
     }
 
-    private void ResolvePushImpact(EnemyBrain other)
+    private void ResolvePushImpact(EnemyBrain other, Vector3? contactPoint = null)
     {
         pushDistanceLeft = 0f;
+        CombatVfx.BluntImpact(contactPoint ?? (other ? (transform.position + other.transform.position) * 0.5f : transform.position));
         ReceivePushImpact();
         if (other && other != this) other.ReceivePushImpact();
     }
 
-    public GameObject SpawnHeldGlass()
-    {
-        if (!heldGlassPrefab || !glassHoldPoint) return null;
 
-        var glass = Instantiate(heldGlassPrefab, glassHoldPoint);
 
-        foreach (var glassCollider in glass.GetComponentsInChildren<Collider>())
-        {
-            glassCollider.enabled = false;
-        }
-
-        return glass;
-    }
 
     #endregion
 
@@ -489,7 +480,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
             }
             if (firstHit.HasValue)
             {
-                ResolvePushImpact(firstHit.Value.collider.GetComponentInParent<EnemyBrain>());
+                ResolvePushImpact(firstHit.Value.collider.GetComponentInParent<EnemyBrain>(), firstHit.Value.point);
                 return;
             }
             // A NavMesh boundary alone is not a physical wall impact.
@@ -509,6 +500,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
     {
         if (IsDead) return;
         EnemyIngredientDrops.Spawn(this);
+        if (!(this is PowderKegEnemy)) CombatVfx.Death(this);
         Remove();
     }
 

@@ -12,9 +12,10 @@ public class BeerHandler : MonoBehaviour
 {
     /// <summary>What the player can do with whatever they're looking at. Empty if nothing.</summary>
     public string Prompt { get; private set; } = string.Empty;
+    public InputHandler.PromptAction PromptAction { get; private set; }
 
-    /// <summary>Raised with a short message saying how a press turned out.</summary>
-    public event Action<string> OnFeedback;
+    /// <summary>Raised only after a beer successfully interrupts an attacking enemy.</summary>
+    public event Action<EnemyBrain> OnParried;
 
     /// <summary>Raised when a beer is handed to an attacking enemy.</summary>
     public event Action OnBeerHanded;
@@ -23,7 +24,8 @@ public class BeerHandler : MonoBehaviour
     public event Action OnRefilled;
 
     [Header("Audio")]
-    [SerializeField] private AudioClip beerGivenSound;
+
+
     [SerializeField] private AudioClip refillSound;
 
     private BeerInventory inventory;
@@ -60,45 +62,37 @@ public class BeerHandler : MonoBehaviour
 
     private void Update()
     {
+        PromptAction = InputHandler.PromptAction.None;
         Prompt = BuildPrompt(aim.FindAimedCollider());
     }
 
     private void HandleBeerPressed()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen) return;
         var enemy = aim.FindAimed<EnemyBrain>();
-        if (!enemy) return;
+        if (!enemy || !enemy.CanBeBeered || !inventory.HasBeer) return;
+        if (!inventory.TryTakeRightmost(out var fill)) return;
+        if (!enemy.TryReceiveBeer(fill))
+        {
+            inventory.TryAddGlass(fill);
+            return;
+        }
 
-        if (enemy.IsBeered)
-        {
-            OnFeedback?.Invoke("Already drinking");
-        }
-        else if (!enemy.CanBeBeered)
-        {
-            OnFeedback?.Invoke("Not attacking");
-        }
-        else if (!inventory.HasBeer)
-        {
-            OnFeedback?.Invoke("No beer left");
-        }
-        else
-        {
-            inventory.TryTakeRightmost(out var fill);
-            enemy.TryReceiveBeer(fill);
-            if (beerGivenSound && audioSource) audioSource.PlayOneShot(beerGivenSound);
-            OnFeedback?.Invoke("Parried!");
-            OnBeerHanded?.Invoke();
-        }
+
+        OnBeerHanded?.Invoke();
+        OnParried?.Invoke(enemy);
     }
 
     private void HandleInteractPressed()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen) return;
         var source = aim.FindAimed<BeerSource>();
         if (source)
         {
             if (source.TryRefill(inventory))
             {
                 if (refillSound && audioSource) audioSource.PlayOneShot(refillSound);
-                OnFeedback?.Invoke("Refilled");
+
                 OnRefilled?.Invoke();
             }
         }
@@ -106,12 +100,12 @@ public class BeerHandler : MonoBehaviour
 
     private void HandleUnbeerPressed()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen) return;
         var enemy = aim.FindAimed<EnemyBrain>();
         if (!enemy || !enemy.TryTakeBackBeer(out var fill)) return;
 
         // With no free slot the glass is dropped, but the attack still resumes
-        var kept = inventory.TryAddGlass(fill);
-        OnFeedback?.Invoke(kept ? "Beer back" : "No room, glass dropped");
+        inventory.TryAddGlass(fill);
     }
 
     private string BuildPrompt(Collider aimed)
@@ -124,17 +118,25 @@ public class BeerHandler : MonoBehaviour
         var enemy = aimed.GetComponentInParent<EnemyBrain>();
         if (!enemy) return string.Empty;
 
-        if (enemy.IsBeered) return "[RMB] Take back beer";
-        if (!enemy.CanBeBeered) return string.Empty;
+        if (enemy.IsBeered)
+        {
+            PromptAction = InputHandler.PromptAction.Unbeer;
+            return "Take back beer";
+        }
 
-        return inventory.HasBeer ? "[LMB] Hand beer" : "No beer left";
+        if (!enemy.CanBeBeered) return string.Empty;
+        if (!inventory.HasBeer) return string.Empty;
+
+        PromptAction = InputHandler.PromptAction.Beer;
+        return "Hand beer";
     }
 
     private string BuildSourcePrompt(BeerSource source)
     {
-        if (source.IsEmpty) return "Barrel empty";
-        if (inventory.IsFullyStocked) return "Beers full";
+        if (source.IsEmpty) return string.Empty;
+        if (inventory.IsFullyStocked) return string.Empty;
 
-        return source.IsUnlimited ? "[E] Refill" : $"[E] Refill ({source.RefillsLeft} left)";
+        PromptAction = InputHandler.PromptAction.Interact;
+        return source.IsUnlimited ? "Refill" : $"Refill ({source.RefillsLeft} left)";
     }
 }

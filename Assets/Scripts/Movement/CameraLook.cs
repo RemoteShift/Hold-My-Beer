@@ -13,6 +13,7 @@ public class CameraLook : Singleton<CameraLook>
     private float pitch;
     private Vector2 lookInput;
     private bool isUsingGamepad;
+    private InputHandler input;
 
     private void Start()
     {
@@ -25,14 +26,16 @@ public class CameraLook : Singleton<CameraLook>
         LockCursor();
         
         // Pass the action context or device info from your InputHandler
-        InputHandler.Instance.OnLookInputChanged += HandleLookInput;
+        input = InputHandler.Instance;
+        input.OnLookInputChanged += HandleLookInput;
     }
 
     private void OnDisable()
     {
         UnlockCursor();
         
-        InputHandler.Instance.OnLookInputChanged -= HandleLookInput;
+        if (input) input.OnLookInputChanged -= HandleLookInput;
+        input = null;
     }
 
     public void UnlockCursor()
@@ -66,12 +69,17 @@ public class CameraLook : Singleton<CameraLook>
     // Update your handler signature to accept a device flag (or check InputSystem directly)
     private void HandleLookInput(Vector2 input, bool isGamepad)
     {
-        lookInput = input;
+        lookInput = PlayerParryFeedback.IsPlayerFrozen && !isGamepad ? Vector2.zero : input;
         isUsingGamepad = isGamepad;
     }
 
     private void Update()
     {
+        if (PlayerParryFeedback.IsPlayerFrozen)
+        {
+            if (!isUsingGamepad) lookInput = Vector2.zero;
+            return;
+        }
         if (!canLook) return;
         
         // Pick sensitivity based on active device

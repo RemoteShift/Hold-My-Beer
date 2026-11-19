@@ -30,6 +30,11 @@ public class ThrowableFurniture : MonoBehaviour
     private float graceUntil;
     private EnemyBrain thrower;
     private float speedBeforePhysics;
+    private Vector3 velocityBeforePhysics;
+    [SerializeField, Min(0f)] private float minimumLandingSpeed = 2.5f;
+    [SerializeField, Min(0f)] private float minimumLandingEnergy = 6f;
+    [SerializeField, Min(0f)] private float landingDustCooldown = 0.65f;
+    private float nextLandingDustTime;
     private float armedDamage;
     private Vector3 pendingVelocityChange;
     private RigidbodyInterpolation freeInterpolation;
@@ -177,11 +182,33 @@ public class ThrowableFurniture : MonoBehaviour
 
     private void FixedUpdate()
     {
-        speedBeforePhysics = (Body.linearVelocity + pendingVelocityChange).magnitude;
+        velocityBeforePhysics = Body.linearVelocity + pendingVelocityChange;
+        speedBeforePhysics = velocityBeforePhysics.magnitude;
         pendingVelocityChange = Vector3.zero;
     }
 
-    private void OnCollisionEnter(Collision collision) { HandleCollision(collision); }
+    private void OnCollisionEnter(Collision collision)
+    {
+        TryEmitLandingDust(collision);
+        HandleCollision(collision);
+    }
+
+    private void TryEmitLandingDust(Collision collision)
+    {
+        if (IsHeld || !Body || Body.isKinematic || Time.time < nextLandingDustTime) return;
+        if (collision.collider.GetComponentInParent<IDamageable>() != null) return;
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            var contact = collision.GetContact(i);
+            if (contact.normal.y < 0.65f) continue;
+            float speed = Mathf.Max(Mathf.Abs(Vector3.Dot(velocityBeforePhysics, contact.normal)),
+                Mathf.Abs(Vector3.Dot(collision.relativeVelocity, contact.normal)));
+            if (speed < minimumLandingSpeed || 0.5f * Body.mass * speed * speed < minimumLandingEnergy) continue;
+            nextLandingDustTime = Time.time + landingDustCooldown;
+            CombatVfx.LandingDust(contact.point, Body.mass);
+            return;
+        }
+    }
     private void OnCollisionStay(Collision collision) { HandleCollision(collision); }
 
     private void HandleCollision(Collision collision)
@@ -194,6 +221,11 @@ public class ThrowableFurniture : MonoBehaviour
         // Its recorded pre-simulation speed is the impact speed, not the post-contact velocity.
         if (!IsDangerous || speedBeforePhysics < minimumImpactSpeed) return;
         if (Time.time < graceUntil && ReferenceEquals(victim, thrower)) return;
-        if (hitTargets.Add(victim)) victim.TakeDamage(armedDamage);
+        if (hitTargets.Add(victim))
+        {
+            var point = collision.contactCount > 0 ? collision.GetContact(0).point : collision.collider.ClosestPoint(Body.worldCenterOfMass);
+            CombatVfx.BluntImpact(point);
+            victim.TakeDamage(armedDamage);
+        }
     }
 }

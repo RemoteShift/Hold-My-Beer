@@ -72,6 +72,7 @@ public class LevelRestarter : MonoBehaviour
 
     private static void ReloadLevel()
     {
+        PlayerParryFeedback.CancelActiveFreeze();
         Time.timeScale = 1f;
         AudioListener.pause = false;
 

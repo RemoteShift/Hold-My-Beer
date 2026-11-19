@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4094354410548550709
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1826667811011755533}
+  - component: {fileID: 399014039461776599}
+  - component: {fileID: 8505949520199131743}
+  m_Layer: 0
+  m_Name: VFX Landing Dust
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1826667811011755533
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4094354410548550709}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &399014039461776599
+SpriteRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4094354410548550709}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 44fa9686a88fe8c43844778b5925ba35, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 6
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 21300000, guid: 8954a69516e8a4845b02b30605cde59b, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 1.5, y: 0.625}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_SpriteSortPoint: 0
+--- !u!114 &8505949520199131743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4094354410548550709}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab0857bd6c13356469265e3a5bb3c947, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatPixelEffect
+  frames:
+  - {fileID: 21300000, guid: 8954a69516e8a4845b02b30605cde59b, type: 3}
+  - {fileID: 21300000, guid: 7425a858ada34b044ade52b69b48c6e8, type: 3}
+  - {fileID: 21300000, guid: eb1d000f2595aba439bb64d74297bc0c, type: 3}
+  - {fileID: 21300000, guid: 01ef7fa2d5aa73e4a82c231d40c43a41, type: 3}
+  - {fileID: 21300000, guid: 4710ee72725cf704faa8bd2600cff567, type: 3}
+  - {fileID: 21300000, guid: 69b37f80cab63eb489a4f29d465fb070, type: 3}
+  - {fileID: 21300000, guid: 19fabf476e2db5a4fa7f197061d3894f, type: 3}
+  - {fileID: 21300000, guid: 54b22ec766230b6409de6162ebb43b90, type: 3}
+  - {fileID: 21300000, guid: eeccc4b17cfe5204ba7dfaa7ba7f3d95, type: 3}
+  - {fileID: 21300000, guid: b1beebb6a7de39b4da17d6fec4fd71ce, type: 3}
+  - {fileID: 21300000, guid: b8900c353afd6704ca4f5ef3a16a2ec7, type: 3}
+  - {fileID: 21300000, guid: 16acd72cc13d9ca4db9e4695db8235a5, type: 3}
+  - {fileID: 21300000, guid: e0b599e7e595b374e97851e6b28dfa36, type: 3}
+  - {fileID: 21300000, guid: 482662eb5289b7440bb4417de5d187ed, type: 3}
+  - {fileID: 21300000, guid: da1e6fd411d6d8141b5d2c1f01962139, type: 3}
+  - {fileID: 21300000, guid: 02591bff24051a6439e89b3535df7a0e, type: 3}
+  - {fileID: 21300000, guid: 105aad33cc2bbbe41b03fad366359b87, type: 3}
+  - {fileID: 21300000, guid: d5fceece856ef2546b5bd11af339f9c7, type: 3}
+  framesPerSecond: 24
+  loop: 0
+  worldWidth: 1
