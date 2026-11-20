@@ -43,6 +43,12 @@ public class ChargerChargeState : EnemyState
         }
 
         var step = charger.chargeSpeed * charger.AttackDeltaTime;
+        if (step <= 0f) return;
+        if (charger.TryGetChargeObstacle(direction, Mathf.Min(step, distanceLeft), out var obstacle))
+        {
+            charger.HitChargeObstacle(obstacle, direction);
+            return;
+        }
         var before = charger.transform.position;
 
         // Checked before moving: agent.Move would otherwise slide along an angled wall
@@ -61,12 +67,9 @@ public class ChargerChargeState : EnemyState
         }
         else if (hitObstacle)
         {
-            var hitPushable = charger.IsPushableAhead();
-            CombatVfx.ChargeObstacle(charger.transform, direction);
-
+            // A NavMesh boundary alone is not proof of a collision (e.g. the edge of a platform).
+            // Real environmental impacts are detected by the physical sweep above.
             charger.SwitchState(new ChargerRecoverState(charger));
-
-            if (!hitPushable) charger.TakeDamage(charger.wallSlamDamage);
         }
         else if (moved < step * BlockedDistanceRatio || distanceLeft <= 0f)
         {

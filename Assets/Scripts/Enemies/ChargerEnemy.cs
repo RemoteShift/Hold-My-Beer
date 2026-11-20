@@ -53,7 +53,7 @@ public class ChargerEnemy : EnemyBrain
         return CombatQuery.IsClear(transform.position, target.position, transform, target);
     }
 
-    /// <summary>Damages everything in front of the charger that has not already been hit.</summary>
+    /// <summary>Damages actors in front of the charger that have not already been hit.</summary>
     /// <returns>True if at least one new target was hit.</returns>
     public bool HitTargetsInFront(HashSet<IDamageable> alreadyHit)
     {
@@ -64,6 +64,8 @@ public class ChargerEnemy : EnemyBrain
 
         for (var i = 0; i < count; i++)
         {
+            // Environmental damageables are handled by the obstacle impact path, which stuns us.
+            if (!IsActor(HitBuffer[i])) continue;
             var damageable = HitBuffer[i].GetComponentInParent<IDamageable>();
 
             if (damageable == null || ReferenceEquals(damageable, this)) continue;
@@ -77,18 +79,47 @@ public class ChargerEnemy : EnemyBrain
         return hitSomething;
     }
 
-    /// <summary>True if the first thing in the charger's path is pushable furniture rather than something fixed.</summary>
-    public bool IsPushableAhead()
+    private static bool IsActor(Collider collider)
+    {
+        return collider.GetComponentInParent<EnemyBrain>()
+            || collider.GetComponentInParent<PlayerHealth>()
+            || collider.GetComponentInParent<LocomotionController>();
+    }
+
+    /// <summary>Finds solid scenery ahead, including furniture that is not in the baked NavMesh.</summary>
+    public bool TryGetChargeObstacle(Vector3 direction, float step, out Collider obstacle)
     {
         var feet = transform.position - Vector3.up * agent.baseOffset;
         var bottom = feet + Vector3.up * (pushableCheckRadius + pushableCheckFloorClearance);
         var top = bottom + Vector3.up * pushableCheckHeight;
 
-        // Leaves out the enemy layer so the sweep can't stop on the charger's own body
-        var hitSomething = Physics.CapsuleCast(bottom, top, pushableCheckRadius, transform.forward, out var hit,
-            pushableCheckDistance, ~(1 << gameObject.layer), QueryTriggerInteraction.Ignore);
+        // Inspect all layers and filter by identity: scenery can share an actor's layer.
+        // Keep the nearest actor in the query so scenery behind them cannot turn their hit into a stun.
+        var hits = Physics.CapsuleCastAll(bottom, top, pushableCheckRadius, direction,
+            Mathf.Max(step, pushableCheckDistance), ~0, QueryTriggerInteraction.Ignore);
+        obstacle = null;
+        var nearestDistance = float.PositiveInfinity;
+        foreach (var hit in hits)
+        {
+            var collider = hit.collider;
+            if (collider.transform.IsChildOf(transform) || hit.distance >= nearestDistance) continue;
+            nearestDistance = hit.distance;
+            obstacle = collider;
+        }
 
-        return hitSomething && (hit.collider.GetComponentInParent<Pushable>() || hit.collider.GetComponentInParent<ThrowableFurniture>());
+        return obstacle && !IsActor(obstacle);
+    }
+
+    /// <summary>An environmental crash interrupts the charge and drives the existing stun stars.</summary>
+    public void HitChargeObstacle(Collider obstacle, Vector3 direction)
+    {
+        var pushable = obstacle.GetComponentInParent<Pushable>()
+            || obstacle.GetComponentInParent<ThrowableFurniture>();
+        var damageable = obstacle.GetComponentInParent<IDamageable>();
+        CombatVfx.ChargeObstacle(transform, direction);
+        SwitchState(new EnemyStunState(this, stunDuration, new ChargerRecoverState(this)));
+        damageable?.TakeDamage(EffectiveDamage);
+        if (!pushable) TakeDamage(wallSlamDamage);
     }
 
 }

@@ -351,6 +351,9 @@ public class EnemyBehaviourChecks : MonoBehaviour
             "Chase stopping distance cannot leave the charger outside its attack range");
         charger.gameObject.SetActive(false);
 
+        var crashes = CheckChargerCrashes(centre.position, target);
+        while (crashes.MoveNext()) yield return crashes.Current;
+
         var collector = Spawn<ChairThrowerEnemy>("Chair Thrower", centre.position + Vector3.up, stationaryTarget.transform);
         collector.startingChair.gameObject.SetActive(false); collector.startingChair = null;
         collector.pickupReach = 1.2f;
@@ -528,6 +531,99 @@ public class EnemyBehaviourChecks : MonoBehaviour
         keg.gameObject.SetActive(false);
     }
 
+    private IEnumerator CheckChargerCrashes(Vector3 position, Transform target)
+    {
+        var charger = Spawn<ChargerEnemy>("Charger", position + Vector3.up, target);
+        charger.detectRange = 0f;
+        charger.attackRange = 0f;
+        charger.stunDuration = 0.2f;
+        charger.agent.enabled = true;
+        charger.agent.Warp(position);
+        yield return null;
+        var start = charger.transform.position;
+        var feet = start - Vector3.up * charger.agent.baseOffset;
+        var stars = charger.transform.Find("VFX Stun Stars");
+        Assert(stars, "Charger prefab has stun stars");
+
+        // These physical props deliberately have no NavMeshObstacle and are not in the bake.
+        foreach (var kind in new[] { "wall", "table", "counter", "pushable table", "damageable prop", "same-layer wall" })
+        {
+            charger.agent.Warp(start);
+            charger.transform.rotation = Quaternion.LookRotation(Vector3.right);
+            charger.currentHealth = charger.maxHealth;
+            var prop = GameObject.CreatePrimitive(PrimitiveType.Cube); created.Add(prop);
+            prop.name = "Charge test " + kind;
+            prop.transform.position = feet + Vector3.right * 0.9f + Vector3.up;
+            prop.transform.localScale = kind.Contains("table") ? new Vector3(0.5f, 0.4f, 2f) : new Vector3(0.2f, 2f, 2f);
+            if (kind.Contains("table")) prop.transform.position = feet + Vector3.right * 0.9f + Vector3.up * 0.7f;
+            if (kind == "pushable table") prop.AddComponent<Pushable>();
+            if (kind == "damageable prop") prop.AddComponent<ChargeTestDamageable>();
+            if (kind == "same-layer wall") prop.layer = charger.gameObject.layer;
+            Physics.SyncTransforms();
+            charger.SwitchState(new ChargerChargeState(charger));
+            charger.CurrentState.Update();
+            Assert(charger.CurrentState is EnemyStunState, "Charging into " + kind + " causes actual stun");
+            Assert(Mathf.Approximately(charger.currentHealth, charger.maxHealth - (kind == "pushable table" ? 0f : charger.wallSlamDamage)),
+                "Charge impact preserves self-damage rules for " + kind);
+            if (kind == "damageable prop") Assert(prop.GetComponent<ChargeTestDamageable>().Hits == 1,
+                "Environmental damageable receives charge damage once");
+            yield return new WaitForEndOfFrame();
+            Assert(stars.gameObject.activeSelf, "Stun stars display after crashing into " + kind);
+            prop.SetActive(false);
+            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForEndOfFrame();
+            Assert(charger.CurrentState is ChargerRecoverState && !stars.gameObject.activeSelf,
+                "Crash stun enters recovery and stars hide for " + kind);
+            var recoveryPosition = charger.transform.position;
+            yield return new WaitForSeconds(0.2f);
+            Assert(charger.CurrentState is ChargerRecoverState
+                && Vector3.Distance(recoveryPosition, charger.transform.position) < 0.02f,
+                "Recovery holds the charger after stun for " + kind);
+            yield return new WaitForSeconds(charger.attackCooldown + 0.1f);
+            Assert(charger.CurrentState is ChargerChaseState,
+                "Crash recovery completes before chasing resumes for " + kind);
+        }
+
+        charger.agent.Warp(start);
+        charger.transform.rotation = Quaternion.LookRotation(Vector3.right);
+        var trigger = GameObject.CreatePrimitive(PrimitiveType.Cube); created.Add(trigger);
+        trigger.transform.position = feet + Vector3.right * 0.9f + Vector3.up;
+        trigger.GetComponent<Collider>().isTrigger = true;
+        var floor = GameObject.CreatePrimitive(PrimitiveType.Cube); created.Add(floor);
+        floor.transform.position = feet - Vector3.up * 0.1f;
+        floor.transform.localScale = new Vector3(15f, 0.1f, 15f);
+        Physics.SyncTransforms();
+        Assert(!charger.TryGetChargeObstacle(Vector3.right, 0.2f, out _), "Charge ignores trigger volumes and the floor");
+        trigger.SetActive(false); floor.SetActive(false);
+
+        var victim = Spawn<ChargerEnemy>("Charger", start + Vector3.right * 0.9f, target);
+        victim.enabled = false;
+        Physics.SyncTransforms();
+        var health = victim.currentHealth;
+        charger.SwitchState(new ChargerChargeState(charger));
+        charger.CurrentState.Update();
+        Assert(charger.CurrentState is ChargerRecoverState && victim.currentHealth < health,
+            "Hitting another enemy deals damage and recovers without stunning the charger");
+        victim.gameObject.SetActive(false);
+
+        // A temporary collider under the real player checks identity without moving or damaging them.
+        var player = FindFirstObjectByType<PlayerHealth>();
+        Assert(player, "Player exists for charger exclusion check");
+        var playerCollider = GameObject.CreatePrimitive(PrimitiveType.Cube); created.Add(playerCollider);
+        playerCollider.transform.SetParent(player.transform);
+        playerCollider.transform.position = feet + Vector3.right * 0.9f + Vector3.up;
+        Physics.SyncTransforms();
+        Assert(!charger.TryGetChargeObstacle(Vector3.right, 0.2f, out _), "Player child colliders do not count as environmental obstacles");
+        playerCollider.SetActive(false);
+
+        charger.agent.Warp(start);
+        charger.chargeDistance = 0f;
+        charger.SwitchState(new ChargerChargeState(charger));
+        charger.CurrentState.Update();
+        Assert(charger.CurrentState is ChargerRecoverState, "An unobstructed charge ends in recovery without stun");
+        charger.gameObject.SetActive(false);
+    }
+
     private T Spawn<T>(string name, Vector3 position, Transform target) where T : EnemyBrain
     {
         var root = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/Enemies/" + name + ".prefab"));
@@ -551,5 +647,14 @@ public class EnemyBehaviourChecks : MonoBehaviour
         if (!condition) throw new Exception("ENEMY CHECK FAILED: " + message);
         assertions++; Debug.Log("PASS: " + message);
     }
+}
+
+/// <summary>Probe used only by the charger environmental-impact integration checks.</summary>
+public sealed class ChargeTestDamageable : MonoBehaviour, IDamageable
+{
+    public int Hits { get; private set; }
+    public void TakeDamage(float damage) { Hits++; }
+    public void Stun() { }
+    public void Die() { }
 }
 #endif

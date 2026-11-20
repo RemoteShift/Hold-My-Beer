@@ -4,10 +4,12 @@ using UnityEngine;
 public class EnemyStunState : EnemyState
 {
     private float remaining;
+    private readonly EnemyState nextState;
 
-    public EnemyStunState(EnemyBrain enemy, float duration) : base(enemy)
+    public EnemyStunState(EnemyBrain enemy, float duration, EnemyState nextState = null) : base(enemy)
     {
         remaining = duration;
+        this.nextState = nextState;
     }
 
     public override void Enter()
@@ -23,7 +25,8 @@ public class EnemyStunState : EnemyState
 
         if (remaining <= 0f)
         {
-            enemy.ReturnToDefaultState();
+            if (nextState != null) enemy.SwitchState(nextState);
+            else enemy.ReturnToDefaultState();
         }
     }
 }
