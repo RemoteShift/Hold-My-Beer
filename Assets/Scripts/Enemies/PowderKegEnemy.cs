@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class PowderKegEnemy : EnemyBrain
 {
+    [HideInInspector] public Animator Animator;
     [Min(0.1f)] public float fuseSeconds = 4f;
     [Min(0.01f)] public float explosionRadius = 5f;
     [Tooltip("Velocity added to loose furniture at the blast centre, in metres/second. Independent of furniture mass.")]
@@ -16,6 +17,8 @@ public class PowderKegEnemy : EnemyBrain
     public float FuseRemaining { get; private set; }
     public bool IsLit { get; private set; }
     private bool exploded;
+
+    protected override void Awake() { base.Awake(); Animator = GetComponentInChildren<Animator>(); }
 
     public override void ReturnToDefaultState() => SwitchState(new FuseState(this));
 
@@ -80,6 +83,7 @@ public class PowderKegEnemy : EnemyBrain
         public override void Enter()
         {
             keg.SetBodyColor(new Color(0.8f, 0.15f, 0.1f));
+            keg.Animator?.SetBool("IsLit", keg.IsLit);
         }
         public override void Update()
         {
@@ -87,6 +91,7 @@ public class PowderKegEnemy : EnemyBrain
             {
                 if (!keg.CanSeeTarget()) return;
                 keg.IsLit = true; keg.FuseRemaining = keg.fuseSeconds;
+                keg.Animator?.SetBool("IsLit", true);
             }
             keg.LookAtTarget(); keg.PathfindToTarget();
         }
