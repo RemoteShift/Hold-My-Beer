@@ -6,18 +6,17 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
-/// <summary>Exercises the real InputHandler and HUD with temporary input devices in a running level.</summary>
+/// <summary>Runs the actual Q, wheel and LMB input route and checks the resulting HUD and AOE preview.</summary>
 public class CocktailInputChecks : MonoBehaviour
 {
     private int assertions;
-
     [MenuItem("Hold My Beer/Run Cocktail Input Checks (Play Mode)")]
     public static void Run()
     {
         var player = FindFirstObjectByType<CocktailBrewer>();
         if (!Application.isPlaying || !player || Time.timeScale <= 0f || InputHandler.Instance.ActionsBlocked)
         {
-            Debug.LogError("Start unpaused gameplay outside a tutorial prompt before checking cocktail input.");
+            Debug.LogError("Start unpaused gameplay with the tutorial off before checking cocktail input.");
             return;
         }
         new GameObject("Cocktail Input Checks").AddComponent<CocktailInputChecks>();
@@ -27,179 +26,171 @@ public class CocktailInputChecks : MonoBehaviour
     {
         var brewer = FindFirstObjectByType<CocktailBrewer>();
         var inventory = brewer.GetComponent<IngredientInventory>();
-        var input = InputHandler.Instance;
+        var health = brewer.GetComponent<PlayerHealth>();
         var hud = brewer.GetComponent<CocktailHud>();
-        var savedInventory = new int[IngredientInfo.Count];
-        for (var i = 0; i < savedInventory.Length; i++) savedInventory[i] = inventory.GetCount((IngredientType)i);
+        var input = InputHandler.Instance;
+        var counts = new int[IngredientInfo.Count];
+        for (int i = 0; i < counts.Length; i++) counts[i] = inventory.GetCount((IngredientType)i);
+        var selected = brewer.SelectedRecipe;
+        var oldProtection = health.InvulnerableSecondsLeft;
+        health.GrantInvulnerability(30f);
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
         var beerPresses = 0;
-        var unbeerPresses = 0;
-        var pushPresses = 0;
-        var interactPresses = 0;
         Action beer = () => beerPresses++;
-        Action unbeer = () => unbeerPresses++;
-        Action push = () => pushPresses++;
-        Action interact = () => interactPresses++;
         input.OnBeerPressed += beer;
-        input.OnUnbeerPressed += unbeer;
-        input.OnPushPressed += push;
-        input.OnInteractPressed += interact;
-        GameObject wall = null;
-        IngredientPickup pickup = null;
-        CocktailProjectile launched = null;
         try
         {
             SetCounts(inventory, new int[IngredientInfo.Count]);
-            yield return null;
-            Check(hud.IsSelectionEmpty, "The one cocktail window is empty when no key is held");
-            yield return new WaitForEndOfFrame();
-            Capture("/tmp/hmb-cocktail-idle.png");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
-            yield return null;
-            Check(brewer.HeldHotkey == 0 && pushPresses == 1 && interactPresses == 1,
-                "E is restored for pushing and refilling");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Q, Key.Z, Key.C));
-            yield return null;
-            Check(brewer.HeldHotkey == 0 && hud.IsSelectionEmpty, "Former ingredient keys do not select anything");
-
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1));
-            yield return null;
-            Check(brewer.HeldHotkey == 1 && !hud.IsSelectionEmpty && brewer.ConfirmedRecipe == null,
-                "Holding 1 previews Honey before LMB");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1, Key.Digit3));
-            yield return null;
-            Check(brewer.HeldHotkey == 3, "The newest held cocktail key takes priority");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1, Key.Digit3, Key.Digit2));
-            yield return null;
-            Check(brewer.HeldHotkey == 2, "A lower-numbered key overrides an older higher-numbered key");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1, Key.Digit3));
-            yield return null;
-            Check(brewer.HeldHotkey == 3, "Releasing the newest key restores the next most recent held key");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1));
-            yield return null;
-            Check(brewer.HeldHotkey == 1, "Fallback continues to the remaining held key");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            yield return null;
-            Check(hud.IsSelectionEmpty, "Releasing every number key clears the window");
-            for (var i = 0; i < CocktailRecipes.HotkeyCount; i++)
-            {
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState((Key)((int)Key.Digit1 + i)));
-                yield return null;
-                Check(brewer.SelectedRecipe.Hotkey == i + 1, "Every number key previews its own cocktail");
-            }
-
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1));
-            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-            yield return null;
-            Check(brewer.ConfirmedRecipe == null && hud.IsShowingFailure && beerPresses == 0 &&
-                inventory.GetCount(IngredientType.Sugar) == 0, "An unaffordable LMB brew shows X and spends nothing");
-            yield return new WaitForEndOfFrame();
-            Capture("/tmp/hmb-cocktail-error.png");
+            Select(brewer, CocktailKind.HoneyBrew);
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState());
-            yield return null;
-            for (var i = 0; i < IngredientInfo.Count; i++) inventory.Add((IngredientType)i, 8);
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1));
-            yield return null;
-            Check(!hud.IsShowingFailure, "Changing selection clears stale failure feedback");
-            yield return new WaitForEndOfFrame();
-            CheckIcons(hud);
-            Capture("/tmp/hmb-cocktail-preview.png");
-            var sugarBefore = inventory.GetCount(IngredientType.Sugar);
-            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-            yield return null;
-            Check(brewer.ConfirmedRecipe?.Id == CocktailKind.HoneyBrew && beerPresses == 0 &&
-                inventory.GetCount(IngredientType.Sugar) == sugarBefore - 2,
-                "1 and LMB reserve Honey through the real input router without beering");
-            yield return new WaitForEndOfFrame();
-            Capture("/tmp/hmb-cocktail-selected.png");
-
+            yield return Frame();
+            Check(!hud.IsSelectionEmpty && !hud.IsCraftingVisible && brewer.HeldRecipe == null,
+                "Idle HUD shows one selected recipe without entering crafting");
+            Capture("idle");
+            for (int key = 0; key < 5; key++)
+            {
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState((Key)((int)Key.Digit1 + key)));
+                yield return Frame();
+                Check(!brewer.IsCrafting && brewer.SelectedRecipe.Id == CocktailKind.HoneyBrew,
+                    "Number keys no longer select or craft");
+            }
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            yield return null;
-            Check(brewer.HeldHotkey == 0 && brewer.ConfirmedRecipe != null,
-                "Releasing 1 keeps the held throw confirmed");
+            InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0, -120) });
+            yield return Frame();
+            Check(brewer.SelectedRecipe.Id == CocktailKind.FizzySodaSplash && !brewer.OwnsCombatInput,
+                "Wheel down selects the next recipe while idle without blocking combat");
+            InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0, 120) });
+            yield return Frame();
+            Check(brewer.SelectedRecipe.Id == CocktailKind.HoneyBrew, "Wheel up selects the previous recipe");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Q));
+            yield return Frame();
             var arc = brewer.transform.Find("Cocktail aim arc").GetComponent<LineRenderer>();
             var ring = brewer.transform.Find("Cocktail landing radius").GetComponent<LineRenderer>();
-            Check(arc.enabled && arc.positionCount > 1 && ring.enabled, "A held throw shows its trajectory and floor radius");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit2));
-            yield return null;
-            Check(brewer.HeldHotkey == 2 && brewer.SelectedRecipe.Id == CocktailKind.HoneyBrew,
-                "A confirmed throw stays locked while another cocktail key is held");
-            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left).WithButton(MouseButton.Right));
-            yield return null;
-            Check(brewer.ConfirmedRecipe == null && inventory.GetCount(IngredientType.Sugar) == sugarBefore &&
-                unbeerPresses == 0 && !arc.enabled && !ring.enabled,
-                "RMB cancels, refunds and hides aim without unbeering");
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            InputSystem.QueueStateEvent(mouse, new MouseState());
-            yield return null;
-            Check(FindObjectsByType<CocktailProjectile>(FindObjectsSortMode.None).Length == 0,
-                "Releasing a cancelled throw creates no projectile");
-
+            Check(brewer.IsCrafting && hud.IsCraftingVisible && arc.enabled && ring.enabled,
+                "Holding Q expands costs and shows the AOE aim before confirmation");
+            Capture("crafting-missing");
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-            yield return null;
-            Check(beerPresses == 1, "A fresh LMB with no cocktail selected still triggers normal beering");
-            InputSystem.QueueStateEvent(mouse, new MouseState());
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
-            yield return null;
-            Check(pushPresses == 2 && interactPresses == 2, "E reaches the existing push and refill handlers");
+            yield return Frame();
+            Check(hud.IsShowingFailure && beerPresses == 0 && inventory.GetCount(IngredientType.Sugar) == 0,
+                "An unaffordable craft shows feedback, spends nothing and consumes LMB");
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            yield return null;
-
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Digit1));
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            yield return Frame();
+            Check(!brewer.IsCrafting && !hud.IsCraftingVisible && !arc.enabled && !ring.enabled &&
+                !hud.IsSelectionEmpty, "Releasing Q hides preview and costs but preserves the selected slot");
+            for (int i = 0; i < counts.Length; i++) inventory.Add((IngredientType)i, 12);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Q));
+            InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0, -120) });
+            yield return Frame();
+            Check(brewer.SelectedRecipe.Id == CocktailKind.FizzySodaSplash && brewer.IsCrafting && arc.enabled &&
+                !hud.IsShowingFailure, "Scrolling during Q updates the recipe and clears its previous error");
+            Capture("crafting-ready");
+            int water = inventory.GetCount(IngredientType.Water);
+            int sugar = inventory.GetCount(IngredientType.Sugar);
+            int projectiles = FindObjectsByType<CocktailProjectile>(FindObjectsSortMode.None).Length;
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-            yield return null;
+            yield return Frame();
+            Check(brewer.ConfirmedRecipe == null && beerPresses == 0 &&
+                inventory.GetCount(IngredientType.Water) == water - 2 &&
+                inventory.GetCount(IngredientType.Sugar) == sugar - 1 &&
+                FindObjectsByType<CocktailProjectile>(FindObjectsSortMode.None).Length == projectiles + 1,
+                "Q plus LMB immediately crafts and throws the selected drink once");
+            yield return Frame();
+            Check(inventory.GetCount(IngredientType.Water) == water - 2, "Holding LMB does not repeatedly spend");
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            yield return null;
+            yield return Frame();
+            Check(!brewer.IsCrafting && !arc.enabled && brewer.OwnsCombatInput,
+                "Releasing Q stops preview while the held mouse click stays captured");
             InputSystem.QueueStateEvent(mouse, new MouseState());
-            yield return null;
-            launched = FindFirstObjectByType<CocktailProjectile>();
-            Check(launched && brewer.ConfirmedRecipe == null && !arc.enabled && !ring.enabled &&
-                inventory.GetCount(IngredientType.Sugar) == sugarBefore - 2 && beerPresses == 1,
-                "Releasing LMB launches the locked recipe exactly once, keeping its cost and hiding the preview");
-            Destroy(launched.gameObject);
+            yield return Frame();
+            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+            yield return Frame();
+            Check(beerPresses == 1 && inventory.GetCount(IngredientType.Water) == water - 2,
+                "A fresh LMB without Q reaches normal combat and does not brew");
 
-            var count = inventory.GetCount(IngredientType.Water);
-            pickup = IngredientPickup.Spawn(IngredientType.Water, 3, brewer.transform.position);
-            yield return new WaitForSeconds(0.4f);
-            Check(!pickup && inventory.GetCount(IngredientType.Water) == count + 3,
-                "Walking onto a visible pickup adds its entire quantity once");
-            yield return new WaitForSeconds(0.15f);
-            Check(inventory.GetCount(IngredientType.Water) == count + 3, "A collected drop cannot award twice");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            yield return Frame();
+            Select(brewer, CocktailKind.SteelGutVodka);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Q));
+            yield return Frame();
+            Check(!arc.enabled && !ring.enabled && hud.IsCraftingVisible,
+                "Drinkable cocktails show costs without an inappropriate AOE marker");
+            int essence = inventory.GetCount(IngredientType.LifeEssence);
+            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+            yield return Frame();
+            Check(inventory.GetCount(IngredientType.LifeEssence) == essence - 2 &&
+                brewer.GetComponent<PlayerCocktailEffects>().InvulnerableSecondsLeft > 0f,
+                "Q plus LMB crafts and uses a drinkable cocktail immediately");
 
-            var forward = Vector3.ProjectOnPlane(Camera.main.transform.forward, Vector3.up).normalized;
-            wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            wall.name = "Pickup line of sight test wall";
-            wall.transform.position = brewer.transform.position + forward * 0.75f;
-            wall.transform.rotation = Quaternion.LookRotation(forward);
-            wall.transform.localScale = new Vector3(2f, 3f, 0.15f);
-            pickup = IngredientPickup.Spawn(IngredientType.Water, 2, brewer.transform.position + forward * 1.5f);
-            Physics.SyncTransforms();
-            yield return new WaitForSeconds(0.4f);
-            Check(pickup && inventory.GetCount(IngredientType.Water) == count + 3, "Solid walls prevent collecting through them");
-            Destroy(wall);
-            yield return new WaitForSeconds(0.2f);
-            Check(!pickup && inventory.GetCount(IngredientType.Water) == count + 5, "Clearing the path makes the nearby drop collectable");
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return Frame();
+            Select(brewer, CocktailKind.HoneyBrew);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Q));
+            yield return Frame();
+            input.ActionsBlocked = true;
+            yield return Frame();
+            Check(!brewer.IsCrafting && !arc.enabled && !ring.enabled,
+                "Blocked input clears the crafting preview");
+            input.ActionsBlocked = false;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return Frame();
+            Canvas.ForceUpdateCanvases();
+            Check(hud.SelectedSlot.rect.width > 0 && hud.SelectedSlot.rect.height > 0,
+                "Selected slot has positive layout dimensions");
+            var beerCanvas = FindFirstObjectByType<BeerHud>().GetComponent<Canvas>();
+            Check(hud.SelectedSlot.GetComponentInParent<Canvas>() == beerCanvas &&
+                hud.IngredientPanel.GetComponentInParent<Canvas>() == beerCanvas,
+                "Ingredients and selected cocktail share the saved health/beer canvas");
+            var uiCamera = beerCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : beerCanvas.worldCamera;
+            Vector2 selectedScreen = RectTransformUtility.WorldToScreenPoint(uiCamera, hud.SelectedSlot.position);
+            Vector2 ingredientScreen = RectTransformUtility.WorldToScreenPoint(uiCamera, hud.IngredientPanel.position);
+            Vector3 playerStart = brewer.transform.position;
+            Quaternion cameraStart = Camera.main.transform.rotation;
+            health.GrantInvulnerability(30f);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+            for (int i = 0; i < 20; i++)
+            {
+                InputSystem.QueueStateEvent(mouse, new MouseState { delta = new Vector2(4f, 1f) });
+                yield return Frame();
+                Check(Vector2.Distance(selectedScreen, RectTransformUtility.WorldToScreenPoint(uiCamera,
+                    hud.SelectedSlot.position)) < .75f &&
+                    Vector2.Distance(ingredientScreen, RectTransformUtility.WorldToScreenPoint(uiCamera,
+                    hud.IngredientPanel.position)) < .75f,
+                    "Saved HUD stays screen-locked while moving and turning");
+            }
+            Check(Vector3.Distance(playerStart, brewer.transform.position) > .05f &&
+                Quaternion.Angle(cameraStart, Camera.main.transform.rotation) > .1f,
+                "Movement test actually moved the player and turned the camera");
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(mouse, new MouseState());
+            yield return Frame();
+            Capture("movement-stable");
             Debug.Log($"COCKTAIL INPUT CHECKS PASSED: {assertions} assertions.");
         }
         finally
         {
-            brewer.CancelConfirmed();
-            SetCounts(inventory, savedInventory);
+            input.ActionsBlocked = false;
+            brewer.Suspend();
+            if (selected != null) Select(brewer, selected.Id);
+            SetCounts(inventory, counts);
+            health.ClearInvulnerability();
+            if (oldProtection > 0f) health.GrantInvulnerability(oldProtection);
             input.OnBeerPressed -= beer;
-            input.OnUnbeerPressed -= unbeer;
-            input.OnPushPressed -= push;
-            input.OnInteractPressed -= interact;
             InputSystem.RemoveDevice(keyboard);
             InputSystem.RemoveDevice(mouse);
-            if (wall) Destroy(wall);
-            if (pickup) Destroy(pickup.gameObject);
-            if (launched) Destroy(launched.gameObject);
             Destroy(gameObject);
         }
     }
 
+    private static IEnumerator Frame() { yield return null; yield return new WaitForEndOfFrame(); }
+    private static void Select(CocktailBrewer brewer, CocktailKind kind)
+    {
+        for (int i = 0; i < CocktailRecipes.All.Count && brewer.SelectedRecipe.Id != kind; i++) brewer.ScrollSelection(1);
+    }
     private static void SetCounts(IngredientInventory inventory, int[] counts)
     {
         var data = new SerializedObject(inventory);
@@ -207,27 +198,14 @@ public class CocktailInputChecks : MonoBehaviour
         for (var i = 0; i < counts.Length; i++) data.FindProperty(names[i]).intValue = counts[i];
         data.ApplyModifiedPropertiesWithoutUndo();
     }
-
-    private void CheckIcons(CocktailHud hud)
+    private static void Capture(string name)
     {
-        var icons = hud.transform.Find("Cocktail HUD").GetComponentsInChildren<CocktailIcon>();
-        Check(icons.Length == 7, "Inventory, cocktail logo and two recipe ingredients are the only visible icons");
-        foreach (var icon in icons)
-        {
-            var renderer = icon.GetComponent<CanvasRenderer>();
-            Check(renderer, "Each icon has its required canvas renderer");
-            var mesh = renderer.GetMesh();
-            Check(mesh && mesh.vertexCount > 0 && icon.color.a > 0f, "Each icon has visible vector geometry");
-        }
-    }
-
-    private static void Capture(string path)
-    {
+        var folder = System.IO.Path.GetFullPath("Temp/UIReview/CocktailSceneHud");
+        System.IO.Directory.CreateDirectory(folder);
         var image = ScreenCapture.CaptureScreenshotAsTexture();
-        System.IO.File.WriteAllBytes(path, image.EncodeToPNG());
+        System.IO.File.WriteAllBytes(System.IO.Path.Combine(folder, name + ".png"), image.EncodeToPNG());
         Destroy(image);
     }
-
     private void Check(bool condition, string description)
     {
         if (!condition) throw new InvalidOperationException("Cocktail input check failed: " + description);

@@ -15,7 +15,7 @@ public sealed class CocktailSettings : ScriptableObject
         }
     }
 
-    [Header("Recipes — keys 1 to 5")]
+    [Header("Recipes — mouse-wheel selection")]
     [SerializeField] private CocktailRecipe honeyBrew = new CocktailRecipe(CocktailKind.HoneyBrew, "Honey Brew", true, 3f, 5f,
             new Color(1f, 0.7f, 0.18f), 1, 0, 2, 0);
     [SerializeField] private CocktailRecipe fizzySodaSplash = new CocktailRecipe(CocktailKind.FizzySodaSplash, "Fizzy Soda Splash", true, 3f, 0f,

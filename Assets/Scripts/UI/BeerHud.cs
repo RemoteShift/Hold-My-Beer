@@ -23,9 +23,22 @@ public class BeerHud : MonoBehaviour
     {
         if (!pushHandler && handler) pushHandler = handler.GetComponent<PushHandler>();
         inventory.OnChanged += RefreshGlasses;
+        PromptAppearance.Apply(promptText);
+        ConfigurePrompt();
 
         if (feedbackText) { feedbackText.text = string.Empty; feedbackText.gameObject.SetActive(false); }
 
+    }
+
+    private void ConfigurePrompt()
+    {
+        if (!promptText) return;
+        var rect = promptText.rectTransform;
+        rect.sizeDelta = new Vector2(1100f, 120f);
+        rect.anchoredPosition = new Vector2(0f, -40f);
+        promptText.alignment = TextAlignmentOptions.Center;
+        promptText.textWrappingMode = TextWrappingModes.Normal;
+        promptText.lineSpacing = 4f;
     }
 
     private void OnDisable()
@@ -131,7 +144,7 @@ public class BeerHud : MonoBehaviour
         if (string.IsNullOrEmpty(first)) return second;
         if (string.IsNullOrEmpty(second)) return first;
 
-        return $"{first}     {second}";
+        return $"{first}\n{second}";
     }
 
 

@@ -2,17 +2,27 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>Owns selection, reservation and release. InputHandler routes cocktail clicks before combat.</summary>
+/// <summary>Scroll selects a recipe; hold Q to aim, then click LMB to craft and use it.</summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(IngredientInventory), typeof(PlayerCocktailEffects), typeof(CocktailTrajectoryPreview))]
 [RequireComponent(typeof(CocktailHud))]
 public class CocktailBrewer : MonoBehaviour
 {
-    public int HeldHotkey { get; private set; }
-    public CocktailRecipe HeldRecipe => CocktailRecipes.GetByHotkey(HeldHotkey);
+    [SerializeField, Min(0)] private int selectedIndex;
+    public bool IsCrafting { get; private set; }
+    public CocktailRecipe SelectedRecipe
+    {
+        get
+        {
+            var recipes = CocktailRecipes.All;
+            if (recipes.Count == 0) return null;
+            selectedIndex = Mathf.Clamp(selectedIndex, 0, recipes.Count - 1);
+            return ConfirmedRecipe ?? recipes[selectedIndex];
+        }
+    }
+    public CocktailRecipe HeldRecipe => IsCrafting ? SelectedRecipe : null;
     public CocktailRecipe ConfirmedRecipe { get; private set; }
-    public CocktailRecipe SelectedRecipe => ConfirmedRecipe ?? HeldRecipe;
-    public bool OwnsCombatInput => HeldHotkey != 0 || primaryCaptured || ConfirmedRecipe != null;
+    public bool OwnsCombatInput => IsCrafting || primaryCaptured || ConfirmedRecipe != null;
     public event Action<string, bool> OnFeedback;
 
     private IngredientInventory ingredients;
@@ -21,9 +31,6 @@ public class CocktailBrewer : MonoBehaviour
     private PlayerHealth health;
     private CocktailTrajectoryPreview preview;
     private bool primaryCaptured;
-    private int previousHeldKeys;
-    private long pressSequence;
-    private long[] keyOrder = new long[CocktailRecipes.HotkeyCount];
 
     private void Awake()
     {
@@ -46,58 +53,54 @@ public class CocktailBrewer : MonoBehaviour
     private void Update()
     {
         var input = InputHandler.Instance;
-        if (!input || !input.isActiveAndEnabled || input.ActionsBlocked || Time.timeScale <= 0f || (health && health.IsDead))
+        if (!input || !input.isActiveAndEnabled || input.ActionsBlocked || Time.timeScale <= 0f ||
+            AudioListener.pause || (health && health.IsDead))
             Suspend();
     }
 
-    private void LateUpdate()
+    private void LateUpdate() { RefreshPreview(); }
+
+    private void RefreshPreview()
     {
+        if (!preview) return;
         var camera = Camera.main;
         if (HeldRecipe != null && camera)
             preview.Show(HeldRecipe, camera.transform, transform);
         else preview.Hide();
     }
 
-    /// <returns>True when this frame's clicks belong to brewing, including failed or cancelled recipes.</returns>
+    /// <returns>True while cocktail crafting owns combat input, including failed crafting clicks.</returns>
     public bool PollInput(bool blocked)
     {
-        if (!isActiveAndEnabled || blocked || Time.timeScale <= 0f || (health && health.IsDead))
+        if (!isActiveAndEnabled || blocked || Time.timeScale <= 0f || AudioListener.pause || (health && health.IsDead))
         {
             Suspend();
             return false;
         }
-        var keyboard = Keyboard.current;
-        var held = 0;
-        var pressed = 0;
-        if (keyboard != null)
-        {
-            for (var i = 0; i < CocktailRecipes.HotkeyCount; i++)
-            {
-                var key = keyboard[(Key)((int)Key.Digit1 + i)];
-                if (key.isPressed) held |= 1 << i;
-                if (key.wasPressedThisFrame) pressed |= 1 << i;
-            }
-        }
         var mouse = Mouse.current;
-        // Focus changes can lose the release edge. Never keep an abandoned reservation latched.
+        // Losing focus may lose a release edge. Do not leave a mouse click captured forever.
         if (primaryCaptured && mouse?.leftButton.isPressed != true && mouse?.leftButton.wasReleasedThisFrame != true)
         {
             CancelConfirmed();
             primaryCaptured = false;
         }
-        return ProcessControls(held, mouse?.leftButton.wasPressedThisFrame == true,
-            mouse?.leftButton.wasReleasedThisFrame == true, mouse?.rightButton.wasPressedThisFrame == true, pressed);
+        var scroll = mouse?.scroll.y.ReadValue() ?? 0f;
+        var steps = scroll > 0f ? -1 : scroll < 0f ? 1 : 0;
+        return ProcessControls(Keyboard.current?.qKey.isPressed == true,
+            mouse?.leftButton.wasPressedThisFrame == true, mouse?.leftButton.wasReleasedThisFrame == true, steps);
     }
 
-    /// <summary>Explicit edges make the same state machine usable by gameplay and integration checks.</summary>
-    public bool ProcessControls(int heldKeys, bool confirmPressed, bool released, bool cancelPressed, int pressedKeys = 0)
+    /// <summary>Explicit input edges also allow integration checks without simulating combat.</summary>
+    public bool ProcessControls(bool craftHeld, bool confirmPressed, bool released, int scrollSteps = 0)
     {
-        UpdateSelection(heldKeys, pressedKeys);
+        if (scrollSteps != 0) ScrollSelection(scrollSteps);
+        IsCrafting = craftHeld;
         var consumed = OwnsCombatInput;
         if (confirmPressed && !primaryCaptured && HeldRecipe != null)
         {
             primaryCaptured = true;
             consumed = true;
+            // Match the existing immediate craft-and-use behaviour for throws and drinks.
             if (ConfirmSelection(HeldRecipe)) ReleaseConfirmed();
         }
         if (released)
@@ -105,26 +108,16 @@ public class CocktailBrewer : MonoBehaviour
             consumed |= primaryCaptured;
             primaryCaptured = false;
         }
+        RefreshPreview();
         return consumed;
     }
 
-    /// <summary>Bit 0 is key 1, bit 1 is key 2, etc. Releasing the newest key restores the next held key.</summary>
-    private void UpdateSelection(int heldKeys, int pressedKeys)
+    /// <summary>Positive steps select the next recipe; negative steps select the previous. Wraps both ways.</summary>
+    public void ScrollSelection(int steps)
     {
-        heldKeys &= (1 << CocktailRecipes.HotkeyCount) - 1;
-        pressedKeys = (pressedKeys | (heldKeys & ~previousHeldKeys)) & heldKeys;
-        if (keyOrder == null || keyOrder.Length != CocktailRecipes.HotkeyCount)
-            keyOrder = new long[CocktailRecipes.HotkeyCount];
-        HeldHotkey = 0;
-        var newest = -1L;
-        for (var i = 0; i < keyOrder.Length; i++)
-        {
-            if ((pressedKeys & (1 << i)) != 0) keyOrder[i] = ++pressSequence;
-            if ((heldKeys & (1 << i)) == 0 || keyOrder[i] <= newest) continue;
-            newest = keyOrder[i];
-            HeldHotkey = i + 1;
-        }
-        previousHeldKeys = heldKeys;
+        var count = CocktailRecipes.All.Count;
+        if (count == 0 || ConfirmedRecipe != null) return;
+        selectedIndex = ((selectedIndex + steps % count) % count + count) % count;
     }
 
     public bool ConfirmSelection(CocktailRecipe recipe)
@@ -173,10 +166,8 @@ public class CocktailBrewer : MonoBehaviour
     public void Suspend()
     {
         CancelConfirmed();
-        HeldHotkey = 0;
-        previousHeldKeys = 0;
-        pressSequence = 0;
-        if (keyOrder != null) Array.Clear(keyOrder, 0, keyOrder.Length);
+        IsCrafting = false;
+        // Keep the selected recipe visible and remember it across focus changes and pauses.
         primaryCaptured = Mouse.current?.leftButton.isPressed == true;
         if (preview) preview.Hide();
     }
