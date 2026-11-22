@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd28e858fbfcf344a93c8c2eebbb74f0, type: 3}
+  m_Name: WorldHudArt
+  m_EditorClassIdentifier: Assembly-CSharp::WorldHudArt
+  ingredients:
+  - sprite: {fileID: 21300000, guid: a1612f3c203470546b46a9a73526d8b3, type: 3}
+    material: {fileID: 2100000, guid: c39281fb32fa135408e2378e97b3dc71, type: 2}
+    worldUnitsPerPixel: 0.0037126266
+    opticalOffsetPixels: {x: -6.0829315, y: -2.739029}
+  - sprite: {fileID: 21300000, guid: a722bba3d639a49488f501de894ac48f, type: 3}
+    material: {fileID: 2100000, guid: e3707bb369b8a4340971f18643382ad6, type: 2}
+    worldUnitsPerPixel: 0.004169986
+    opticalOffsetPixels: {x: -0.06281662, y: 10.717796}
+  - sprite: {fileID: 21300000, guid: 049692b449407df4bbbe746fbedfcc8b, type: 3}
+    material: {fileID: 2100000, guid: 4935e03370c84864c9eccb3d9fa0d978, type: 2}
+    worldUnitsPerPixel: 0.0030365835
+    opticalOffsetPixels: {x: -0.11064911, y: -1.2821579}
+  - sprite: {fileID: 21300000, guid: 9f6a490eb284dde43bc4f44fea326fca, type: 3}
+    material: {fileID: 2100000, guid: dc1a428e0181c5e43b2088d303d9f37c, type: 2}
+    worldUnitsPerPixel: 0.0030877828
+    opticalOffsetPixels: {x: -0.5778656, y: 6.870964}
+  cocktails:
+  - sprite: {fileID: 21300000, guid: dce5ae5cadd99504d8f11c1e64b3d370, type: 3}
+    material: {fileID: 2100000, guid: a9274eacf4e0a4c45a5cff94a9d9123f, type: 2}
+    worldUnitsPerPixel: 0.013678823
+    opticalOffsetPixels: {x: -0.19230843, y: 0.57068634}
+  - sprite: {fileID: 21300000, guid: da3313753b48fcb49abb21c193e5ab45, type: 3}
+    material: {fileID: 2100000, guid: 28bf68812c9c9cd4cb7a17065d7c8a5a, type: 2}
+    worldUnitsPerPixel: 0.012705707
+    opticalOffsetPixels: {x: 0.10717583, y: -0.19775772}
+  - sprite: {fileID: 21300000, guid: c7964053ae19ef74ba07a9bb8d84568c, type: 3}
+    material: {fileID: 2100000, guid: edf97c36e949c084a802a96cf4da826d, type: 2}
+    worldUnitsPerPixel: 0.012237255
+    opticalOffsetPixels: {x: 1.3635616, y: -0.13810349}
+  - sprite: {fileID: 21300000, guid: a7484daac4fd40849804dcad7bdaf4a6, type: 3}
+    material: {fileID: 2100000, guid: 3fe7eff01410cd642b8eb8985fa8d666, type: 2}
+    worldUnitsPerPixel: 0.012598816
+    opticalOffsetPixels: {x: -0.8562603, y: -1.215168}
+  - sprite: {fileID: 21300000, guid: b9319089b5e662c438f39308a6e8290f, type: 3}
+    material: {fileID: 2100000, guid: 1cbcb5322344f804aa57aef85e8cb152, type: 2}
+    worldUnitsPerPixel: 0.01320037
+    opticalOffsetPixels: {x: -1.9840279, y: 0.45643806}
+  spriteMaterial: {fileID: 2100000, guid: 37970f339201bfc459617be024b496a5, type: 2}

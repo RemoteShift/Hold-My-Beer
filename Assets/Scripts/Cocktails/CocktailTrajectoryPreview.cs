@@ -6,7 +6,8 @@ public class CocktailTrajectoryPreview : MonoBehaviour
 {
     private readonly Vector3[] points = new Vector3[1201];
     private LineRenderer arc;
-    private LineRenderer landing;
+    private CocktailPixelRange landing;
+    private CocktailPackEffect landingEffect;
     private Material material;
     private CocktailRecipe recipe;
     private Transform aim;
@@ -28,7 +29,8 @@ public class CocktailTrajectoryPreview : MonoBehaviour
         recipe = null;
         aim = null;
         if (arc) arc.enabled = false;
-        if (landing) landing.enabled = false;
+        if (landing) landing.Hide();
+        if (landingEffect) { landingEffect.Release(); landingEffect = null; }
     }
 
     private void LateUpdate()
@@ -41,8 +43,11 @@ public class CocktailTrajectoryPreview : MonoBehaviour
         if (arc) return;
         material = CocktailVisuals.CreateMaterial(Color.white);
         arc = CocktailVisuals.CreateLine("Cocktail aim arc", transform, material, 0.035f);
-        landing = CocktailVisuals.CreateLine("Cocktail landing radius", transform, material, 0.055f);
-        arc.enabled = landing.enabled = false;
+        landing = CocktailPixelRange.Create();
+        arc.numCapVertices = 0;
+        arc.numCornerVertices = 0;
+        arc.enabled = false;
+        if (landing) landing.Hide();
     }
 
     private void Redraw()
@@ -75,16 +80,17 @@ public class CocktailTrajectoryPreview : MonoBehaviour
         arc.enabled = visibleCount > 1;
         arc.positionCount = visibleCount;
         for (var i = 0; i < visibleCount; i++) arc.SetPosition(i, points[firstVisible + i]);
-        var color = recipe.Color;
+        var color = CocktailVfx.ColorFor(recipe.Id, recipe.Color);
         arc.startColor = new Color(color.r, color.g, color.b, 0.28f);
         arc.endColor = new Color(color.r, color.g, color.b, 0.9f);
-        landing.enabled = false;
+        if (landing) landing.Hide();
         if (landed && CocktailBallistics.GroundBelow(impact, owner, out var ground, out var normal))
         {
-            landing.enabled = true;
-            CocktailVisuals.SetRing(landing, ground, normal,
-                recipe.Radius > 0f ? recipe.Radius : 0.15f, new Color(color.r, color.g, color.b, 0.8f));
+            if (landing) landing.Show(ground, normal,
+                recipe.Radius > 0f ? recipe.Radius : 0.15f, new Color(color.r, color.g, color.b, 0.65f));
+            CocktailVfx.Preview(ref landingEffect, recipe.Id, ground, normal, recipe.Radius);
         }
+        else if (landingEffect) { landingEffect.Release(); landingEffect = null; }
     }
 
     private void OnDisable() { Hide(); }

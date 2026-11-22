@@ -9,9 +9,8 @@ public class CocktailHoneyPatch : MonoBehaviour
     private float duration;
     private float radius;
     private Color color;
-    private Material material;
-    private LineRenderer edge;
-    private LineRenderer inner;
+    private CocktailPixelRange edge;
+    private CocktailPackEffect areaVfx;
 
     public static CocktailHoneyPatch Create(Vector3 position, Vector3 normal, CocktailRecipe recipe)
     {
@@ -22,12 +21,12 @@ public class CocktailHoneyPatch : MonoBehaviour
         patch.expiresAt = Time.time + recipe.Duration;
         patch.radius = recipe.Radius;
         patch.color = recipe.Color;
-        patch.material = CocktailVisuals.CreateMaterial(Color.white);
-        patch.edge = CocktailVisuals.CreateLine("Honey edge", go.transform, patch.material, 0.075f);
-        patch.inner = CocktailVisuals.CreateLine("Honey pool", go.transform, patch.material, recipe.Radius * 0.65f);
-        CocktailVisuals.SetRing(patch.edge, position, normal, recipe.Radius, recipe.Color);
-        CocktailVisuals.SetRing(patch.inner, position, normal, recipe.Radius * 0.50f,
-            new Color(recipe.Color.r, recipe.Color.g, recipe.Color.b, 0.12f));
+        patch.edge = CocktailPixelRange.Create();
+        if (patch.edge) patch.edge.transform.SetParent(go.transform, true);
+        var tint = CocktailVfx.ColorFor(recipe.Id, recipe.Color);
+        if (patch.edge) patch.edge.Show(position, normal, recipe.Radius,
+            new Color(tint.r, tint.g, tint.b, .4f));
+        patch.areaVfx = CocktailVfx.Area(recipe.Id, go.transform, normal, recipe.Radius);
         patch.ApplyToNearbyEnemies();
         return patch;
     }
@@ -52,8 +51,12 @@ public class CocktailHoneyPatch : MonoBehaviour
             affected.Add(enemy);
             // Each entrant gets the full recipe duration, even just before the puddle dries.
             enemy.ApplyHoney(duration);
+            CocktailEnemyVfx.Ensure(enemy);
         }
     }
 
-    private void OnDestroy() { if (material) Destroy(material); }
+    private void OnDestroy()
+    {
+        if (areaVfx) areaVfx.Release();
+    }
 }

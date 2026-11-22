@@ -55,9 +55,10 @@ public class CocktailProjectileChecks : MonoBehaviour
             Assert(Vector3.Distance(arc.GetPosition(arc.positionCount - 1),
                 predicted.point + predicted.normal * CocktailBallistics.BottleRadius) < 0.01f,
                 "The visible aim arc ends at the swept bottle collision");
-            var radius = owner.transform.Find("Cocktail landing radius").GetComponent<LineRenderer>();
-            Assert(radius.enabled && Mathf.Abs(Vector3.Distance(radius.GetPosition(0),
-                predicted.point + Vector3.up * 0.035f) - honey.Radius) < 0.03f,
+            var radius = (CocktailPixelRange)typeof(CocktailTrajectoryPreview)
+                .GetField("landing", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(preview);
+            Assert(radius && radius.gameObject.activeSelf && Mathf.Abs(radius.Radius - honey.Radius) < 0.03f
+                && Vector3.Distance(radius.Center, predicted.point) < 0.03f,
                 "Honey preview shows its actual area radius on the floor");
             var projectile = CocktailProjectile.Launch(honey, aim.transform, owner.transform);
             created.Add(projectile.gameObject);
@@ -78,13 +79,18 @@ public class CocktailProjectileChecks : MonoBehaviour
                 "The Honey patch appears at the predicted impact");
             created.Add(patch.gameObject);
             preview.Hide();
-            Assert(!arc.enabled && !radius.enabled, "Cancelling/hiding removes both aiming visuals");
+            Assert(!arc.enabled && !radius.gameObject.activeSelf, "Cancelling/hiding removes both aiming visuals");
 
             var caught = Probe("Honey victim", patch.transform.position + Vector3.up + Vector3.right,
                 owner.transform);
             yield return null;
             Assert(caught.IsHoneyRooted && caught.CurrentState is EnemyStunState,
                 "A Honey floor entrant receives a brief stun and movement root");
+            yield return null;
+            Assert(StatusVisible(caught, "honey"), "Honey shows sticky ankle VFX on a rooted enemy");
+            var area = (CocktailPackEffect)typeof(CocktailHoneyPatch)
+                .GetField("areaVfx", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(patch);
+            Assert(area && area.IsPlaying && !area.Paused, "Honey puddle animation is running");
             yield return new WaitForSeconds(2f);
             var late = Probe("Late Honey victim", patch.transform.position + Vector3.up + Vector3.left,
                 owner.transform);
@@ -95,6 +101,9 @@ public class CocktailProjectileChecks : MonoBehaviour
             Assert(late.IsHoneyRooted, "A late entrant receives its own full five seconds of glue");
             yield return new WaitForSeconds(2f);
             Assert(!patch && !late.IsHoneyRooted, "The late entrant's root also expires");
+            yield return null;
+            Assert(!StatusVisible(caught, "honey") && !StatusVisible(late, "honey") && !area.IsPlaying,
+                "Honey ankle and puddle VFX stop when their gameplay effects end");
             caught.gameObject.SetActive(false); late.gameObject.SetActive(false);
 
             aim.transform.rotation = Quaternion.identity;
@@ -105,7 +114,24 @@ public class CocktailProjectileChecks : MonoBehaviour
             var directHealth = direct.currentHealth;
             projectile = CocktailProjectile.Launch(soda, aim.transform, owner.transform);
             created.Add(projectile.gameObject);
-            yield return new WaitForSeconds(0.4f);
+            var impactDeadline = Time.time + 1f;
+            while (projectile && Time.time < impactDeadline) yield return null;
+            yield return null;
+            CocktailPackEffect bodyBurst = null;
+            var sodaStyle = CocktailVfx.Style(CocktailKind.FizzySodaSplash);
+            foreach (var effect in FindObjectsByType<CocktailPackEffect>(FindObjectsSortMode.None))
+                if (effect.Clip == sodaStyle.impact && effect.IsPlaying &&
+                    (Transform)typeof(CocktailPackEffect).GetField("follow", BindingFlags.NonPublic | BindingFlags.Instance)
+                        .GetValue(effect) == direct.transform) bodyBurst = effect;
+            Assert(bodyBurst && bodyBurst.transform.position.y > origin.y + .5f && bodyBurst.CameraOffset >= .3f,
+                "Direct Soda hit shows a body-height burst clear of the enemy mesh");
+            var burstBefore = bodyBurst.transform.position;
+            direct.transform.position += Vector3.right;
+            yield return null;
+            Assert(Vector3.Distance(bodyBurst.transform.position, burstBefore + Vector3.right) < .1f,
+                "Soda hit burst follows the pushed enemy rather than remaining on the floor");
+            direct.transform.position -= Vector3.right;
+            yield return new WaitForSeconds(0.2f);
             Assert(!projectile && direct.Knockbacks == 1, "Soda knocks back the directly struck patron once");
             Assert(direct.currentHealth == directHealth && bystander.Knockbacks == 1 && direct.LastStrength == bystander.LastStrength,
                 "Soda deals no damage and gives nearby bystanders the same knockback strength");
@@ -127,9 +153,9 @@ public class CocktailProjectileChecks : MonoBehaviour
                 "Affected patrons target each other instead of the owner");
             Assert(!outside.IsAggressive && first.currentHealth == first.maxHealth && second.currentHealth == second.maxHealth,
                 "Aggression is non-damaging and respects its area radius");
-            Assert(FindNear<CocktailSplash>(predicted.point), "Aggression circle persists during the tonic effect");
+            Assert(!FindNear<CocktailSplash>(predicted.point), "Aggression leaves no lingering ground circle");
             yield return new WaitForSeconds(2.1f);
-            Assert(!FindNear<CocktailSplash>(predicted.point), "Aggression circle disappears when the effect ends");
+            Assert(!FindNear<CocktailSplash>(predicted.point), "Aggression leaves no ground circle after expiry");
             Assert(!first.IsAggressive && first.target == owner.transform && second.target == owner.transform,
                 "Aggression expires and restores the previous target");
             first.gameObject.SetActive(false); second.gameObject.SetActive(false); outside.gameObject.SetActive(false);
@@ -150,6 +176,14 @@ public class CocktailProjectileChecks : MonoBehaviour
             Time.timeScale = priorTimeScale;
             Destroy(gameObject);
         }
+    }
+
+    private bool StatusVisible(EnemyBrain enemy, string field)
+    {
+        var vfx = enemy.GetComponent<CocktailEnemyVfx>();
+        var effect = vfx ? (CocktailPackEffect)typeof(CocktailEnemyVfx)
+            .GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(vfx) : null;
+        return effect && effect.IsPlaying && !effect.Paused;
     }
 
     private bool Predict(Transform aim, Transform owner, out RaycastHit hit)

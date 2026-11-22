@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 592a72131d8bfe049a6a4591e5b7dd6c, type: 3}
+  m_Name: CocktailVfxLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::CocktailVfxLibrary
+  styles:
+  - kind: 0
+    color: {r: 1, g: 0.69803923, b: 0.18039216, a: 1}
+    flight:
+      name: Honey Flight
+      material: {fileID: 2100000, guid: 40b8920ef24d753499a238a3db28e172, type: 2}
+      frameSize: {x: 32, y: 16}
+      columns: 18
+      frameCount: 18
+      framesPerSecond: 15
+      pivot: {x: 0.5, y: 0.5}
+    impact:
+      name: Honey Goo Splash
+      material: {fileID: 2100000, guid: 5e1c1ca7d0993c548b9edcd952dcb8b6, type: 2}
+      frameSize: {x: 80, y: 64}
+      columns: 8
+      frameCount: 26
+      framesPerSecond: 21.428572
+      pivot: {x: 0.5, y: 0.21875}
+    area:
+      name: Honey Ground Ripples
+      material: {fileID: 2100000, guid: 3ab93f6faaf2d494faa4745bafec45db, type: 2}
+      frameSize: {x: 96, y: 52}
+      columns: 8
+      frameCount: 24
+      framesPerSecond: 13.333333
+      pivot: {x: 0.5, y: 0.42307693}
+    status:
+      name: Honey Sticky Ankles
+      material: {fileID: 2100000, guid: a6c75d5f6361a284a9387cd9a9f8bb21, type: 2}
+      frameSize: {x: 48, y: 56}
+      columns: 8
+      frameCount: 16
+      framesPerSecond: 12.5
+      pivot: {x: 0.5, y: 0.10714286}
+    statusWidth: 1.45
+  - kind: 1
+    color: {r: 0.72156864, g: 0.46666667, b: 0.2627451, a: 1}
+    flight:
+      name: 
+      material: {fileID: 0}
+      frameSize: {x: 0, y: 0}
+      columns: 0
+      frameCount: 0
+      framesPerSecond: 0
+      pivot: {x: 0.5, y: 0.5}
+    impact:
+      name: Soda Small Bubble Pop
+      material: {fileID: 2100000, guid: 4eb86f010ee4e354fa6fef827e6f3bbf, type: 2}
+      frameSize: {x: 48, y: 48}
+      columns: 8
+      frameCount: 12
+      framesPerSecond: 20
+      pivot: {x: 0.5, y: 0.5}
+    area:
+      name: 
+      material: {fileID: 0}
+      frameSize: {x: 0, y: 0}
+      columns: 0
+      frameCount: 0
+      framesPerSecond: 0
+      pivot: {x: 0.5, y: 0.5}
+    status:
+      name: Soda Popping Bubbles
+      material: {fileID: 2100000, guid: 4eb86f010ee4e354fa6fef827e6f3bbf, type: 2}
+      frameSize: {x: 48, y: 48}
+      columns: 8
+      frameCount: 12
+      framesPerSecond: 16.666666
+      pivot: {x: 0.5, y: 0.5}
+    statusWidth: 0.65
+  - kind: 2
+    color: {r: 1, g: 0.29803923, b: 0.2509804, a: 1}
+    flight:
+      name: Aggression Flight
+      material: {fileID: 2100000, guid: b7d5507a48f8f4047a30d1182699619a, type: 2}
+      frameSize: {x: 32, y: 16}
+      columns: 18
+      frameCount: 18
+      framesPerSecond: 15
+      pivot: {x: 0.5, y: 0.5}
+    impact:
+      name: Aggression Comic Burst
+      material: {fileID: 2100000, guid: 0bf3cb2c376455a47bdb149543436dcc, type: 2}
+      frameSize: {x: 48, y: 48}
+      columns: 6
+      frameCount: 6
+      framesPerSecond: 18
+      pivot: {x: 0.5, y: 0.5}
+    area:
+      name: 
+      material: {fileID: 0}
+      frameSize: {x: 0, y: 0}
+      columns: 0
+      frameCount: 0
+      framesPerSecond: 0
+      pivot: {x: 0.5, y: 0.5}
+    status:
+      name: Aggression Anger Mark
+      material: {fileID: 2100000, guid: df3baf8195b2212498e182c6b46ceec4, type: 2}
+      frameSize: {x: 28, y: 28}
+      columns: 10
+      frameCount: 10
+      framesPerSecond: 12
+      pivot: {x: 0.5, y: 0.035714287}
+    statusWidth: 0.75

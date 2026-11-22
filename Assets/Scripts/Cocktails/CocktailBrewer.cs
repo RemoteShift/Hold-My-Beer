@@ -24,6 +24,8 @@ public class CocktailBrewer : MonoBehaviour
     public CocktailRecipe ConfirmedRecipe { get; private set; }
     public bool OwnsCombatInput => IsCrafting || primaryCaptured || ConfirmedRecipe != null;
     public event Action<string, bool> OnFeedback;
+    public event Action<CocktailRecipe> OnCraftFailed;
+    public event Action<int> OnSelectionScrolled;
 
     private IngredientInventory ingredients;
     private BeerInventory beers;
@@ -116,8 +118,10 @@ public class CocktailBrewer : MonoBehaviour
     public void ScrollSelection(int steps)
     {
         var count = CocktailRecipes.All.Count;
-        if (count == 0 || ConfirmedRecipe != null) return;
+        if (count == 0 || ConfirmedRecipe != null || steps == 0) return;
+        int previousIndex = selectedIndex;
         selectedIndex = ((selectedIndex + steps % count) % count + count) % count;
+        if (selectedIndex != previousIndex) OnSelectionScrolled?.Invoke(steps > 0 ? 1 : -1);
     }
 
     public bool ConfirmSelection(CocktailRecipe recipe)
@@ -126,6 +130,7 @@ public class CocktailBrewer : MonoBehaviour
         if (recipe.IsThrowable && !Camera.main) return false;
         if (!ingredients.TryConsume(recipe, beers, out var error))
         {
+            OnCraftFailed?.Invoke(recipe);
             OnFeedback?.Invoke(error, true);
             return false;
         }

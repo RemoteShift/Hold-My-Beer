@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -10,10 +11,24 @@ public class EnemyFreezeTimer : MonoBehaviour
     [SerializeField] private TMP_Text secondsText;
     [SerializeField] private UnityEngine.UI.Image stampBeer;
     [SerializeField, Min(0.0001f)] private float stampWorldScale = 0.008f;
+    [SerializeField, Min(0.1f)] private float beerIconScale = 1.35f;
+    [SerializeField] private Vector2 beerIconOffset = new Vector2(.65f, -1.12f);
 
     [SerializeField] private EnemyUILayoutSettings layoutSettings;
     [SerializeField, Min(0f)] private float sideOffset = 1f;
     [SerializeField] private float sideHeight = 0.35f;
+
+    [Header("Cocktail effect stamps")]
+    [SerializeField] private CocktailStampView honeyStamp, aggressionStamp, sodaStamp;
+    [SerializeField, Min(104f)] private float stampSpacing = 118f;
+    private readonly List<int> effectOrder = new List<int>(4);
+    private float honeyDuration, honeyPrevious, aggressionDuration, aggressionPrevious;
+    private float sodaDistance;
+
+    public void ShowSodaPush()
+    {
+        sodaDistance = enemy && enemy.IsBeingPushed ? enemy.PushDistanceLeft : 0f;
+    }
 
     private EnemyUILayoutSettings Settings
     {
@@ -56,9 +71,10 @@ public class EnemyFreezeTimer : MonoBehaviour
         stampBeer.preserveAspect = true;
         var mug = stampBeer.rectTransform;
         mug.anchorMin = mug.anchorMax = mug.pivot = new Vector2(0.5f, 0.5f);
-        mug.anchoredPosition = new Vector2(2f, 0f);
+        mug.anchoredPosition = beerIconOffset;
         mug.localScale = Vector3.one;
         stampBeer.SetNativeSize();
+        mug.sizeDelta *= beerIconScale;
         if (secondsText) secondsText.gameObject.SetActive(false);
         SetStampScale();
     }
@@ -111,26 +127,66 @@ public class EnemyFreezeTimer : MonoBehaviour
     {
         PositionStamp();
         if (!enemy || !panel || !fillBar) return;
-        var isBeered = enemy.IsBeered;
-        if (panel.activeSelf != isBeered) panel.SetActive(isBeered);
-        if (!isBeered) return;
+        bool alive = !enemy.IsDead;
+        SetEffectActive(0, alive && enemy.IsBeered);
+        SetEffectActive(1, alive && enemy.IsHoneyRooted && honeyStamp);
+        SetEffectActive(2, alive && enemy.IsAggressive && aggressionStamp);
+        SetEffectActive(3, alive && sodaDistance > 0f && enemy.IsBeingPushed && sodaStamp);
+        if (!enemy.IsBeingPushed) sodaDistance = 0f;
 
+        if (honeyStamp)
+            honeyStamp.SetProgress(TimerProgress(enemy.HoneySecondsLeft, ref honeyDuration, ref honeyPrevious));
+        if (aggressionStamp)
+            aggressionStamp.SetProgress(TimerProgress(enemy.AggressionSecondsLeft, ref aggressionDuration, ref aggressionPrevious));
+        if (sodaStamp && sodaDistance > 0f)
+            sodaStamp.SetProgress(enemy.PushDistanceLeft / sodaDistance);
+
+        for (int i = 0; i < effectOrder.Count; i++)
+        {
+            var rect = EffectRect(effectOrder[i]);
+            if (rect) rect.anchoredPosition = new Vector2((i % 2) * stampSpacing, -(i / 2) * stampSpacing);
+        }
+        if (!enemy.IsBeered) return;
         var fillImage = fillBar.GetComponent<UnityEngine.UI.Image>();
         if (fillImage && fillImage.type == UnityEngine.UI.Image.Type.Filled)
         {
-            // Crop whole source rows; keep the stamp's pixels at their original proportions.
             var rows = fillImage.sprite ? fillImage.sprite.rect.height : fillBar.rect.height;
-            var fill = Mathf.Clamp01(enemy.BeerFill);
+            float fill = Mathf.Clamp01(enemy.BeerFill);
             fillImage.fillAmount = rows > 0f ? Mathf.Ceil(fill * rows) / rows : fill;
         }
-        else
-        {
-            fillBar.anchorMax = new Vector2(enemy.BeerFill, 1f);
-        }
+        else fillBar.anchorMax = new Vector2(enemy.BeerFill, 1f);
         if (secondsText && secondsText.gameObject.activeSelf)
             secondsText.text = $"{enemy.BeerSecondsLeft:0.0}s";
+    }
 
+    private RectTransform EffectRect(int effect)
+    {
+        if (effect == 0) return panel ? panel.transform as RectTransform : null;
+        var stamp = effect == 1 ? honeyStamp : effect == 2 ? aggressionStamp : sodaStamp;
+        return stamp ? stamp.transform as RectTransform : null;
+    }
 
+    private void SetEffectActive(int effect, bool active)
+    {
+        var rect = EffectRect(effect);
+        if (!rect) return;
+        if (rect.gameObject.activeSelf != active) rect.gameObject.SetActive(active);
+        int index = effectOrder.IndexOf(effect);
+        if (active && index < 0) effectOrder.Add(effect);
+        else if (!active && index >= 0) effectOrder.RemoveAt(index);
+    }
 
+    private static float TimerProgress(float remaining, ref float duration, ref float previous)
+    {
+        if (remaining <= 0f) { duration = previous = 0f; return 0f; }
+        if (duration <= 0f || remaining > previous + .001f) duration = remaining;
+        previous = remaining;
+        return duration > 0f ? Mathf.Clamp01(remaining / duration) : 0f;
+    }
+
+    private void OnDisable()
+    {
+        effectOrder.Clear();
+        honeyDuration = honeyPrevious = aggressionDuration = aggressionPrevious = sodaDistance = 0f;
     }
 }

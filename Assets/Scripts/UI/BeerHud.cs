@@ -67,12 +67,15 @@ public class BeerHud : MonoBehaviour
 
     }
 
-    // Same order as the inventory, so the rightmost filled glass is always the next one handed over
+    // Inventory serves its last entry first; display it in the leftmost remaining slot.
     private void RefreshGlasses()
     {
         var glasses = inventory.Glasses;
         for (var i = 0; i < glassFills.Length; i++)
-            SetGlassLevel(i, Mathf.Clamp01(i < glasses.Count ? glasses[i] : 0f));
+        {
+            int inventoryIndex = glassFills.Length - 1 - i;
+            SetGlassLevel(i, Mathf.Clamp01(inventoryIndex < glasses.Count ? glasses[inventoryIndex] : 0f));
+        }
     }
 
     /// <summary>Crops full-size sprites at native pixel rows instead of scaling their artwork.</summary>

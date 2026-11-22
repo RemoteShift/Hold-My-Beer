@@ -16,6 +16,7 @@ public class CocktailHud : MonoBehaviour
     [SerializeField] private RectTransform slot;
     [SerializeField] private RectTransform details;
     [SerializeField] private CocktailIcon cocktailIcon;
+    [SerializeField] private CocktailStampView cocktailStamp;
     [SerializeField] private TMP_Text cocktailName, detailName, prompt, errorMark, controlHint;
     [SerializeField] private TMP_Text[] quantities;
     [SerializeField] private CostIcon[] costs;
@@ -70,50 +71,33 @@ public class CocktailHud : MonoBehaviour
 
     private void RefreshUI()
     {
-        if (!root || !slot || !details || !inventory || !brewer ||
-            quantities == null || costs == null) return;
+        if (!root || !slot || !inventory || !brewer || quantities == null) return;
         root.gameObject.SetActive(!Application.isPlaying || !health || !health.IsDead);
         for (int i = 0; i < quantities.Length; i++)
-            if (quantities[i]) quantities[i].SetText("{0}", inventory.GetCount((IngredientType)i));
+            if (quantities[i]) quantities[i].SetText("x{0}", inventory.GetCount((IngredientType)i));
 
+        // The cocktail display is artwork only. Ingredient inventory remains separate.
+        if (cocktailIcon) cocktailIcon.gameObject.SetActive(false);
+        if (cocktailName) cocktailName.gameObject.SetActive(false);
+        if (controlHint) controlHint.gameObject.SetActive(false);
+        if (details) details.gameObject.SetActive(false);
         var recipe = brewer.SelectedRecipe;
         if (!Application.isPlaying)
             foreach (var candidate in CocktailRecipes.All)
                 if (candidate.Id == previewRecipe) { recipe = candidate; break; }
         slot.gameObject.SetActive(recipe != null);
-        if (recipe == null) return;
-        if (displayedRecipe != recipe)
+        if (recipe == null || !cocktailStamp) return;
+        displayedRecipe = recipe;
+        cocktailStamp.SetKind(recipe.Id);
+        float progress = 1f;
+        if (Application.isPlaying && recipe.Duration > 0f)
         {
-            displayedRecipe = recipe;
-            errorUntil = 0f;
-            cocktailIcon.SetRecipe(recipe);
-            cocktailName.text = detailName.text = recipe.Name;
-            RefreshCosts(recipe);
+            if (recipe.Id == CocktailKind.AllYouCanDrink && beers && beers.HasInfiniteBeer)
+                progress = beers.InfiniteBeerSecondsLeft / recipe.Duration;
+            else if (recipe.Id == CocktailKind.SteelGutVodka && health && health.InvulnerableSecondsLeft > 0f)
+                progress = health.InvulnerableSecondsLeft / recipe.Duration;
         }
-
-        bool alreadyActive = Application.isPlaying && recipe.Id == CocktailKind.AllYouCanDrink &&
-            beers && beers.HasInfiniteBeer;
-        bool affordable = !alreadyActive;
-        foreach (var item in costs)
-        {
-            if (!item.Root || !item.Root.activeSelf) continue;
-            int available = item.IsBeer ? (beers ? beers.PhysicalCount : 0) : inventory.GetCount(item.Type);
-            bool enough = available >= item.Required;
-            item.Amount.color = enough ? Paper : Error;
-            affordable &= enough;
-        }
-        var tint = recipe.Color;
-        tint.a = !Application.isPlaying || affordable ? 1f : .45f;
-        cocktailIcon.color = tint;
-        bool crafting = Application.isPlaying ? brewer.IsCrafting : previewCraftingDetails;
-        details.gameObject.SetActive(crafting);
-        controlHint.text = crafting ? "Q held  |  LMB" : "Hold Q  |  Scroll";
-        bool failed = Application.isPlaying && recipe == failedRecipe && Time.unscaledTime < errorUntil;
-        errorMark.gameObject.SetActive(failed);
-        prompt.color = failed || !affordable ? Error : Muted;
-        prompt.text = failed ? errorMessage : !affordable
-            ? (alreadyActive ? "Already active" : "Missing ingredients")
-            : recipe.IsThrowable ? "LMB  Craft & throw" : "LMB  Craft & drink";
+        cocktailStamp.SetProgress(progress);
     }
 
     private void ShowFeedback(string message, bool error)

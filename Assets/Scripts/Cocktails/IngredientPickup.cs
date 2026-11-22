@@ -11,7 +11,6 @@ public sealed class IngredientPickup : MonoBehaviour
     private Transform visual;
     private Transform label;
     private Vector3 restPosition;
-    private Material material;
     private float nextPlayerSearch;
     private float collectAfter;
     private bool collected;
@@ -31,22 +30,18 @@ public sealed class IngredientPickup : MonoBehaviour
     {
         restPosition = transform.position;
         collectAfter = Time.time + 0.25f;
-        var body = GameObject.CreatePrimitive(Type == IngredientType.Sugar ? PrimitiveType.Cube :
-            Type == IngredientType.Gunpowder ? PrimitiveType.Cylinder : PrimitiveType.Sphere);
-        body.name = "Ingredient";
-        body.transform.SetParent(transform, false);
-        body.transform.localScale = Type == IngredientType.Gunpowder ? new Vector3(0.24f, 0.16f, 0.24f) : Vector3.one * 0.28f;
-        body.GetComponent<Collider>().enabled = false;
-        visual = body.transform;
-        var color = IngredientInfo.Color(Type);
-        material = CocktailVisuals.CreateMaterial(color);
-        body.GetComponent<Renderer>().sharedMaterial = material;
+        var art = WorldHudArt.Instance;
+        visual = WorldHudSprite.Create("Ingredient icon", transform, art ? art.Ingredient(Type) : null);
+        IngredientDropGlow.Create(visual);
+        var color = new Color32(0xFB, 0xFF, 0x8A, 0xFF);
 
         var textObject = new GameObject("Ingredient label");
         textObject.transform.SetParent(transform, false);
         textObject.transform.localPosition = Vector3.up * 0.4f;
         var text = textObject.AddComponent<TextMeshPro>();
-        text.text = IngredientInfo.Name(Type) + " +" + Quantity;
+        text.text = "x" + Quantity;
+        var font = Resources.Load<TMP_FontAsset>("IngredientHUD/NotJamOldStyle14 Ingredients SDF");
+        if (font) { text.font = font; text.fontSharedMaterial = font.material; }
         text.fontSize = 2.1f;
         text.alignment = TextAlignmentOptions.Center;
         text.color = color;
@@ -65,7 +60,6 @@ public sealed class IngredientPickup : MonoBehaviour
         if (visual)
         {
             visual.localPosition = Vector3.up * (Mathf.Sin(Time.time * 2.5f + (int)Type) * 0.06f);
-            visual.Rotate(Vector3.up, 45f * Time.deltaTime, Space.World);
         }
         if (!player || !player.isActiveAndEnabled || Time.time < collectAfter) return;
         var health = player.GetComponent<PlayerHealth>();
@@ -83,6 +77,5 @@ public sealed class IngredientPickup : MonoBehaviour
         if (camera && label) label.rotation = camera.transform.rotation;
     }
 
-    private void OnDestroy() { if (material) Destroy(material); }
 
 }

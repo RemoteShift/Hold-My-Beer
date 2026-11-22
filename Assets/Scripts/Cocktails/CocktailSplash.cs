@@ -4,15 +4,15 @@ using UnityEngine;
 public class CocktailSplash : MonoBehaviour
 {
     private System.Collections.Generic.List<EnemyBrain> pushedEnemies;
-    private Material material;
-    private LineRenderer ring;
+    private CocktailPixelRange ring;
+    private CocktailPackEffect areaVfx;
     private float born;
     private float lifetime;
     private float radius;
     private Color color;
     private Vector3 normal;
 
-    public static void Create(Vector3 position, Vector3 normal, float radius, Color color, float seconds, System.Collections.Generic.List<EnemyBrain> pushedEnemies = null)
+    public static void Create(Vector3 position, Vector3 normal, float radius, Color color, float seconds, System.Collections.Generic.List<EnemyBrain> pushedEnemies = null, CocktailKind kind = CocktailKind.FizzySodaSplash)
     {
         var go = new GameObject("Cocktail splash");
         go.transform.position = position;
@@ -23,9 +23,11 @@ public class CocktailSplash : MonoBehaviour
         splash.radius = radius;
         splash.color = color;
         splash.normal = normal;
-        splash.material = CocktailVisuals.CreateMaterial(Color.white);
-        splash.ring = CocktailVisuals.CreateLine("Splash ring", go.transform, splash.material, 0.1f);
-        CocktailVisuals.SetRing(splash.ring, position, normal, radius, color);
+        splash.ring = CocktailPixelRange.Create();
+        if (splash.ring) splash.ring.transform.SetParent(go.transform, true);
+        var tint = CocktailVfx.ColorFor(kind, color);
+        if (splash.ring) splash.ring.Show(position, normal, radius, new Color(tint.r, tint.g, tint.b, .35f));
+        splash.areaVfx = CocktailVfx.Area(kind, go.transform, normal, radius);
     }
 
     private void Update()
@@ -37,5 +39,8 @@ public class CocktailSplash : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private void OnDestroy() { if (material) Destroy(material); }
+    private void OnDestroy()
+    {
+        if (areaVfx) areaVfx.Release();
+    }
 }
