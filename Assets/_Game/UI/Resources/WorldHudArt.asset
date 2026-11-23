@@ -42,7 +42,7 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: edf97c36e949c084a802a96cf4da826d, type: 2}
     worldUnitsPerPixel: 0.012237255
     opticalOffsetPixels: {x: 1.3635616, y: -0.13810349}
-  - sprite: {fileID: 21300000, guid: a7484daac4fd40849804dcad7bdaf4a6, type: 3}
+  - sprite: {fileID: 21300000, guid: fabe4416b8a202f4e82e11bd03f54ec4, type: 3}
     material: {fileID: 2100000, guid: 3fe7eff01410cd642b8eb8985fa8d666, type: 2}
     worldUnitsPerPixel: 0.012598816
     opticalOffsetPixels: {x: -0.8562603, y: -1.215168}

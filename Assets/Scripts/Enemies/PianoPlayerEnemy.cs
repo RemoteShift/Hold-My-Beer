@@ -26,6 +26,22 @@ public class PianoPlayerEnemy : EnemyBrain
     public AudioSource music;
     public Transform leftHand;
     public Transform rightHand;
+    private Vector3 leftHandRest, rightHandRest;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        if (leftHand) leftHandRest = leftHand.localPosition;
+        if (rightHand) rightHandRest = rightHand.localPosition;
+    }
+
+    protected override void Update()
+    {
+        // Seated animation owns the pose; navigation only takes over for pushes or leaving.
+        if (agent) agent.updatePosition = IsBeingPushed || IsLeaving;
+        base.Update();
+    }
+
     public bool IsPlayingMusic => isActiveAndEnabled && !IsDead && !IsImpactStunned && CurrentState is PlayingState;
 
     private void OnEnable() { Players.Add(this); }
@@ -69,8 +85,8 @@ public class PianoPlayerEnemy : EnemyBrain
         public PlayingState(PianoPlayerEnemy enemy) : base(enemy)
         {
             pianist = enemy;
-            if (enemy.leftHand) leftRest = enemy.leftHand.localPosition;
-            if (enemy.rightHand) rightRest = enemy.rightHand.localPosition;
+            if (enemy.leftHand) leftRest = enemy.leftHandRest;
+            if (enemy.rightHand) rightRest = enemy.rightHandRest;
         }
         public override void Enter()
         {
@@ -81,12 +97,17 @@ public class PianoPlayerEnemy : EnemyBrain
                 if (songTime == 0f) pianist.music.Play(); else pianist.music.UnPause();
             }
         }
-        public override void Exit() { if (pianist.music) pianist.music.Pause(); }
+        public override void Exit()
+        {
+            if (pianist.music) pianist.music.Pause();
+            if (pianist.leftHand) pianist.leftHand.localPosition = leftRest;
+            if (pianist.rightHand) pianist.rightHand.localPosition = rightRest;
+        }
         public override void Update()
         {
             songTime += Time.deltaTime;
-            if (pianist.leftHand) pianist.leftHand.localPosition = leftRest + Vector3.up * (Mathf.Sin(songTime * 18f) * 0.04f);
-            if (pianist.rightHand) pianist.rightHand.localPosition = rightRest + Vector3.up * (Mathf.Cos(songTime * 18f) * 0.04f);
+            if (pianist.leftHand) pianist.leftHand.localPosition = leftRest + Vector3.up * ((1f + Mathf.Sin(songTime * 18f)) * 0.015f);
+            if (pianist.rightHand) pianist.rightHand.localPosition = rightRest + Vector3.up * ((1f + Mathf.Cos(songTime * 18f)) * 0.015f);
         }
     }
 }

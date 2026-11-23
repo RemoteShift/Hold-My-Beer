@@ -40,7 +40,7 @@ MonoBehaviour:
   - kind: 3
     background: {fileID: 21300000, guid: 91e3562719f614a4ea95238a12a6628b, type: 3}
     fill: {fileID: 21300000, guid: e6b23a8482d588244b419b67a4047a35, type: 3}
-    icon: {fileID: 21300000, guid: a7484daac4fd40849804dcad7bdaf4a6, type: 3}
+    icon: {fileID: 21300000, guid: fabe4416b8a202f4e82e11bd03f54ec4, type: 3}
     pixelScale: 1.3351867
     iconOffset: {x: -0.83, y: -1.72}
     hudIconScale: 1.0160831

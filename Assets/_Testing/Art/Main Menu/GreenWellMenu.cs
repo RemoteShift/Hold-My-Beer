@@ -15,6 +15,7 @@ public class GreenWellMenu : MonoBehaviour {
  public CinemachineCamera chalkboardCamera, storyCamera;
  public CinemachineBrain cameraBrain;
  public CutsceneCameraPath cutscenePath;
+ public PianoAudioMenu audioMenu;
  private bool storyStarted;
 
  void Start()
@@ -40,6 +41,8 @@ public class GreenWellMenu : MonoBehaviour {
      Cursor.lockState = CursorLockMode.None;
      Cursor.visible = true;
  }
+
+ public void Audio() { if (audioMenu) audioMenu.Open(); }
 
  public void NewGame()
  {
@@ -94,7 +97,7 @@ public void Back(){controls.SetActive(false);quit.SetActive(false);options.SetAc
  label(options.transform,"HOLD MY BEER",0,285,530,65,53,headingFont);
  line(options.transform,0,232,430,2,0);
  button(options.transform,"New Game",0,155,NewGame);
- button(options.transform,"Sound",0,45,()=>{});
+ button(options.transform,"Audio",0,45,Audio);
  button(options.transform,"Controls",0,-65,Controls);button(options.transform,"Quit",0,-175,ConfirmQuit);
 
  controls=rect(root.transform,"Controls Panel",310,0,600,700).gameObject;
