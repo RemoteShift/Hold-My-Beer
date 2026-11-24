@@ -22,6 +22,9 @@ public sealed class PianoAudioMenu : MonoBehaviour
     private float homeFov, homeNear;
     private bool brainWasEnabled;
     private Coroutine travel;
+    private CanvasGroup menuOptions;
+    private bool menuWasInteractable, menuBlockedRaycasts;
+
 
     private void Awake()
     {
@@ -50,7 +53,12 @@ public sealed class PianoAudioMenu : MonoBehaviour
         brainWasEnabled = cameraBrain && cameraBrain.enabled;
         if (cameraBrain) cameraBrain.enabled = false;
         menuCamera.nearClipPlane = 0.03f;
-        mainMenu.options.SetActive(false);
+        // Keep the chalkboard visible while the camera visits the piano.
+        menuOptions = mainMenu.options.GetComponent<CanvasGroup>();
+        if (!menuOptions) menuOptions = mainMenu.options.AddComponent<CanvasGroup>();
+        menuWasInteractable = menuOptions.interactable;
+        menuBlockedRaycasts = menuOptions.blocksRaycasts;
+        menuOptions.interactable = menuOptions.blocksRaycasts = false;
         IsOpen = true;
         BeginTravel(audioView.position, audioView.rotation, 60f, true);
     }
@@ -92,7 +100,8 @@ public sealed class PianoAudioMenu : MonoBehaviour
         {
             menuCamera.nearClipPlane = homeNear;
             if (cameraBrain) cameraBrain.enabled = brainWasEnabled;
-            mainMenu.options.SetActive(true);
+            menuOptions.interactable = menuWasInteractable;
+            menuOptions.blocksRaycasts = menuBlockedRaycasts;
         }
         IsTransitioning = false;
         travel = null;

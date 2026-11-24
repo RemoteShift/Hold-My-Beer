@@ -38,7 +38,7 @@ Material:
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
     - _UseUIAlphaClip: 0
-    - _WoodTintStrength: 1
+    - _WoodTintStrength: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _CutColor: {r: 0.055, g: 0.035, b: 0.018, a: 1}

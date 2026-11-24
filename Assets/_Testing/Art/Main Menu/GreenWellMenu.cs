@@ -11,6 +11,7 @@ public class GreenWellMenu : MonoBehaviour {
  public Quaternion startRotation;
 
  public GameObject options, controls, quit;
+ public ReceiptControlsView receiptControls;
 
  public CinemachineCamera chalkboardCamera, storyCamera;
  public CinemachineBrain cameraBrain;
@@ -61,8 +62,8 @@ public class GreenWellMenu : MonoBehaviour {
      }
  }
 
-public void Back(){controls.SetActive(false);quit.SetActive(false);options.SetActive(true);}
- public void Controls(){options.SetActive(false);controls.SetActive(true);}
+public void Back(){if(receiptControls && receiptControls.IsOpen){receiptControls.Close();return;}controls.SetActive(false);quit.SetActive(false);options.SetActive(true);}
+ public void Controls(){if(receiptControls){receiptControls.Open();return;}options.SetActive(false);controls.SetActive(true);}
  public void ConfirmQuit(){options.SetActive(false);quit.SetActive(true);}
  public void Quit(){
  #if UNITY_EDITOR
@@ -122,3 +123,4 @@ public void StoryBack()
      ShowMenu();
  }
 }
+
