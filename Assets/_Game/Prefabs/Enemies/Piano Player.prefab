@@ -56,6 +56,9 @@ MonoBehaviour:
   icon: {fileID: 3588543206472609502}
   kind: 1
   stampSize: 104
+  stampHeight: 0
+  iconOnly: 0
+  iconHeight: 92
 --- !u!1 &797000797178099008
 GameObject:
   m_ObjectHideFlags: 0
@@ -1521,7 +1524,7 @@ MonoBehaviour:
     enabled: 1
     multiplier: 1.35
   recoverySpeedBuff:
-    enabled: 1
+    enabled: 0
     multiplier: 1.35
   damageBuff:
     enabled: 0
@@ -2698,6 +2701,9 @@ MonoBehaviour:
   icon: {fileID: 2584668227008300938}
   kind: 2
   stampSize: 104
+  stampHeight: 0
+  iconOnly: 0
+  iconHeight: 92
 --- !u!1 &6125309240372277030
 GameObject:
   m_ObjectHideFlags: 0
@@ -4601,6 +4607,9 @@ MonoBehaviour:
   icon: {fileID: 6908730914889283171}
   kind: 0
   stampSize: 104
+  stampHeight: 0
+  iconOnly: 0
+  iconHeight: 92
 --- !u!1001 &1952255191273422890
 PrefabInstance:
   m_ObjectHideFlags: 0
