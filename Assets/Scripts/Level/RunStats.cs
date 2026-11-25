@@ -2,12 +2,16 @@ using UnityEngine;
 
 /// <summary>
 /// Keeps score of the current run for the game over screen: beers handed to enemies,
-/// enemies remaining, refills used and time survived. Counting starts with gameplay and stops at <see cref="End"/>.
+/// enemies remaining, refills used and time survived. Counting starts once the level itself is underway
+/// (after any tutorial) and stops at <see cref="End"/>.
 /// </summary>
 public class RunStats : MonoBehaviour
 {
     [Tooltip("Counting starts once this has started gameplay. Leave empty to start when the scene loads.")]
     [SerializeField] private GameplayStarter starter;
+
+    [Tooltip("The level's own Level Manager. Counting also waits for it to be switched on, so a tutorial played first doesn't count. Leave empty to start with gameplay.")]
+    [SerializeField] private LevelManager level;
 
     /// <summary>Beers handed over, counting every hand-off even to the same enemy.</summary>
     public int EnemiesBeered { get; private set; }
@@ -30,7 +34,7 @@ public class RunStats : MonoBehaviour
 
     private void Update()
     {
-        if (!hasBegun && (!starter || starter.HasStarted)) Begin();
+        if (!hasBegun && (!starter || starter.HasStarted) && (!level || level.isActiveAndEnabled)) Begin();
     }
 
     private void OnDestroy()
