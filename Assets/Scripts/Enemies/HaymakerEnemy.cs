@@ -8,19 +8,22 @@ public class HaymakerEnemy : EnemyBrain
 
     [Header("Weapon")]
     public GameObject weaponPrefab;
+    [Tooltip("Mount point under the hand bone — adjust position/rotation here to tune the grip.")]
+    public Transform handHoldPoint;
+    [Tooltip("Swing pivot — weapon re-parents here during the attack arc.")]
     public Transform weaponHoldPoint;
 
     private GameObject _weaponInstance;
-    private Transform _rightHandBone;
+    // Set by HaymakerState: true only during the swing arc (phase 2), not windup.
+    internal bool IsSwingActive;
 
     protected override void Awake()
     {
         base.Awake();
         Animator = GetComponentInChildren<Animator>();
-        _rightHandBone = FindDeep(transform, "mixamorig:RightHand");
         if (weaponPrefab)
         {
-            var spawnParent = _rightHandBone != null ? _rightHandBone : weaponHoldPoint;
+            var spawnParent = handHoldPoint != null ? handHoldPoint : weaponHoldPoint;
             if (spawnParent)
             {
                 _weaponInstance = Instantiate(weaponPrefab, spawnParent);
@@ -32,7 +35,7 @@ public class HaymakerEnemy : EnemyBrain
     private void LateUpdate()
     {
         if (_weaponInstance == null) return;
-        var attackParent = (CurrentState?.IsAttacking ?? false) ? weaponHoldPoint : _rightHandBone;
+        var attackParent = IsSwingActive ? weaponHoldPoint : handHoldPoint;
         if (attackParent == null || _weaponInstance.transform.parent == attackParent) return;
         _weaponInstance.transform.SetParent(attackParent, false);
         _weaponInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -70,6 +73,7 @@ public class HaymakerEnemy : EnemyBrain
         public override void PrepareToResume() { aimLocked = true; }
         public override void Enter()
         {
+            brawler.IsSwingActive = phase == 2;
             brawler.SetBodyColor(phase == 0 ? new Color(0.6f, 0.25f, 0.12f) : Color.yellow);
             brawler.Animator?.SetBool("IsSwinging", phase == 2);
         }
@@ -93,6 +97,7 @@ public class HaymakerEnemy : EnemyBrain
                 Pose(-brawler.swingArc * 0.5f);
                 if (elapsed < brawler.windupSeconds) return;
                 phase = 2; elapsed = 0f;
+                brawler.IsSwingActive = true;
                 brawler.Animator?.SetBool("IsSwinging", true);
                 brawler.SetBodyColor(new Color(1f, 0.3f, 0.1f));
             }
@@ -115,6 +120,7 @@ public class HaymakerEnemy : EnemyBrain
                 }
                 if (progress < 1f) return;
                 phase = 3; elapsed = 0f;
+                brawler.IsSwingActive = false;
                 brawler.Animator?.SetBool("IsSwinging", false);
                 brawler.SetBodyColor(Color.gray);
             }

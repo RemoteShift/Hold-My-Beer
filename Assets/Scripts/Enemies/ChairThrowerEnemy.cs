@@ -12,12 +12,16 @@ public class ChairThrowerEnemy : EnemyBrain
     [Tooltip("Distance around the current position to choose roaming destinations while searching for furniture.")]
     [Min(1f)] public float roamRadius = 10f;
     public float throwRange = 14f;
+    [Tooltip("Natural walk speed of the Walk animation clip in m/s. Adjust until feet match ground movement.")]
+    [Min(0.01f)] public float walkAnimSpeed = 1.4f;
     [Min(0.1f)] public float chargeSeconds = 1.5f;
     [Min(0.1f)] public float flightSeconds = 0.8f;
     public ThrowableFurniture HeldChair { get; private set; }
     /// <summary>The current attack aim, retained while beered for an accurate trajectory gizmo.</summary>
     public Vector3 ThrowAimOffset { get; private set; }
+    [HideInInspector] public Animator Animator;
 
+    protected override void Awake() { base.Awake(); Animator = GetComponentInChildren<Animator>(); }
     protected override void Start()
     {
         if (startingChair && startingChair.TryHold(this, chairHoldPoint)) HeldChair = startingChair;
@@ -45,6 +49,7 @@ public class ChairThrowerEnemy : EnemyBrain
         private float nextRoamAttempt;
         private float roamDeadline;
         private readonly NavMeshPath roamPath = new NavMeshPath();
+        private float liftEndTime = -1f;
         public override bool IsAttacking => phase == 1;
         public ThrowState(ChairThrowerEnemy enemy) : base(enemy) { thrower = enemy; }
         public override void PrepareToResume() { aimLocked = true; }
@@ -52,6 +57,9 @@ public class ChairThrowerEnemy : EnemyBrain
         {
             if (!entered) { normalStoppingDistance = thrower.agent.stoppingDistance; entered = true; }
             thrower.SetBodyColor(phase == 1 ? Color.yellow : new Color(0.3f, 0.5f, 0.7f));
+            thrower.Animator?.SetBool("IsLifting", false);
+            thrower.Animator?.SetBool("IsThrowing", phase == 1);
+            thrower.Animator?.SetLayerWeight(1, thrower.HeldChair ? 1f : 0f);
         }
         public override void Exit() { RestoreStoppingDistance(); }
         private void RestoreStoppingDistance() { thrower.agent.stoppingDistance = normalStoppingDistance; }
@@ -118,6 +126,11 @@ public class ChairThrowerEnemy : EnemyBrain
 
         public override void Update()
         {
+            thrower.Animator?.SetFloat("Speed",
+                thrower.agent.velocity.sqrMagnitude > 0.01f
+                    ? thrower.agent.velocity.magnitude / thrower.walkAnimSpeed
+                    : 1f);
+
             if (phase == 2)
             {
                 elapsed += thrower.RecoveryDeltaTime;
@@ -154,6 +167,9 @@ public class ChairThrowerEnemy : EnemyBrain
                         thrower.HeldChair = nearest;
                         thrower.StopPathfinding();
                         RestoreStoppingDistance();
+                        thrower.Animator?.SetBool("IsLifting", true);
+                        thrower.Animator?.SetLayerWeight(1, 1f);
+                        liftEndTime = Time.time + 0.7f;
                     }
                 }
                 else if (thrower.CanNavigate && !thrower.IsBeingPushed)
@@ -173,6 +189,7 @@ public class ChairThrowerEnemy : EnemyBrain
             }
             if (phase == 0)
             {
+                if (liftEndTime > 0f && Time.time >= liftEndTime) { liftEndTime = -1f; thrower.Animator?.SetBool("IsLifting", false); }
                 if (!thrower.CanSeeTarget()) { thrower.StopPathfinding(); return; }
                 thrower.LookAtTarget();
                 if (Vector3.Distance(thrower.transform.position, thrower.target.position) > thrower.throwRange ||
@@ -180,6 +197,8 @@ public class ChairThrowerEnemy : EnemyBrain
                 { thrower.PathfindToTarget(); return; }
                 thrower.StopPathfinding(); phase = 1; elapsed = 0f;
                 thrower.SetBodyColor(Color.yellow);
+                thrower.Animator?.SetBool("IsLifting", false);
+                thrower.Animator?.SetBool("IsThrowing", true);
             }
             if (!aimLocked && thrower.target)
             {
@@ -194,6 +213,8 @@ public class ChairThrowerEnemy : EnemyBrain
             thrower.HeldChair.Release(velocity, thrower.EffectiveDamage);
             thrower.HeldChair = null; phase = 2; elapsed = 0f;
             thrower.SetBodyColor(Color.gray);
+            thrower.Animator?.SetBool("IsThrowing", false);
+            thrower.Animator?.SetLayerWeight(1, 0f);
         }
     }
 }

@@ -52,6 +52,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 886165464378826791, guid: c95785b67a60979438bf556dc1a142bf, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 886165464378826791, guid: c95785b67a60979438bf556dc1a142bf, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 886165464378826791, guid: c95785b67a60979438bf556dc1a142bf, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -146,5 +158,5 @@ MonoBehaviour:
   impactDamage: 30
   minimumImpactSpeed: 2
   gripPoint: {fileID: 0}
-  heldPositionOffset: {x: 0, y: 0, z: 0}
+  heldPositionOffset: {x: -0.34, y: -0.1, z: -0.25}
   heldRotationOffset: {x: 0, y: 0, z: 0}
