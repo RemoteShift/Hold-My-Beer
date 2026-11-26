@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7147380853824983981
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 260379693246429012}
+  - component: {fileID: 8445063747444356684}
+  m_Layer: 0
+  m_Name: Bottle Results Screen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &260379693246429012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7147380853824983981}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8445063747444356684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7147380853824983981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8ce1f277fee5be488b23bdaf3ae4110, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BottleResultsScreen
+  levelManager: {fileID: 0}
+  stats: {fileID: 0}
+  bottlePrefab: {fileID: 6314033077617172409, guid: dba29611dcd552044b841eb383743337, type: 3}
+  emptyLabel: {fileID: 2800000, guid: 5142248920110b94587a6d8a9b067c89, type: 3}
+  checkStamp: {fileID: 2800000, guid: cb7d0c564c54f644886aa97bb7f4ea53, type: 3}
+  numberFont: {fileID: 11400000, guid: d5a0bfcdeedca76448ade715aed52836, type: 2}
+  labelShader: {fileID: 4800000, guid: 183f4e809a90ca941b41d22df73d6cdf, type: 3}
+  bottleShader: {fileID: 4800000, guid: d1858b484b104b34bbd0d3acd075df56, type: 3}
+  celebrationShader: {fileID: 4800000, guid: 3a5d7e15d65fceb45b945d102fa3a411, type: 3}
+  filmLookProfile: {fileID: 11400000, guid: a931495776c1473448f83b11a3898041, type: 2}
+  fadeSeconds: 0.25
+  countSeconds: 0.85
+  rowGap: 0.16
+  fastForwardMultiplier: 6
+  bottleTilt: 9
+  rockingDegrees: 4
+  cameraDistance: 0.122
+  fieldOfView: 30
+  entranceSeconds: 1.2
+  entranceDistance: 0.36
+  gradeAMaxSeconds: 120
+  gradeAMaxDamage: 10
+  gradeBMaxSeconds: 240
+  gradeBMaxDamage: 40
+  gradeCMaxSeconds: 360
+  gradeCMaxDamage: 80
+  previewResults:
+    seconds: 84
+    beersHeld: 8
+    cocktailsMixed: 2
+    bruisesEarned: 3
+    tripsToTap: 3
+    damageTaken: 8
+  onFinished:
+    m_PersistentCalls:
+      m_Calls: []

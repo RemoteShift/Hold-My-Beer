@@ -25,6 +25,8 @@ public class CocktailBrewer : MonoBehaviour
     public bool OwnsCombatInput => IsCrafting || primaryCaptured || ConfirmedRecipe != null;
     public event Action<string, bool> OnFeedback;
     public event Action<CocktailRecipe> OnCraftFailed;
+    /// <summary>A successfully used drink or launched cocktail; cancelled crafts do not count.</summary>
+    public event Action OnMixed;
     public event Action<int> OnSelectionScrolled;
 
     private IngredientInventory ingredients;
@@ -142,6 +144,7 @@ public class CocktailBrewer : MonoBehaviour
         else
         {
             effects.Apply(recipe);
+            OnMixed?.Invoke();
             OnFeedback?.Invoke(recipe.Name + $"  -  {recipe.Duration:0}s", false);
         }
         return true;
@@ -156,6 +159,7 @@ public class CocktailBrewer : MonoBehaviour
         ConfirmedRecipe = null;
         preview.Hide();
         CocktailProjectile.Launch(recipe, camera.transform, transform);
+        OnMixed?.Invoke();
         OnFeedback?.Invoke(recipe.Name + " thrown", false);
     }
 

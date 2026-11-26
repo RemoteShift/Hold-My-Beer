@@ -11,10 +11,11 @@ namespace HoldMyBeer.Rendering
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             var cameraData = renderingData.cameraData;
-            if (cameraData.camera == ReceiptControlsView.ReadableReceiptCamera
+            if (!cameraData.postProcessEnabled
                 || cameraData.cameraType != CameraType.Game
                 || cameraData.renderType != CameraRenderType.Base
-                || !cameraData.camera.CompareTag("MainCamera")
+                || (!cameraData.camera.CompareTag("MainCamera")
+                    && !cameraData.camera.GetComponentInParent<BottleResultsScreen>())
                 || SceneManager.GetActiveScene().path != LevelPath)
             {
                 return;
@@ -24,4 +25,6 @@ namespace HoldMyBeer.Rendering
         }
     }
 }
+
+
 

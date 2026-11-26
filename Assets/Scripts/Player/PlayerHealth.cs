@@ -30,6 +30,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     /// <summary>Raised when health reaches 0.</summary>
     public event Action OnDied;
 
+    /// <summary>Actual damage applied by a hit, excluding healing and max-health changes.</summary>
+    public event Action<float> OnDamageTaken;
+
     private LocomotionController locomotion;
     private Vector3 spawnPosition;
     private Quaternion spawnRotation;
@@ -65,7 +68,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         RefreshMusicHealth();
         damage /= PianoPlayerEnemy.GetPlayerBuffs(transform).defense;
+        var healthBeforeHit = currentHealth;
         currentHealth = Mathf.Max(CanDie ? 0f : 1f, currentHealth - damage);
+        var appliedDamage = healthBeforeHit - currentHealth;
+        if (appliedDamage > 0f) OnDamageTaken?.Invoke(appliedDamage);
         OnHealthChanged?.Invoke(currentHealth, MaxHealth);
         Debug.Log($"Player took {damage} damage: {currentHealth}/{maxHealth}");
 

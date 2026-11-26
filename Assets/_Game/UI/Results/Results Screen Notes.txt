@@ -1,0 +1,59 @@
+Bottle Results Screen
+=====================
+
+Instant preview
+  Unity menu: Hold My Beer > Results > Preview Results (Ctrl+Shift+R).
+  This enters Play Mode and immediately opens the presentation with sample results.
+  Or enter Play Mode normally and press F8 in the Game view.
+  Press any button during counting to speed the sequence up six times.
+  Once the stamp has settled, a fresh press dismisses it.
+  Preview restores the previous screen and game state. F8 can replay it.
+  Stop Play Mode to edit permanent settings.
+
+Settings
+  Select the Bottle Results Screen object in Level 1, or its prefab under
+  Assets/_Game/UI/Results/Bottle Results Screen.prefab.
+  Art references, preview results, timing, tilt, rocking, zoom and grade thresholds
+  are exposed in the Inspector. Grade A/B/C require BOTH their time and damage
+  thresholds. D is the fallback.
+
+Victory integration
+  The scene instance listens to the real Level Manager, not Tutorial Level Manager.
+  It freezes RunStats before taking a snapshot. After dismissal it fades to black
+  and raises On Finished once. Connect the future next-level sequence there.
+  No next scene or extra gameplay has been invented.
+
+Stat definitions
+  Time: active game time since the real level started (tutorial excluded).
+  Beers Held: successful beer hand-offs, matching the existing EnemiesBeered stat.
+  Cocktails Mixed: successfully consumed drinks or launched throws; failed and
+    cancelled crafts are excluded.
+  Bruises Earned: hits that actually remove health; invulnerability and healing
+    do not count. Damage Taken separately sums the actual health removed for grading.
+  Trips to Tap: successful tap/barrel refills through BeerHandler.OnRefilled.
+
+Rendering
+  The presentation is built by BottleResultsScreen at first use in a distant stage.
+  The 977x1213 empty label, NotJamOldStyle14 numbers (42pt, 24px cap height) and
+  supplied stamp are rendered together into the bottle's existing curved label UVs.
+  Number ink is sampled from the final example: RGB(30,0,59), #1E003B.
+  Stamp checkbox centre is aligned to A/B/C/D at 18% above its native size.
+  The background and bottle movement use unscaled time while gameplay is paused.
+  Camera output follows Game view resolution without stretching.
+
+Verification
+  Reviewed two fresh Play Mode visual passes; removed inherited font shadow,
+  tightened the camera and corrected aspect ratio. Confirmed all five final values.
+  Checked A/B/C/D thresholds and stamp coordinates, real keyboard fast-forward,
+  separate keyboard/mouse/gamepad continuation, preview state restoration, successful
+  and cancelled cocktail tracking, damage/healing/invulnerability, no duplicate
+  subscriptions after reset, frozen results and the actual victory event/handoff.
+  No Unity Console errors were reported after these checks.
+  Captures: Temp/UIReview/BottleResults/
+  Restore copies of edited existing files: Temp/restore/BottleResults-20261126/
+  No packages were added.
+
+Docs consulted
+  Installed uGUI: UICanvas.md, class-RectTransform.md, script-CanvasScaler.md,
+  TextMeshPro/index.md; Input System device-state sources; Unity reflection for
+  Material.SetTexture, InputSystem.onAnyButtonPress and ButtonControl edges.

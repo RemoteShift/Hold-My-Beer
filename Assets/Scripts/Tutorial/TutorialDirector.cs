@@ -186,6 +186,9 @@ public class TutorialDirector : MonoBehaviour
             if (target) target.SetActive(true);
         }
 
+        var runStats = FindFirstObjectByType<RunStats>();
+        if (runStats) runStats.ResetForLevel();
+
         if (levelAfterTutorial) levelAfterTutorial.enabled = true;
 
         // Done: this also stops the tips and anything else the tutorial was running
