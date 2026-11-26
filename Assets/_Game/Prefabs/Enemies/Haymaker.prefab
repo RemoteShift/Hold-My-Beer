@@ -322,7 +322,7 @@ MonoBehaviour:
   defense: 1
   currentHealth: 0
   detectRange: 25
-  attackCooldown: 1.5
+  attackCooldown: 0.7
   stunDuration: 0.5
   stunnedColor: {r: 0.45, g: 0.6, b: 1, a: 1}
   fullBeerFreezeSeconds: 3
@@ -338,11 +338,11 @@ MonoBehaviour:
   weaponPrefab: {fileID: 919132149155446097, guid: 5bc914677affa004fa008a0712e3f748, type: 3}
   handHoldPoint: {fileID: 1947611718898975288}
   weaponHoldPoint: {fileID: 7291834650123487291}
-  attackRange: 2.8
+  attackRange: 1.8
   swingRadius: 3.3
   swingArc: 175
   windupSeconds: 0.5
-  swingSeconds: 0.2
+  swingSeconds: 1.9
   swingPivot: {fileID: 3681580810947393598}
 --- !u!136 &8456344911580531624
 CapsuleCollider:

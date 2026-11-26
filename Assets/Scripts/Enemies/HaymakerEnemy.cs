@@ -34,10 +34,9 @@ public class HaymakerEnemy : EnemyBrain
 
     private void LateUpdate()
     {
-        if (_weaponInstance == null) return;
-        var attackParent = IsSwingActive ? weaponHoldPoint : handHoldPoint;
-        if (attackParent == null || _weaponInstance.transform.parent == attackParent) return;
-        _weaponInstance.transform.SetParent(attackParent, false);
+        if (_weaponInstance == null || handHoldPoint == null) return;
+        if (_weaponInstance.transform.parent == handHoldPoint) return;
+        _weaponInstance.transform.SetParent(handHoldPoint, false);
         _weaponInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
     }
 

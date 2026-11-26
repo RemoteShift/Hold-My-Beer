@@ -184,6 +184,10 @@ public class ChairThrowerEnemy : EnemyBrain
                         lastPickupGoal = goal;
                         thrower.agent.SetDestination(goal);
                     }
+                    var moveDir = thrower.agent.desiredVelocity; moveDir.y = 0f;
+                    if (moveDir.sqrMagnitude > 0.01f)
+                        thrower.transform.rotation = Quaternion.Slerp(thrower.transform.rotation,
+                            Quaternion.LookRotation(moveDir), Time.deltaTime * thrower.turnSpeed * thrower.Buffs.turnSpeed);
                 }
                 return;
             }
@@ -191,10 +195,16 @@ public class ChairThrowerEnemy : EnemyBrain
             {
                 if (liftEndTime > 0f && Time.time >= liftEndTime) { liftEndTime = -1f; thrower.Animator?.SetBool("IsLifting", false); }
                 if (!thrower.CanSeeTarget()) { thrower.StopPathfinding(); return; }
-                thrower.LookAtTarget();
                 if (Vector3.Distance(thrower.transform.position, thrower.target.position) > thrower.throwRange ||
                     !CombatQuery.IsClear(thrower.transform.position, thrower.target.position, thrower.transform, thrower.target))
-                { thrower.PathfindToTarget(); return; }
+                {
+                    thrower.PathfindToTarget();
+                    var moveDir = thrower.agent.desiredVelocity; moveDir.y = 0f;
+                    if (moveDir.sqrMagnitude > 0.01f)
+                        thrower.transform.rotation = Quaternion.Slerp(thrower.transform.rotation,
+                            Quaternion.LookRotation(moveDir), Time.deltaTime * thrower.turnSpeed * thrower.Buffs.turnSpeed);
+                    return;
+                }
                 thrower.StopPathfinding(); phase = 1; elapsed = 0f;
                 thrower.SetBodyColor(Color.yellow);
                 thrower.Animator?.SetBool("IsLifting", false);
