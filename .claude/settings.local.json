@@ -4,7 +4,21 @@
       "mcp__unity-mcp__Unity_RunCommand",
       "mcp__unity-mcp__Unity_GetConsoleLogs",
       "Bash(find C:\\\\Users\\\\noore\\\\dev\\\\hmb\\\\Assets:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(py --version)",
+      "Bash(py:*)",
+      "Read(//usr/**)",
+      "Bash(ls /c/Python*/python.exe)",
+      "Bash(ls /c/Users/noore/AppData/Local/Programs/Python/*/python.exe)",
+      "Bash(command -v python.exe)",
+      "Bash(/c/Users/noore/Miniconda3/python.exe:*)",
+      "mcp__unity-mcp__Unity_Camera_Capture",
+      "mcp__unity-mcp__Unity_SceneView_CaptureMultiAngleSceneView",
+      "mcp__unity-mcp__Unity_SceneView_Capture2DScene",
+      "Bash(git log:*)",
+      "Bash(grep -B30 \"value: 1$\")",
+      "Bash(git restore:*)",
+      "Bash(cat \"Assets/_Game/Animations/Powder Keg/\"*.fbx.meta)"
     ]
   }
 }

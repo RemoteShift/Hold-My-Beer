@@ -3,5 +3,10 @@ using UnityEngine;
 /// <summary>Keep furniture packaged with its patron in the prefab, but independent in play.</summary>
 public class DetachFurnitureOnStart : MonoBehaviour
 {
-    private void Start() { transform.SetParent(null, true); }
+    private void Start()
+    {
+        transform.SetParent(null, true);
+        var rb = GetComponent<Rigidbody>();
+        if (rb) rb.Sleep();
+    }
 }

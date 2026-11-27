@@ -29,6 +29,7 @@ public class ChargerChargeState : EnemyState
     {
         charger.StopPathfinding();
         charger.SetBodyColor(charger.chargeColor);
+        charger.Animator?.Play("Run", 0);
     }
 
     // Skips the base look-at on purpose: a charge never steers.
@@ -38,7 +39,7 @@ public class ChargerChargeState : EnemyState
         if (charger.IsHoneyRooted)
         {
             // The charge remains live at the glued position and can still hit someone touching it.
-            if (charger.HitTargetsInFront(alreadyHit)) charger.SwitchState(new ChargerRecoverState(charger));
+            if (charger.HitTargetsInFront(alreadyHit)) charger.SwitchState(new ChargerRecoverState(charger, hitPlayer: true));
             return;
         }
 
@@ -63,7 +64,7 @@ public class ChargerChargeState : EnemyState
 
         if (charger.HitTargetsInFront(alreadyHit))
         {
-            charger.SwitchState(new ChargerRecoverState(charger));
+            charger.SwitchState(new ChargerRecoverState(charger, hitPlayer: true));
         }
         else if (hitObstacle)
         {

@@ -12,6 +12,7 @@ public class ChargerChaseState : EnemyState
     {
         originalStoppingDistance = charger.agent.stoppingDistance;
         charger.SetBodyColor(charger.chaseColor);
+        charger.Animator?.CrossFadeInFixedTime("Walk", 0.15f, 0, 0f);
     }
 
     public override void Exit()

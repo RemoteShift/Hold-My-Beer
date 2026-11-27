@@ -14,6 +14,9 @@ public class GameOverController : MonoBehaviour
     [Tooltip("Raised once the game has frozen, for the game over screens.")]
     public UnityEvent onGameOver = new UnityEvent();
 
+    [Tooltip("Plays after the game freezes. Must ignore the listener pause to be heard.")]
+    [SerializeField] private AudioSource gameOverMusic;
+
     public bool IsGameOver { get; private set; }
 
     private PlayerHealth playerHealth;
@@ -54,6 +57,7 @@ public class GameOverController : MonoBehaviour
 
         FreezeGame();
         onGameOver.Invoke();
+        if (gameOverMusic) { gameOverMusic.ignoreListenerPause = true; gameOverMusic.Play(); }
     }
 
     private void FreezeGame()

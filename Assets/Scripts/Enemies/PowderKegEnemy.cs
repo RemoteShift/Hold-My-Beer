@@ -57,6 +57,7 @@ public class PowderKegEnemy : EnemyBrain
         }
     }
 
+
     public override void ReturnToDefaultState() => SwitchState(new FuseState(this));
 
     public override void Die() => Explode();
@@ -99,6 +100,11 @@ public class PowderKegEnemy : EnemyBrain
         if (PlayerParryFeedback.IsPlayerFrozen) return;
         var wasBeered = IsBeered;
         base.Update();
+        if (!IsBeered && CurrentState is FuseState)
+        {
+            Animator?.SetBool("IsMoving", IsLit && NavigationSpeed > 0.05f);
+            UpdateWalkSpeed(moveSpeed);
+        }
         // Do not charge an entire frame against the fuse when beer expires mid-update.
         if (wasBeered) return;
         if (!IsLit || IsBeered || IsDead) return;

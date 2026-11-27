@@ -22,6 +22,11 @@ public class EnemyBeeredState : EnemyState
     {
         enemy.StopPathfinding();
         enemy.SetBodyColor(enemy.beeredColor);
+        if (enemy is ChargerEnemy && enemy.Animator)
+        {
+            enemy.Animator.speed = 1f;
+            enemy.Animator.Play("Beered", 0, 0f);
+        }
     }
 
     // Skips the base look-at on purpose: a beered enemy holds its interrupted pose.
