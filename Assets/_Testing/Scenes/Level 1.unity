@@ -1637,6 +1637,14 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 3294148743987056586, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
       propertyPath: m_text
       value: 
@@ -1699,7 +1707,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3552,8 +3560,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -3980,8 +3988,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -10364,8 +10372,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -11825,6 +11833,7 @@ GameObject:
   - component: {fileID: 119078316}
   - component: {fileID: 119078317}
   - component: {fileID: 119078318}
+  - component: {fileID: 119078319}
   m_Layer: 0
   m_Name: Game Over
   m_TagString: Untagged
@@ -11849,6 +11858,7 @@ MonoBehaviour:
   onGameOver:
     m_PersistentCalls:
       m_Calls: []
+  gameOverMusic: {fileID: 119078319}
 --- !u!4 &119078315
 Transform:
   m_ObjectHideFlags: 0
@@ -11933,6 +11943,103 @@ MonoBehaviour:
   statsScreen: {fileID: 119078317}
   starter: {fileID: 2087125904}
   menuCamera: {fileID: 647915806}
+--- !u!82 &119078319
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119078313}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 1e1e4380045132f4c85bc014adaeaaf1, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.6
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &119283879
 GameObject:
   m_ObjectHideFlags: 0
@@ -13192,12 +13299,24 @@ PrefabInstance:
     m_TransformParent: {fileID: 1582682207}
     m_Modifications:
     - target: {fileID: 2035025440835537910, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2035025440835537910, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2035025440835537910, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2035025440835537910, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
       propertyPath: m_LocalPosition.x
       value: -17
       objectReference: {fileID: 0}
     - target: {fileID: 2035025440835537910, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.22
+      value: 1.84
       objectReference: {fileID: 0}
     - target: {fileID: 2035025440835537910, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -13254,6 +13373,10 @@ PrefabInstance:
     - target: {fileID: 5992519263122991763, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
       propertyPath: m_Name
       value: Powder Keg
+      objectReference: {fileID: 0}
+    - target: {fileID: 5992519263122991763, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6446954743475732510, guid: bd5f68d3f501688648bda07e988bf71c, type: 3}
       propertyPath: m_LocalScale.x
@@ -19750,8 +19873,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -28370,6 +28493,14 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 3497739894667054985, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.7071068
@@ -28388,7 +28519,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5261584698294753236, guid: b067c64f867b42b47ad1edbf3cea20a9, type: 3}
       propertyPath: m_LocalPosition.z
@@ -28775,8 +28906,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0000001
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0000001
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -49005,8 +49136,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -50929,8 +51060,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -53513,8 +53644,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -53781,8 +53912,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.2676953
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.2676953
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -55205,6 +55336,42 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 510833206484730665, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: sfxSource
+      value: 
+      objectReference: {fileID: 1414884306}
+    - target: {fileID: 510833206484730665, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: refillSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 7c9b49f55d62aa14f9127f8a655782b9, type: 3}
+    - target: {fileID: 510833206484730665, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: beerGivenSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 29bde6326b4c34ad8a12da475f79b50a, type: 3}
+    - target: {fileID: 899427014641851757, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -11.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 899427014641851757, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -10.56
+      objectReference: {fileID: 0}
+    - target: {fileID: 1068022072754729160, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: SprintInput
+      value: 
+      objectReference: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    - target: {fileID: 1186576559966830396, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: jumpSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 2c5292ba5cf254919a6b9e2b18e04f49, type: 3}
+    - target: {fileID: 1186576559966830396, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: walkSound
+      value: 
+      objectReference: {fileID: 8300000, guid: b12c1e501b51c1340b16ba9a959678c5, type: 3}
+    - target: {fileID: 1186576559966830396, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 1414884306}
     - target: {fileID: 383916966916761901, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -55602,7 +55769,7 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3154660374772906256, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: 'm_fontMaterials.Array.data[0]'
+      propertyPath: m_fontMaterials.Array.data[0]
       value: 
       objectReference: {fileID: 1394714082}
     - target: {fileID: 3154660374772906256, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
@@ -55610,7 +55777,7 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3154660374772906256, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: 'm_fontSharedMaterials.Array.data[0]'
+      propertyPath: m_fontSharedMaterials.Array.data[0]
       value: 
       objectReference: {fileID: 1394714082}
     - target: {fileID: 3174029145980819049, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
@@ -55997,6 +56164,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 883261622}
+    - target: {fileID: 4956818410280513487, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: sfxSource
+      value: 
+      objectReference: {fileID: 1414884306}
+    - target: {fileID: 4956818410280513487, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: beerPushSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 2c5292ba5cf254919a6b9e2b18e04f49, type: 3}
+    - target: {fileID: 4956818410280513487, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+      propertyPath: furniturePushSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 29d8d2ead07bb0a43b27cd914fe92b51, type: 3}
     - target: {fileID: 5988315952003696464, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
@@ -56006,7 +56185,7 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5988315952003696464, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: 'm_fontMaterials.Array.data[0]'
+      propertyPath: m_fontMaterials.Array.data[0]
       value: 
       objectReference: {fileID: 883261622}
     - target: {fileID: 5988315952003696464, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
@@ -56014,7 +56193,7 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5988315952003696464, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      propertyPath: 'm_fontSharedMaterials.Array.data[0]'
+      propertyPath: m_fontSharedMaterials.Array.data[0]
       value: 
       objectReference: {fileID: 883261622}
     - target: {fileID: 6424465040593460050, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
@@ -56315,20 +56494,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 2482951231252257656, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      insertIndex: 0
-      addedObject: {fileID: 1396500569}
-    - targetCorrespondingSourceObject: {fileID: 5100461394148483873, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      insertIndex: 0
-      addedObject: {fileID: 1711627361}
-    - targetCorrespondingSourceObject: {fileID: 6349090413239404529, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      insertIndex: 0
-      addedObject: {fileID: 141129468}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8483102733080966507, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1479956201}
+    m_AddedGameObjects: [{targetCorrespondingSourceObject: {fileID: 2482951231252257656, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}, insertIndex: 0, addedObject: {fileID: 1396500569}},
+      {targetCorrespondingSourceObject: {fileID: 5100461394148483873, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}, insertIndex: 0, addedObject: {fileID: 1711627361}},
+      {targetCorrespondingSourceObject: {fileID: 6349090413239404529, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}, insertIndex: 0, addedObject: {fileID: 141129468}}]
+    m_AddedComponents: [{targetCorrespondingSourceObject: {fileID: 6564302963227462502, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}, insertIndex: -1, addedObject: {fileID: 1414884306}},
+      {targetCorrespondingSourceObject: {fileID: 8483102733080966507, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}, insertIndex: -1, addedObject: {fileID: 1479956201}}]
   m_SourcePrefab: {fileID: 100100000, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
 --- !u!1 &541327033 stripped
 GameObject:
@@ -64239,8 +64409,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 0.3134796
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 0.3134796
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -65359,9 +65529,17 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 2614445763463562492, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}
+      propertyPath: m_BaseOffset
+      value: 0.9166667
+      objectReference: {fileID: 0}
     - target: {fileID: 3432695877212352034, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}
       propertyPath: m_Name
       value: Piano Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 3432695877212352034, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3635204274203980181, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}
       propertyPath: m_Enabled
@@ -65461,10 +65639,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 213947788029295849, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 804455885}
+    m_AddedGameObjects: [{targetCorrespondingSourceObject: {fileID: 213947788029295849, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}, insertIndex: -1, addedObject: {fileID: 804455885}}]
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: abebba03135f50d5aaf82e622a1125d9, type: 3}
 --- !u!1 &651965814
@@ -70246,8 +70421,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.332665
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.332665
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -70604,8 +70779,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0000001
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0000001
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -82166,8 +82341,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.3326178
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.3326178
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -82556,10 +82731,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6676347572937940343, guid: 58003f069d8ce244697de8a63b5aa79d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 555698976}
+    m_AddedGameObjects: [{targetCorrespondingSourceObject: {fileID: 6676347572937940343, guid: 58003f069d8ce244697de8a63b5aa79d, type: 3}, insertIndex: -1, addedObject: {fileID: 555698976}}]
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 58003f069d8ce244697de8a63b5aa79d, type: 3}
 --- !u!4 &801608704 stripped
@@ -88656,10 +88828,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6676347572937940343, guid: 58003f069d8ce244697de8a63b5aa79d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 623148130}
+    m_AddedGameObjects: [{targetCorrespondingSourceObject: {fileID: 6676347572937940343, guid: 58003f069d8ce244697de8a63b5aa79d, type: 3}, insertIndex: -1, addedObject: {fileID: 623148130}}]
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 58003f069d8ce244697de8a63b5aa79d, type: 3}
 --- !u!4 &859008861 stripped
@@ -88946,7 +89115,7 @@ PrefabInstance:
     m_TransformParent: {fileID: 1653882787}
     m_Modifications:
     - target: {fileID: 5606872467812462411, guid: 8b63e7f034e7d054d8963990889d467a, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
+      propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: -7971138446455444095, guid: eb209f766e5c0ae44b9b6cd6a084838f, type: 2}
     - target: {fileID: 6255324775096159902, guid: 8b63e7f034e7d054d8963990889d467a, type: 3}
@@ -91721,8 +91890,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.3326296
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.3326296
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -98520,8 +98689,7 @@ PrefabInstance:
       value: bulb (1)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 9093206653228036459, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
+    m_RemovedGameObjects: [{fileID: 9093206653228036459, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}]
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6226d5ce80398af4ea00afa1a4493c70, type: 3}
@@ -98962,8 +99130,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.2676953
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.2676953
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -99397,8 +99565,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0002339
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0002339
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -101576,8 +101744,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.3326299
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.3326299
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -105913,8 +106081,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0002347
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0002347
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -116823,8 +116991,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0002347
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0002347
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -124723,8 +124891,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.3326299
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.3326299
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -127408,7 +127576,7 @@ PrefabInstance:
     m_TransformParent: {fileID: 1653882787}
     m_Modifications:
     - target: {fileID: 5606872467812462411, guid: 8b63e7f034e7d054d8963990889d467a, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
+      propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: -7971138446455444095, guid: eb209f766e5c0ae44b9b6cd6a084838f, type: 2}
     - target: {fileID: 6255324775096159902, guid: 8b63e7f034e7d054d8963990889d467a, type: 3}
@@ -130029,8 +130197,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0000001
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0000001
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -136033,16 +136201,12 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 4748713477188251910, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
-    - {fileID: 4131426424141073239, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
-    - {fileID: 4430799363974123202, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
-    - {fileID: 7388402883808286286, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
-    - {fileID: 3580078976794657402, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 3253485246356158434, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1921490316}
+    m_RemovedGameObjects: [{fileID: 4748713477188251910, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3},
+      {fileID: 4131426424141073239, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3},
+      {fileID: 4430799363974123202, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3},
+      {fileID: 7388402883808286286, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3},
+      {fileID: 3580078976794657402, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}]
+    m_AddedGameObjects: [{targetCorrespondingSourceObject: {fileID: 3253485246356158434, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}, insertIndex: -1, addedObject: {fileID: 1921490316}}]
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d11ad9f869c409c41980ccf072b80dfb, type: 3}
 --- !u!4 &1350612810 stripped
@@ -143530,6 +143694,108 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1414676989}
   m_CullTransparentMesh: 1
+--- !u!1 &1414884288 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6564302963227462502, guid: a4cf5332f56c845479aaaa2b2ecbe289, type: 3}
+  m_PrefabInstance: {fileID: 541327032}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &1414884306
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1414884288}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 0.002
+  m_Pitch: 1
+  Loop: 0
+  Mute: 1
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1416898992
 GameObject:
   m_ObjectHideFlags: 0
@@ -143867,8 +144133,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0002339
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0002339
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -146358,8 +146624,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -151180,8 +151446,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -155102,8 +155368,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.3326178
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.3326178
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -155600,6 +155866,10 @@ PrefabInstance:
     - target: {fileID: 3557678451403072210, guid: dacbe1c3d76447f1eaaeef85a91a252c, type: 3}
       propertyPath: m_Name
       value: Haymaker
+      objectReference: {fileID: 0}
+    - target: {fileID: 3557678451403072210, guid: dacbe1c3d76447f1eaaeef85a91a252c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3958854753598069612, guid: dacbe1c3d76447f1eaaeef85a91a252c, type: 3}
       propertyPath: m_LocalScale.x
@@ -158542,8 +158812,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.332665
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.332665
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -170981,8 +171251,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -188125,8 +188395,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.3326296
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.3326296
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -211416,8 +211686,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1.0000001
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1.0000001
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
@@ -212148,8 +212418,8 @@ Mesh:
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
-  'm_MeshMetrics[0]': 1
-  'm_MeshMetrics[1]': 1
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
   m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2

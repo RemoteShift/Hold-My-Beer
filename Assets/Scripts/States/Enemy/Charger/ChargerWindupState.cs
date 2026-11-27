@@ -26,13 +26,17 @@ public class ChargerWindupState : EnemyState
     {
         charger.StopPathfinding();
         charger.SetBodyColor(charger.windupColor);
+        charger.PlayPose("Windup", Progress);
     }
+
+    private float Progress => 1f - remaining / Mathf.Max(0.001f, charger.windupDuration);
 
     public override void Update()
     {
         if (!aimLocked) base.Update();
 
         remaining -= charger.WindupDeltaTime;
+        charger.SetPoseTime(Progress);
 
         if (remaining <= 0f)
         {

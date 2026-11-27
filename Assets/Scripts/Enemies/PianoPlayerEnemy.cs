@@ -28,6 +28,7 @@ public class PianoPlayerEnemy : EnemyBrain
     public Transform rightHand;
     public bool IsPlayingMusic => isActiveAndEnabled && !IsDead && !IsImpactStunned && CurrentState is PlayingState;
 
+
     private void OnEnable() { Players.Add(this); }
     private void OnDisable() { Players.Remove(this); if (music) music.Pause(); }
 
@@ -59,6 +60,19 @@ public class PianoPlayerEnemy : EnemyBrain
     }
 
     public override void ReturnToDefaultState() => SwitchState(new PlayingState(this));
+    public override void Die()
+    {
+        if (IsDead) return;
+        base.Die();
+        if (!Animator || Animator.transform == transform || !Animator.runtimeAnimatorController) return;
+
+        // The visual finishes its fall after the music, aura and colliders are gone.
+        Animator.transform.SetParent(null, true);
+        Animator.SetBool("IsDying", true);
+        Animator.Play("Dying", 0, 0f);
+        Animator.Update(0f);
+        Destroy(Animator.gameObject, Animator.GetCurrentAnimatorStateInfo(0).length);
+    }
     private sealed class PlayingState : EnemyState
     {
         private readonly PianoPlayerEnemy pianist;
@@ -85,8 +99,6 @@ public class PianoPlayerEnemy : EnemyBrain
         public override void Update()
         {
             songTime += Time.deltaTime;
-            if (pianist.leftHand) pianist.leftHand.localPosition = leftRest + Vector3.up * (Mathf.Sin(songTime * 18f) * 0.04f);
-            if (pianist.rightHand) pianist.rightHand.localPosition = rightRest + Vector3.up * (Mathf.Cos(songTime * 18f) * 0.04f);
         }
     }
 }
