@@ -18,17 +18,14 @@ public class ChargerRecoverState : EnemyState
     {
         charger.StopPathfinding();
         charger.SetBodyColor(charger.recoverColor);
-        charger.Animator?.SetBool("IsCharging", false);
-        if (hitPlayer)
-            charger.Animator?.SetTrigger("HitPlayer");
-        else
-            charger.Animator?.SetTrigger("HitWall");
+        charger.PlayPose(hitPlayer ? "HitPlayer" : "HitWall");
     }
 
     // Skips the base look-at on purpose: the charger stays facing the way it ran.
     public override void Update()
     {
         remaining -= charger.RecoveryDeltaTime;
+        charger.SetPoseTime(1f - remaining / Mathf.Max(0.001f, charger.attackCooldown));
 
         if (remaining <= 0f)
         {

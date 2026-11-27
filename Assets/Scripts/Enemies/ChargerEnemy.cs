@@ -7,12 +7,16 @@ using UnityEngine;
 /// </summary>
 public class ChargerEnemy : EnemyBrain
 {
-    [HideInInspector] public Animator Animator;
 
-    protected override void Awake()
+    protected override void Update()
     {
-        base.Awake();
-        Animator = GetComponent<Animator>();
+        base.Update();
+        if (CurrentState is ChargerChargeState)
+        {
+            // Imported run covers 3.64 metres per cycle-second at unit scale.
+            SetStrideRate(CanNavigate && !IsBeingPushed ? chargeSpeed * Buffs.attackSpeed / (3.64f * transform.lossyScale.z) : 0f);
+        }
+        else UpdateWalkSpeed(1.5f * transform.lossyScale.z);
     }
     [Header("Charge Attack")]
     [Tooltip("Keep this within the player's hand range, or the wind-up can't be parried.")]

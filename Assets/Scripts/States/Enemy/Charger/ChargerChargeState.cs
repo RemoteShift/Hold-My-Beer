@@ -27,7 +27,7 @@ public class ChargerChargeState : EnemyState
     {
         charger.StopPathfinding();
         charger.SetBodyColor(charger.chargeColor);
-        charger.Animator?.SetBool("IsCharging", true);
+        charger.Animator?.Play("Run", 0);
     }
 
     // Skips the base look-at on purpose: a charge never steers.

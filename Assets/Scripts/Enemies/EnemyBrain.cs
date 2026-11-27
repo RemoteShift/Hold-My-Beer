@@ -83,8 +83,37 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         appliedMaxHealth = capacity;
     }
 
+    [HideInInspector] public Animator Animator;
+    private static readonly int PoseTime = UnityEngine.Animator.StringToHash("PoseTime");
+    private static readonly int Speed = UnityEngine.Animator.StringToHash("Speed");
+
+    public void PlayPose(string state, float progress = 0f)
+    {
+        if (!Animator) return;
+        SetPoseTime(progress);
+        Animator.Play(state, 0, 0f);
+    }
+
+    public void SetPoseTime(float progress)
+    {
+        if (Animator) Animator.SetFloat(PoseTime, Mathf.Clamp01(progress));
+    }
+
+    protected float NavigationSpeed => CanNavigate && !agent.isStopped ? agent.velocity.magnitude : 0f;
+
+    protected void UpdateWalkSpeed(float strideSpeed)
+    {
+        SetStrideRate(NavigationSpeed / Mathf.Max(0.01f, strideSpeed));
+    }
+
+    protected void SetStrideRate(float rate)
+    {
+        if (Animator) Animator.SetFloat(Speed, rate);
+    }
+
     protected virtual void Awake()
     {
+        Animator = GetComponentInChildren<Animator>();
         currentHealth = maxHealth;
         appliedMaxHealth = Mathf.Max(0.01f, maxHealth);
 
@@ -133,6 +162,7 @@ public abstract class EnemyBrain : MonoBehaviour, IDamageable
         if (IsDead && newState != null) return;
         currentState?.Exit();
         currentState = newState;
+        if (Animator) Animator.speed = newState is EnemyStunState || newState is EnemyBeeredState ? 0f : 1f;
         currentState?.Enter();
 
         currentStateName = currentState != null ? currentState.GetType().Name : "None";

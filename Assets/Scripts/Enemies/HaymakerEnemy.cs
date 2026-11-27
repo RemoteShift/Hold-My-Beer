@@ -4,7 +4,6 @@ using UnityEngine;
 /// <summary>A slow brawler. His raised fist and locked facing survive a beer parry.</summary>
 public class HaymakerEnemy : EnemyBrain
 {
-    [HideInInspector] public Animator Animator;
 
     [Header("Weapon")]
     public GameObject weaponPrefab;
@@ -20,7 +19,6 @@ public class HaymakerEnemy : EnemyBrain
     protected override void Awake()
     {
         base.Awake();
-        Animator = GetComponentInChildren<Animator>();
         if (weaponPrefab)
         {
             var spawnParent = handHoldPoint != null ? handHoldPoint : weaponHoldPoint;
@@ -30,6 +28,12 @@ public class HaymakerEnemy : EnemyBrain
                 _weaponInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             }
         }
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+        UpdateWalkSpeed(moveSpeed);
     }
 
     private void LateUpdate()
@@ -64,6 +68,9 @@ public class HaymakerEnemy : EnemyBrain
     {
         private readonly HaymakerEnemy brawler;
         private readonly HashSet<IDamageable> hitTargets = new HashSet<IDamageable>();
+        // The hand finishes winding back at 40% and crosses the target by 68%.
+        private const float SwingStart = 0.4f;
+        private const float SwingEnd = 0.68f;
         private int phase;
         private float elapsed;
         private bool aimLocked;
@@ -74,7 +81,7 @@ public class HaymakerEnemy : EnemyBrain
         {
             brawler.IsSwingActive = phase == 2;
             brawler.SetBodyColor(phase == 0 ? new Color(0.6f, 0.25f, 0.12f) : Color.yellow);
-            brawler.Animator?.SetBool("IsSwinging", phase == 2);
+            if (phase == 0) brawler.Animator?.Play("Walk", 0, 0f);
         }
         public override void Update()
         {
@@ -86,6 +93,7 @@ public class HaymakerEnemy : EnemyBrain
                 { brawler.PathfindToTarget(); return; }
                 brawler.StopPathfinding();
                 phase = 1;
+                brawler.PlayPose("Swing");
                 brawler.SetBodyColor(Color.yellow);
             }
             elapsed += phase == 1 ? brawler.WindupDeltaTime :
@@ -93,16 +101,17 @@ public class HaymakerEnemy : EnemyBrain
             if (phase == 1)
             {
                 if (!aimLocked) brawler.LookAtTarget();
+                brawler.SetPoseTime(SwingStart * Mathf.Clamp01(elapsed / brawler.windupSeconds));
                 Pose(-brawler.swingArc * 0.5f);
                 if (elapsed < brawler.windupSeconds) return;
                 phase = 2; elapsed = 0f;
                 brawler.IsSwingActive = true;
-                brawler.Animator?.SetBool("IsSwinging", true);
                 brawler.SetBodyColor(new Color(1f, 0.3f, 0.1f));
             }
             if (phase == 2)
             {
                 var progress = Mathf.Clamp01(elapsed / brawler.swingSeconds);
+                brawler.SetPoseTime(Mathf.Lerp(SwingStart, SwingEnd, progress));
                 Pose(Mathf.Lerp(-brawler.swingArc * 0.5f, brawler.swingArc * 0.5f, progress));
                 // Sweeping cone grows with the visible fist, instead of hitting the whole arc at once.
                 var angle = -brawler.swingArc * 0.5f + brawler.swingArc * progress;
@@ -120,10 +129,13 @@ public class HaymakerEnemy : EnemyBrain
                 if (progress < 1f) return;
                 phase = 3; elapsed = 0f;
                 brawler.IsSwingActive = false;
-                brawler.Animator?.SetBool("IsSwinging", false);
                 brawler.SetBodyColor(Color.gray);
             }
-            if (phase == 3 && elapsed >= brawler.attackCooldown) brawler.ReturnToDefaultState();
+            if (phase == 3)
+            {
+                brawler.SetPoseTime(Mathf.Lerp(SwingEnd, 1f, elapsed / Mathf.Max(0.001f, brawler.attackCooldown)));
+                if (elapsed >= brawler.attackCooldown) brawler.ReturnToDefaultState();
+            }
         }
         private void Pose(float angle)
         {
