@@ -40,6 +40,7 @@ public class TutorialPromptChecks : MonoBehaviour
         var mouse = InputSystem.AddDevice<Mouse>();
         var oldScale = Time.timeScale;
         var oldFixed = Time.fixedDeltaTime;
+        var oldAudioPause = AudioListener.pause;
         var input = InputHandler.Instance;
         var oldBlocked = input && input.ActionsBlocked;
         try
@@ -54,6 +55,13 @@ public class TutorialPromptChecks : MonoBehaviour
             yield return new WaitForSecondsRealtime(.2f);
             Check(p.IsReading && Time.timeScale == 0f, "Holding Enter cannot skip a new card");
             Check(!input || input.ActionsBlocked, "Combat input is blocked while reading");
+            AudioListener.pause = true;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Enter));
+            yield return new WaitForSecondsRealtime(.15f);
+            Check(p.IsReading && p.IsShowing && Time.timeScale == 0f, "Pause-menu Enter cannot dismiss a tutorial explanation");
+            AudioListener.pause = false;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
             yield return new WaitForSecondsRealtime(5.2f);
@@ -104,6 +112,7 @@ public class TutorialPromptChecks : MonoBehaviour
             InputSystem.RemoveDevice(mouse);
             Time.timeScale = oldScale;
             Time.fixedDeltaTime = oldFixed;
+            AudioListener.pause = oldAudioPause;
             if (input) input.ActionsBlocked = oldBlocked;
             Destroy(gameObject);
         }
@@ -113,7 +122,9 @@ public class TutorialPromptChecks : MonoBehaviour
     private static void Capture(string path)
     {
         var image = ScreenCapture.CaptureScreenshotAsTexture();
-        System.IO.File.WriteAllBytes(path, image.EncodeToPNG());
+        var folder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Application.dataPath), "Temp/TutorialPromptChecks");
+        System.IO.Directory.CreateDirectory(folder);
+        System.IO.File.WriteAllBytes(System.IO.Path.Combine(folder, System.IO.Path.GetFileName(path)), image.EncodeToPNG());
         Destroy(image);
     }
     private void Check(bool value, string message)

@@ -8,6 +8,7 @@ public class CameraLook : Singleton<CameraLook>
     [SerializeField] private Transform pitchPivot;
 
     public bool canLook = false;
+    public float MouseSensitivity => mouseSensitivity * MouseSensitivitySettings.Multiplier;
 
     private float yaw;
     private float pitch;
@@ -83,7 +84,7 @@ public class CameraLook : Singleton<CameraLook>
         if (!canLook) return;
         
         // Pick sensitivity based on active device
-        var currentSensitivity = isUsingGamepad ? controllerLookSensitivity : mouseSensitivity;
+        var currentSensitivity = isUsingGamepad ? controllerLookSensitivity : MouseSensitivity;
 
         // Frame-rate independence for controllers (mice already output delta per frame)
         if (isUsingGamepad)

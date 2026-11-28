@@ -1421,7 +1421,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: x0
+  m_text: x50
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
   m_sharedMaterial: {fileID: -7568175132703919296, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
@@ -2388,7 +2388,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: x0
+  m_text: x50
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
   m_sharedMaterial: {fileID: -7568175132703919296, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
@@ -2603,7 +2603,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: x0
+  m_text: x50
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
   m_sharedMaterial: {fileID: -7568175132703919296, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
@@ -5794,10 +5794,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a23d837c45cd48e193c79a60e779a6a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IngredientInventory
-  lifeEssence: 50
-  water: 50
-  sugar: 50
-  gunpowder: 50
+  lifeEssence: 0
+  water: 0
+  sugar: 0
+  gunpowder: 0
 --- !u!114 &8702035849624372698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7885,7 +7885,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: x0
+  m_text: x50
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}
   m_sharedMaterial: {fileID: -7568175132703919296, guid: 6483fc18884bed14eac56edf2b64ba17, type: 2}

@@ -174,20 +174,21 @@ public class TutorialPrompter : MonoBehaviour
         while (!ContinuePressed()) yield return null;
         // Do not hand the confirmation frame to the next gameplay prompt.
         yield return null;
+        while (AudioListener.pause) yield return null;
         Hide();
         CancelFreeze();
     }
 
-    private static bool ContinueHeld() => Keyboard.current?.enterKey.isPressed == true ||
+    private static bool ContinueHeld() => AudioListener.pause || Keyboard.current?.enterKey.isPressed == true ||
         Keyboard.current?.numpadEnterKey.isPressed == true;
-    private static bool ContinuePressed() => Keyboard.current?.enterKey.wasPressedThisFrame == true ||
-        Keyboard.current?.numpadEnterKey.wasPressedThisFrame == true;
+    private static bool ContinuePressed() => !AudioListener.pause && (Keyboard.current?.enterKey.wasPressedThisFrame == true ||
+        Keyboard.current?.numpadEnterKey.wasPressedThisFrame == true);
 
     public IEnumerator Prompt(string text, Func<bool> done, InputHandler.PromptAction action = InputHandler.PromptAction.None)
     {
         if (done()) yield break;
         ShowCard(text, "PRACTICE  •  Complete the action to continue", action);
-        while (!done()) yield return null;
+        while (AudioListener.pause || !done()) yield return null;
         Hide();
     }
 
@@ -196,8 +197,9 @@ public class TutorialPrompter : MonoBehaviour
         if (done()) yield break;
         BeginTimeControl();
         var previousReady = (bool?)null;
-        while (!done())
+        while (AudioListener.pause || !done())
         {
+            if (AudioListener.pause) { yield return null; continue; }
             var ready = canAct == null || canAct();
             // Reach and occlusion still come from PlayerAim. Outside reach, allow repositioning.
             SetTimeScale(ready ? 0f : positioningTimeScale);
@@ -211,9 +213,11 @@ public class TutorialPrompter : MonoBehaviour
         }
         Hide();
         var from = Time.timeScale;
-        for (var t = 0f; t < speedUpSeconds; t += Time.unscaledDeltaTime)
+        for (var t = 0f; t < speedUpSeconds;)
         {
+            if (AudioListener.pause) { yield return null; continue; }
             SetTimeScale(Mathf.Lerp(from, savedTimeScale, t / speedUpSeconds));
+            t += Time.unscaledDeltaTime;
             yield return null;
         }
         CancelFreeze();

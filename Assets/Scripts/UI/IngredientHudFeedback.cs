@@ -15,6 +15,8 @@ public sealed class IngredientHudFeedback : MonoBehaviour
         public UnityEngine.UI.LayoutElement Layout;
         [System.NonSerialized] public float Blend, ShakeLeft, SpendLeft;
         [System.NonSerialized] public int PreviousCount;
+        [System.NonSerialized] public float PreviewWidth, PreviewCountWidth;
+        [System.NonSerialized] public bool LayoutCaptured;
     }
 
     [SerializeField] private CocktailBrewer brewer;
@@ -41,7 +43,16 @@ public sealed class IngredientHudFeedback : MonoBehaviour
         if (inventory) inventory.OnChanged += InventoryChanged;
         if (items == null || !inventory) return;
         for (int i = 0; i < items.Length; i++)
+        {
             items[i].PreviousCount = inventory.GetCount((IngredientType)i);
+            var item = items[i];
+            if (!item.LayoutCaptured && item.Layout && item.Count)
+            {
+                item.PreviewWidth = Mathf.Max(item.Layout.minWidth, item.Layout.preferredWidth);
+                item.PreviewCountWidth = item.Count.rectTransform.rect.width;
+                item.LayoutCaptured = true;
+            }
+        }
         initialized = true;
     }
 
@@ -80,8 +91,9 @@ public sealed class IngredientHudFeedback : MonoBehaviour
         {
             var item = items[i];
             if (!item.Motion || !item.Icon || !item.Count || !item.Layout) continue;
-            // Reserve actual count width, so increasing stock never overlaps the next ingredient.
-            float width = 32f + Mathf.Max(26f, item.Count.preferredWidth);
+            // Preserve the authored preview spacing, expanding only when a longer count needs it.
+            float width = Mathf.Max(item.PreviewWidth,
+                32f + Mathf.Max(26f, Mathf.Max(item.PreviewCountWidth, item.Count.preferredWidth)));
             if (Mathf.Abs(item.Layout.preferredWidth - width) > .01f)
             {
                 item.Layout.preferredWidth = width;
@@ -132,7 +144,13 @@ public sealed class IngredientHudFeedback : MonoBehaviour
                     item.Motion.localRotation = Quaternion.identity;
                 }
                 if (item.Flash) item.Flash.color = new Color(1f, 1f, 1f, 0f);
+                if (item.LayoutCaptured && item.Layout && item.Count)
+                {
+                    item.Layout.preferredWidth = item.PreviewWidth;
+                    item.Count.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, item.PreviewCountWidth);
+                }
             }
+        if (panel) UnityEngine.UI.LayoutRebuilder.MarkLayoutForRebuild(panel);
         initialized = false;
     }
 }

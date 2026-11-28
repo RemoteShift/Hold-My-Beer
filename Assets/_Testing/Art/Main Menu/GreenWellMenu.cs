@@ -43,7 +43,11 @@ public class GreenWellMenu : MonoBehaviour {
      Cursor.visible = true;
  }
 
- public void Audio() { if (audioMenu) audioMenu.Open(); }
+ public void Audio() {
+     if (!audioMenu) return;
+     if (audioMenu.sharedMenus) audioMenu.sharedMenus.OpenAudioFromMainMenu();
+     else audioMenu.Open();
+ }
 
  public void NewGame()
  {
@@ -63,8 +67,8 @@ public class GreenWellMenu : MonoBehaviour {
  }
 
 public void Back(){if(receiptControls && receiptControls.IsOpen){receiptControls.Close();return;}controls.SetActive(false);quit.SetActive(false);options.SetActive(true);}
- public void Controls(){if(receiptControls){receiptControls.Open();return;}options.SetActive(false);controls.SetActive(true);}
- public void ConfirmQuit(){options.SetActive(false);quit.SetActive(true);}
+ public void Controls(){if(receiptControls){if(receiptControls.sharedMenus)receiptControls.sharedMenus.OpenControlsFromMainMenu();else receiptControls.Open();return;}options.SetActive(false);controls.SetActive(true);}
+ public void ConfirmQuit(){Quit();}
  public void Quit(){
  #if UNITY_EDITOR
  UnityEditor.EditorApplication.isPlaying=false;
@@ -99,7 +103,7 @@ public void Back(){if(receiptControls && receiptControls.IsOpen){receiptControls
  line(options.transform,0,232,430,2,0);
  button(options.transform,"New Game",0,155,NewGame);
  button(options.transform,"Audio",0,45,Audio);
- button(options.transform,"Controls",0,-65,Controls);button(options.transform,"Quit",0,-175,ConfirmQuit);
+ button(options.transform,"Controls",0,-65,Controls);button(options.transform,"Quit",0,-175,Quit);
 
  controls=rect(root.transform,"Controls Panel",310,0,600,700).gameObject;
  label(controls.transform,"CONTROLS",0,240,540,70,57,headingFont);

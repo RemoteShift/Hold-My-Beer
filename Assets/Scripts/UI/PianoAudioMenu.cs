@@ -4,10 +4,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Unity.Cinemachine;
 
-/// <summary>World-space piano controls and a short camera trip from the main menu.</summary>
+/// <summary>Shared world-space piano controls, accessible from the title or pause menu.</summary>
 public sealed class PianoAudioMenu : MonoBehaviour
 {
-    public GreenWellMenu mainMenu;
+    public SharedSettingsMenus sharedMenus;
     public Camera menuCamera;
     public CinemachineBrain cameraBrain;
     public Transform audioView;
@@ -24,6 +24,7 @@ public sealed class PianoAudioMenu : MonoBehaviour
     private Coroutine travel;
     private CanvasGroup menuOptions;
     private bool menuWasInteractable, menuBlockedRaycasts;
+    private bool restoreNavigationSelection;
 
 
     private void Awake()
@@ -46,6 +47,8 @@ public sealed class PianoAudioMenu : MonoBehaviour
     public void Open()
     {
         if (IsOpen || IsTransitioning || !menuCamera || !audioView) return;
+        restoreNavigationSelection = !IsPointerActivation();
+        if (EventSystem.current) EventSystem.current.SetSelectedGameObject(null);
         homePosition = menuCamera.transform.position;
         homeRotation = menuCamera.transform.rotation;
         homeFov = menuCamera.fieldOfView;
@@ -54,11 +57,13 @@ public sealed class PianoAudioMenu : MonoBehaviour
         if (cameraBrain) cameraBrain.enabled = false;
         menuCamera.nearClipPlane = 0.03f;
         // Keep the chalkboard visible while the camera visits the piano.
-        menuOptions = mainMenu.options.GetComponent<CanvasGroup>();
-        if (!menuOptions) menuOptions = mainMenu.options.AddComponent<CanvasGroup>();
-        menuWasInteractable = menuOptions.interactable;
-        menuBlockedRaycasts = menuOptions.blocksRaycasts;
-        menuOptions.interactable = menuOptions.blocksRaycasts = false;
+        menuOptions = sharedMenus.mainMenuOptions;
+        if (menuOptions)
+        {
+            menuWasInteractable = menuOptions.interactable;
+            menuBlockedRaycasts = menuOptions.blocksRaycasts;
+            menuOptions.interactable = menuOptions.blocksRaycasts = false;
+        }
         IsOpen = true;
         BeginTravel(audioView.position, audioView.rotation, 60f, true);
     }
@@ -66,6 +71,8 @@ public sealed class PianoAudioMenu : MonoBehaviour
     public void Close()
     {
         if (!IsOpen) return;
+        if (IsPointerActivation()) restoreNavigationSelection = false;
+        if (EventSystem.current) EventSystem.current.SetSelectedGameObject(null);
         IsOpen = false;
         PlayerPrefs.Save();
         panel.interactable = panel.blocksRaycasts = false;
@@ -100,13 +107,28 @@ public sealed class PianoAudioMenu : MonoBehaviour
         {
             menuCamera.nearClipPlane = homeNear;
             if (cameraBrain) cameraBrain.enabled = brainWasEnabled;
-            menuOptions.interactable = menuWasInteractable;
-            menuOptions.blocksRaycasts = menuBlockedRaycasts;
+            if (menuOptions)
+            {
+                menuOptions.interactable = menuWasInteractable;
+                menuOptions.blocksRaycasts = menuBlockedRaycasts;
+            }
         }
         IsTransitioning = false;
         travel = null;
         if (EventSystem.current)
-            EventSystem.current.SetSelectedGameObject(opening ? musicSlider.gameObject : openButton.gameObject);
+            EventSystem.current.SetSelectedGameObject(restoreNavigationSelection
+                ? (opening ? musicSlider.gameObject : openButton && openButton.gameObject.activeInHierarchy ? openButton.gameObject : null)
+                : null);
+    }
+
+    private static bool IsPointerActivation()
+    {
+        // Button.onClick runs on release, so include the release frame.
+        return (Mouse.current != null &&
+                (Mouse.current.leftButton.isPressed || Mouse.current.leftButton.wasReleasedThisFrame)) ||
+               (Touchscreen.current != null &&
+                (Touchscreen.current.primaryTouch.press.isPressed ||
+                 Touchscreen.current.primaryTouch.press.wasReleasedThisFrame));
     }
 
     private void OnDestroy()

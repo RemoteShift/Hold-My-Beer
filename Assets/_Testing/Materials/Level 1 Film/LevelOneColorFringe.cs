@@ -15,7 +15,9 @@ namespace HoldMyBeer.Rendering
                 || cameraData.cameraType != CameraType.Game
                 || cameraData.renderType != CameraRenderType.Base
                 || (!cameraData.camera.CompareTag("MainCamera")
-                    && !cameraData.camera.GetComponentInParent<BottleResultsScreen>())
+                    && !cameraData.camera.GetComponentInParent<BottleResultsScreen>()
+                    && !cameraData.camera.GetComponentInParent<PauseCardMenu>()
+                    && !cameraData.camera.GetComponentInParent<FilmCursor>())
                 || SceneManager.GetActiveScene().path != LevelPath)
             {
                 return;

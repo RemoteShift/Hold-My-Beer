@@ -35,6 +35,18 @@ public class InputHandler : Singleton<InputHandler>
     /// <summary>While true, beer, unbeer, interact and push presses are ignored, e.g. so a tutorial prompt can be read first.</summary>
     public bool ActionsBlocked { get; set; }
 
+    public bool PauseInput { get; private set; }
+
+    public void SetPauseInput(bool paused)
+    {
+        PauseInput = paused;
+        if (!paused) return;
+        moveInput = Vector2.zero;
+        JumpPressed = false;
+        ClearParryFollowUpInputs();
+        OnLookInputChanged?.Invoke(Vector2.zero, lastInputDevice is Gamepad);
+    }
+
     private InputAction unbeerInput;
     private CocktailBrewer brewer;
 
@@ -77,6 +89,7 @@ public class InputHandler : Singleton<InputHandler>
 
     private void Update()
     {
+        if (PauseInput) { moveInput = Vector2.zero; JumpPressed = false; return; }
         moveInput = MoveInput.action.ReadValue<Vector2>();
         if (PlayerParryFeedback.IsPlayerFrozen)
         {
@@ -249,7 +262,7 @@ public class InputHandler : Singleton<InputHandler>
 
     private void HandleLookInput(InputAction.CallbackContext context)
     {
-        var look = context.ReadValue<Vector2>();
+        var look = PauseInput ? Vector2.zero : context.ReadValue<Vector2>();
         if (context.performed && look != Vector2.zero) lastInputDevice = context.control.device;
         OnLookInputChanged?.Invoke(look, context.control.device is Gamepad);
     }
